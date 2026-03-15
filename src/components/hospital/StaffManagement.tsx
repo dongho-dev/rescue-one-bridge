@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "../ui/label";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { toast } from "sonner";
-import { 
-  Search, 
-  Plus, 
-  Eye, 
+import { getRoleColor, getRoleText, getStaffStatusColor, getStaffStatusText } from "../../utils/statusHelpers";
+import {
+  Search,
+  Plus,
+  Eye,
   Edit,
   UserCheck,
   Clock,
@@ -146,45 +147,6 @@ const mockStaff: StaffMember[] = [
   }
 ];
 
-const getRoleColor = (role: string) => {
-  switch (role) {
-    case 'doctor': return 'default';
-    case 'nurse': return 'secondary';
-    case 'technician': return 'outline';
-    case 'admin': return 'destructive';
-    default: return 'outline';
-  }
-};
-
-const getRoleText = (role: string) => {
-  switch (role) {
-    case 'doctor': return '의사';
-    case 'nurse': return '간호사';
-    case 'technician': return '기사';
-    case 'admin': return '관리자';
-    default: return role;
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'on-duty': return 'default';
-    case 'off-duty': return 'secondary';
-    case 'break': return 'outline';
-    case 'emergency': return 'destructive';
-    default: return 'outline';
-  }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'on-duty': return '근무중';
-    case 'off-duty': return '비번';
-    case 'break': return '휴식중';
-    case 'emergency': return '응급호출';
-    default: return status;
-  }
-};
 
 const getRoleIcon = (role: string) => {
   switch (role) {
@@ -230,7 +192,7 @@ export function StaffManagement() {
   };
 
   const handleStatusChange = (staffId: string, newStatus: string) => {
-    toast.success(`직원 ${staffId}의 상태가 ${getStatusText(newStatus)}로 변경되었습니다.`);
+    toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleEmergencyCall = (staffId: string) => {
@@ -383,7 +345,7 @@ export function StaffManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getRoleColor(member.role) as any}>
+                        <Badge variant={getRoleColor(member.role)}>
                           {getRoleText(member.role)}
                         </Badge>
                       </TableCell>
@@ -401,8 +363,8 @@ export function StaffManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusColor(member.status) as any}>
-                          {getStatusText(member.status)}
+                        <Badge variant={getStaffStatusColor(member.status)}>
+                          {getStaffStatusText(member.status)}
                         </Badge>
                       </TableCell>
                       <TableCell>

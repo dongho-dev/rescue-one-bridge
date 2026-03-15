@@ -8,7 +8,8 @@ import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
-import { 
+import { getSeverityColor, getSeverityText } from "../../utils/statusHelpers";
+import {
   Ambulance,
   User,
   MapPin,
@@ -65,23 +66,6 @@ const quickPatients: QuickPatient[] = [
   }
 ];
 
-const getSeverityColor = (severity: string) => {
-  switch (severity) {
-    case 'critical': return 'destructive';
-    case 'urgent': return 'secondary';
-    case 'stable': return 'outline';
-    default: return 'outline';
-  }
-};
-
-const getSeverityText = (severity: string) => {
-  switch (severity) {
-    case 'critical': return '위급';
-    case 'urgent': return '응급';
-    case 'stable': return '안정';
-    default: return severity;
-  }
-};
 
 export function PatientRequest() {
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
@@ -215,7 +199,7 @@ export function PatientRequest() {
                         <User size={16} />
                         <span className="font-medium">{patient.name}</span>
                       </div>
-                      <Badge variant={getSeverityColor(patient.severity) as any}>
+                      <Badge variant={getSeverityColor(patient.severity)}>
                         {getSeverityText(patient.severity)}
                       </Badge>
                     </div>
@@ -269,7 +253,7 @@ export function PatientRequest() {
                   </div>
                   <div>
                     <Label>중증도</Label>
-                    <Badge variant={getSeverityColor(selectedPatient.severity) as any} className="mt-1">
+                    <Badge variant={getSeverityColor(selectedPatient.severity)} className="mt-1">
                       {getSeverityText(selectedPatient.severity)}
                     </Badge>
                   </div>
