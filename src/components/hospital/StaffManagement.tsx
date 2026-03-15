@@ -6,6 +6,7 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Label } from "../ui/label";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { toast } from "sonner";
@@ -390,9 +391,27 @@ export function StaffManagement() {
                           <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
                             <Edit size={14} />
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleEmergencyCall(member.id)}>
-                            <Shield size={14} />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" aria-label="응급호출">
+                                <Shield size={14} />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>응급호출 확인</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {member.name}에게 응급호출을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>취소</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleEmergencyCall(member.id)}>
+                                  호출 발송
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
