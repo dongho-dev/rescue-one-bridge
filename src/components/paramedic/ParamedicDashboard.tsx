@@ -21,6 +21,12 @@ import {
 } from 'lucide-react';
 import { toast } from "sonner";
 
+const recentEvents = [
+  { time: '10분 전', message: '서울대병원 수용 가능 상태 전환', type: 'info' },
+  { time: '15분 전', message: 'Case #RQ-1023 배정 완료', type: 'success' },
+  { time: '23분 전', message: '응급호출 3건 신규 접수', type: 'warning' },
+];
+
 export function ResponderDashboard() {
   const [isOnline, setIsOnline] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -37,7 +43,7 @@ export function ResponderDashboard() {
       acc[req.status] = (acc[req.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     return {
       pending: counts.pending || 0,
       matched: counts.matched || 0,
@@ -61,12 +67,6 @@ export function ResponderDashboard() {
       default: return <Activity size={16} />;
     }
   };
-
-  const recentEvents = [
-    { time: '10분 전', message: '서울대병원 수용 가능 상태 전환', type: 'info' },
-    { time: '15분 전', message: 'Case #RQ-1023 배정 완료', type: 'success' },
-    { time: '23분 전', message: '응급호출 3건 신규 접수', type: 'warning' },
-  ];
 
   return (
     <div className="space-y-6">
