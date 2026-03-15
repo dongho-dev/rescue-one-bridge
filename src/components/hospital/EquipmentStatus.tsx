@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Progress } from "../ui/progress";
+import { Separator } from "../ui/separator";
 import { toast } from "sonner";
-import { getEquipmentStatusColor, getEquipmentStatusText, getEquipmentTypeText } from "../../utils/statusHelpers";
+import { getEquipmentStatusText, getEquipmentTypeText } from "../../utils/statusHelpers";
 import { mockEquipment, type Equipment } from "@/mocks/equipmentData";
 import {
   Search,
@@ -18,15 +19,12 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Clock,
   MapPin,
   Calendar,
   Stethoscope,
-  Heart,
   Activity,
   Zap,
   Monitor,
-  Thermometer,
   Droplets
 } from 'lucide-react';
 
@@ -40,6 +38,28 @@ const getTypeIcon = (type: string) => {
     case 'infusion': return Droplets;
     default: return Stethoscope;
   }
+};
+
+const getEquipmentStatusBadgeClass = (status: string): string => {
+  switch (status) {
+    case 'operational': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    case 'maintenance': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+    case 'error': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50';
+    case 'offline': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+  }
+};
+
+const getBatteryColorClass = (level: number): string => {
+  if (level > 50) return '[&>div]:bg-green-500';
+  if (level >= 20) return '[&>div]:bg-amber-500';
+  return '[&>div]:bg-red-500';
+};
+
+const getBatteryTextClass = (level: number): string => {
+  if (level > 50) return 'text-green-600';
+  if (level >= 20) return 'text-amber-600';
+  return 'text-red-600';
 };
 
 export function EquipmentStatus() {
@@ -56,7 +76,7 @@ export function EquipmentStatus() {
                          item.model.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || item.type === selectedType;
     const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
-    
+
     return matchesSearch && matchesType && matchesStatus;
   });
 
@@ -88,10 +108,10 @@ export function EquipmentStatus() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">장비 현황</h1>
-          <p className="text-muted-foreground">응급실 의료 장비 상태를 실시간으로 모니터링합니다</p>
+          <p className="text-muted-foreground mt-1">응급실 의료 장비 상태를 실시간으로 모니터링하고 관리합니다</p>
         </div>
         <Button onClick={handleAddEquipment} className="flex items-center gap-2">
           <Plus size={16} />
@@ -101,57 +121,67 @@ export function EquipmentStatus() {
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <Stethoscope className="mx-auto mb-2 text-muted-foreground" size={20} />
+              <div className="bg-slate-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <Stethoscope className="text-slate-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">전체 장비</p>
               <p className="text-2xl font-bold">{equipmentStats.total}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <CheckCircle className="mx-auto mb-2 text-green-600" size={20} />
+              <div className="bg-green-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <CheckCircle className="text-green-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">정상</p>
               <p className="text-2xl font-bold text-green-600">{equipmentStats.operational}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <Settings className="mx-auto mb-2 text-yellow-600" size={20} />
+              <div className="bg-amber-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <Settings className="text-amber-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">점검중</p>
-              <p className="text-2xl font-bold text-yellow-600">{equipmentStats.maintenance}</p>
+              <p className="text-2xl font-bold text-amber-600">{equipmentStats.maintenance}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <AlertTriangle className="mx-auto mb-2 text-red-600" size={20} />
+              <div className="bg-red-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <AlertTriangle className="text-red-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">오류</p>
               <p className="text-2xl font-bold text-red-600">{equipmentStats.error}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <XCircle className="mx-auto mb-2 text-gray-600" size={20} />
+              <div className="bg-slate-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <XCircle className="text-slate-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">오프라인</p>
-              <p className="text-2xl font-bold text-gray-600">{equipmentStats.offline}</p>
+              <p className="text-2xl font-bold text-slate-600">{equipmentStats.offline}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* 검색 및 필터 */}
-      <Card>
+      <Card className="shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
               <Input
@@ -203,11 +233,11 @@ export function EquipmentStatus() {
         {filteredEquipment.map((item) => {
           const TypeIcon = getTypeIcon(item.type);
           return (
-            <Card key={item.id} className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${
+            <Card key={item.id} className={`cursor-pointer shadow-sm hover:shadow-md transition-all border-l-4 ${
               item.status === 'error' ? 'border-l-red-500' :
               item.status === 'operational' ? 'border-l-green-500' :
-              item.status === 'maintenance' ? 'border-l-yellow-500' :
-              'border-l-gray-500'
+              item.status === 'maintenance' ? 'border-l-amber-500' :
+              'border-l-slate-400'
             }`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -215,7 +245,7 @@ export function EquipmentStatus() {
                     <TypeIcon size={18} />
                     {item.name}
                   </CardTitle>
-                  <Badge variant={getEquipmentStatusColor(item.status)}>
+                  <Badge variant="outline" className={getEquipmentStatusBadgeClass(item.status)}>
                     {getEquipmentStatusText(item.status)}
                   </Badge>
                 </div>
@@ -242,9 +272,9 @@ export function EquipmentStatus() {
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>배터리</span>
-                      <span>{item.batteryLevel}%</span>
+                      <span className={`font-medium ${getBatteryTextClass(item.batteryLevel)}`}>{item.batteryLevel}%</span>
                     </div>
-                    <Progress value={item.batteryLevel} className="h-2" />
+                    <Progress value={item.batteryLevel} className={`h-2 ${getBatteryColorClass(item.batteryLevel)}`} />
                   </div>
                 )}
 
@@ -306,35 +336,41 @@ export function EquipmentStatus() {
                 <DialogDescription>장비 상태를 관리합니다.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>장비 ID</Label>
-                    <p>{selectedEquipment.id}</p>
-                  </div>
-                  <div>
-                    <Label>장비명</Label>
-                    <p>{selectedEquipment.name}</p>
-                  </div>
-                  <div>
-                    <Label>제조사</Label>
-                    <p>{selectedEquipment.manufacturer}</p>
-                  </div>
-                  <div>
-                    <Label>모델</Label>
-                    <p>{selectedEquipment.model}</p>
-                  </div>
-                  <div>
-                    <Label>위치</Label>
-                    <p>{selectedEquipment.location}</p>
-                  </div>
-                  <div>
-                    <Label>사용 시간</Label>
-                    <p>{selectedEquipment.usageHours}시간</p>
+                {/* 장비 기본 정보 */}
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">장비 정보</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground text-sm">장비 ID</Label>
+                      <p className="font-medium">{selectedEquipment.id}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">장비명</Label>
+                      <p className="font-medium">{selectedEquipment.name}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">제조사</Label>
+                      <p className="font-medium">{selectedEquipment.manufacturer}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">모델</Label>
+                      <p className="font-medium">{selectedEquipment.model}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">위치</Label>
+                      <p className="font-medium">{selectedEquipment.location}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">사용 시간</Label>
+                      <p className="font-medium">{selectedEquipment.usageHours}시간</p>
+                    </div>
                   </div>
                 </div>
 
+                <Separator />
+
                 <div>
-                  <Label>상태 변경</Label>
+                  <Label className="text-muted-foreground text-sm">상태 변경</Label>
                   <Select defaultValue={selectedEquipment.status} onValueChange={(value) => handleStatusChange(selectedEquipment.id, value)}>
                     <SelectTrigger className="mt-2">
                       <SelectValue />
@@ -348,8 +384,10 @@ export function EquipmentStatus() {
                   </Select>
                 </div>
 
+                <Separator />
+
                 <div>
-                  <Label htmlFor="notes">메모</Label>
+                  <Label htmlFor="notes" className="text-muted-foreground text-sm">메모</Label>
                   <Textarea
                     id="notes"
                     placeholder="장비 관련 특이사항을 입력하세요..."
