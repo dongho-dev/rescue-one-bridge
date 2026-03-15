@@ -318,11 +318,11 @@ export function EquipmentStatus() {
         {filteredEquipment.map((item) => {
           const TypeIcon = getTypeIcon(item.type);
           return (
-            <Card key={item.id} className={`cursor-pointer transition-all hover:shadow-md ${
-              item.status === 'error' ? 'border-red-200' :
-              item.status === 'operational' ? 'border-green-200' :
-              item.status === 'maintenance' ? 'border-yellow-200' :
-              'border-gray-200'
+            <Card key={item.id} className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${
+              item.status === 'error' ? 'border-l-red-500' :
+              item.status === 'operational' ? 'border-l-green-500' :
+              item.status === 'maintenance' ? 'border-l-yellow-500' :
+              'border-l-gray-500'
             }`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">

@@ -149,6 +149,16 @@ const mockStaff: StaffMember[] = [
 ];
 
 
+const getStaffStatusIcon = (status: string) => {
+  switch (status) {
+    case 'on-duty': return '\u25CF'; // ●
+    case 'break': return '\u25CB';   // ○
+    case 'off-duty': return '\u2014'; // —
+    case 'emergency': return '\u26A0'; // ⚠
+    default: return '';
+  }
+};
+
 const getRoleIcon = (role: string) => {
   switch (role) {
     case 'doctor': return Stethoscope;
@@ -367,9 +377,12 @@ export function StaffManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStaffStatusColor(member.status)}>
-                          {getStaffStatusText(member.status)}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <span aria-hidden="true">{getStaffStatusIcon(member.status)}</span>
+                          <Badge variant={getStaffStatusColor(member.status)}>
+                            {getStaffStatusText(member.status)}
+                          </Badge>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">

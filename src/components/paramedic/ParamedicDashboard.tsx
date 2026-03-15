@@ -174,7 +174,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <div className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+        <button className="w-full text-left p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium text-sm">{hospital.name}</h4>
             <Badge variant={hospital.accepting ? "default" : "destructive"}>
@@ -191,7 +191,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
               <Badge key={i} variant="outline" className="text-xs">{specialty}</Badge>
             ))}
           </div>
-        </div>
+        </button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

@@ -180,6 +180,7 @@ export function BedManagement() {
         <Card>
           <CardContent className="pt-4">
             <div className="text-center">
+              <Bed className="mx-auto mb-2 text-muted-foreground" size={20} />
               <p className="text-sm text-muted-foreground">전체 병상</p>
               <p className="text-2xl font-bold">{bedStats.total}</p>
             </div>
@@ -188,6 +189,7 @@ export function BedManagement() {
         <Card>
           <CardContent className="pt-4">
             <div className="text-center">
+              <User className="mx-auto mb-2 text-red-600" size={20} />
               <p className="text-sm text-muted-foreground">사용중</p>
               <p className="text-2xl font-bold text-red-600">{bedStats.occupied}</p>
             </div>
@@ -196,6 +198,7 @@ export function BedManagement() {
         <Card>
           <CardContent className="pt-4">
             <div className="text-center">
+              <Plus className="mx-auto mb-2 text-green-600" size={20} />
               <p className="text-sm text-muted-foreground">사용가능</p>
               <p className="text-2xl font-bold text-green-600">{bedStats.available}</p>
             </div>
@@ -204,6 +207,7 @@ export function BedManagement() {
         <Card>
           <CardContent className="pt-4">
             <div className="text-center">
+              <Settings className="mx-auto mb-2 text-yellow-600" size={20} />
               <p className="text-sm text-muted-foreground">점검중</p>
               <p className="text-2xl font-bold text-yellow-600">{bedStats.maintenance}</p>
             </div>
@@ -212,6 +216,7 @@ export function BedManagement() {
         <Card>
           <CardContent className="pt-4">
             <div className="text-center">
+              <Clock className="mx-auto mb-2 text-blue-600" size={20} />
               <p className="text-sm text-muted-foreground">청소중</p>
               <p className="text-2xl font-bold text-blue-600">{bedStats.cleaning}</p>
             </div>
@@ -253,11 +258,11 @@ export function BedManagement() {
       {/* 병상 그리드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredBeds.map((bed) => (
-          <Card key={bed.id} className={`cursor-pointer transition-all hover:shadow-md ${
-            bed.status === 'occupied' ? 'border-red-200' :
-            bed.status === 'available' ? 'border-green-200' :
-            bed.status === 'maintenance' ? 'border-yellow-200' :
-            'border-blue-200'
+          <Card key={bed.id} className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${
+            bed.status === 'occupied' ? 'border-l-red-500' :
+            bed.status === 'available' ? 'border-l-green-500' :
+            bed.status === 'maintenance' ? 'border-l-yellow-500' :
+            'border-l-blue-500'
           }`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
