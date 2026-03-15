@@ -138,85 +138,112 @@ export function PatientRequest() {
   };
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-600 text-white rounded-lg">
+          <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20">
             <Ambulance size={24} />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">구급대원 환자 요청</h1>
-            <p className="text-muted-foreground">환자 정보를 선택하고 병원에 요청하세요</p>
+            <p className="text-sm text-muted-foreground">환자 정보를 선택하고 병원에 요청하세요</p>
           </div>
         </div>
-        <Badge variant="secondary" className="flex items-center gap-1">
+        <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm">
           <Timer size={14} />
           {estimatedTime} 도착 예정
         </Badge>
       </div>
 
-      {/* 위치 정보 */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin className="text-blue-600" size={16} />
-              <span className="text-sm font-medium">현재 위치</span>
+      {/* 위치/ETA 정보 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <MapPin className="text-blue-600 dark:text-blue-400" size={16} />
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">현재 위치</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLocationUpdate} className="h-8">
+                <Navigation size={14} className="mr-1" />
+                위치 업데이트
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleLocationUpdate}>
-              <Navigation size={14} className="mr-1" />
-              위치 업데이트
-            </Button>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">{currentLocation}</p>
-        </CardContent>
-      </Card>
+            <p className="mt-2.5 text-sm font-medium pl-9">{currentLocation}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-amber-100 dark:bg-amber-900 rounded-lg">
+                <Clock className="text-amber-600 dark:text-amber-400" size={16} />
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">예상 도착 시간</span>
+            </div>
+            <p className="mt-2.5 text-2xl font-bold pl-9 text-amber-700 dark:text-amber-400">{estimatedTime}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 왼쪽: 환자 선택 */}
         <div className="space-y-4">
           {/* 빠른 선택 */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Users size={18} />
                 빠른 환자 선택
               </CardTitle>
+              <p className="text-xs text-muted-foreground">최근 환자 중 선택하거나 새로 등록하세요</p>
             </CardHeader>
             <CardContent className="space-y-3">
               {quickPatients.map((patient) => (
-                <Card 
-                  key={patient.id} 
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    selectedPatient?.id === patient.id ? 'ring-2 ring-primary' : ''
+                <Card
+                  key={patient.id}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-[1.01] ${
+                    selectedPatient?.id === patient.id
+                      ? 'ring-2 ring-primary shadow-md bg-primary/5'
+                      : 'hover:bg-muted/30'
                   }`}
                   onClick={() => handleQuickSelect(patient)}
                 >
-                  <CardContent className="pt-4">
+                  <CardContent className="pt-4 pb-3">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <User size={16} />
+                        <div className={`p-1 rounded-full ${
+                          selectedPatient?.id === patient.id
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          <User size={14} />
+                        </div>
                         <span className="font-medium">{patient.name}</span>
                       </div>
                       <Badge variant={getSeverityColor(patient.severity)}>
                         {getSeverityText(patient.severity)}
                       </Badge>
                     </div>
-                    <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="text-sm text-muted-foreground space-y-1 pl-7">
                       <p>{patient.age}세 / {patient.gender}</p>
                       <p>증상: {patient.condition}</p>
-                      <p className="flex items-center gap-1">
-                        <Clock size={12} />
+                      <p className="flex items-center gap-1 text-xs">
+                        <Clock size={11} />
                         최근 사용: {patient.lastUsed}
                       </p>
                     </div>
                   </CardContent>
                 </Card>
               ))}
-              
-              <Button 
-                variant="outline" 
+
+              <Separator className="my-2" />
+
+              <Button
+                variant={isNewPatient ? "default" : "outline"}
                 className="w-full"
                 onClick={handleNewPatient}
               >
@@ -231,42 +258,43 @@ export function PatientRequest() {
         <div className="space-y-4">
           {selectedPatient && !isNewPatient && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
                   <User size={18} />
                   선택된 환자 정보
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>이름</Label>
-                    <p className="mt-1">{selectedPatient.name}</p>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-muted-foreground">이름</Label>
+                    <p className="font-medium">{selectedPatient.name}</p>
                   </div>
-                  <div>
-                    <Label>나이/성별</Label>
-                    <p className="mt-1">{selectedPatient.age}세 / {selectedPatient.gender}</p>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-muted-foreground">나이/성별</Label>
+                    <p className="font-medium">{selectedPatient.age}세 / {selectedPatient.gender}</p>
                   </div>
-                  <div>
-                    <Label>증상</Label>
-                    <p className="mt-1">{selectedPatient.condition}</p>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-muted-foreground">증상</Label>
+                    <p className="font-medium">{selectedPatient.condition}</p>
                   </div>
-                  <div>
-                    <Label>중증도</Label>
-                    <Badge variant={getSeverityColor(selectedPatient.severity)} className="mt-1">
-                      {getSeverityText(selectedPatient.severity)}
-                    </Badge>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-muted-foreground">중증도</Label>
+                    <div>
+                      <Badge variant={getSeverityColor(selectedPatient.severity)}>
+                        {getSeverityText(selectedPatient.severity)}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
-                <div>
-                  <Label htmlFor="additional-notes">추가 정보</Label>
-                  <Textarea 
+
+                <div className="space-y-2">
+                  <Label htmlFor="additional-notes" className="text-sm font-medium text-muted-foreground">추가 정보</Label>
+                  <Textarea
                     id="additional-notes"
                     placeholder="환자 상태, 현장 상황 등 추가 정보를 입력하세요..."
-                    className="mt-2"
                   />
                 </div>
               </CardContent>
@@ -275,35 +303,36 @@ export function PatientRequest() {
 
           {isNewPatient && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
                   <Plus size={18} />
                   새 환자 정보 입력
                 </CardTitle>
+                <p className="text-xs text-muted-foreground">필수 항목을 입력해주세요</p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">환자명</Label>
-                    <Input 
-                      id="name" 
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-sm font-medium text-muted-foreground">환자명 *</Label>
+                    <Input
+                      id="name"
                       placeholder="이름을 입력하세요"
                       value={newPatientForm.name}
                       onChange={(e) => setNewPatientForm({...newPatientForm, name: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="age">나이</Label>
-                    <Input 
-                      id="age" 
-                      type="number" 
+                  <div className="space-y-1.5">
+                    <Label htmlFor="age" className="text-sm font-medium text-muted-foreground">나이 *</Label>
+                    <Input
+                      id="age"
+                      type="number"
                       placeholder="나이"
                       value={newPatientForm.age}
                       onChange={(e) => setNewPatientForm({...newPatientForm, age: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <Label>성별</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-muted-foreground">성별</Label>
                     <Select value={newPatientForm.gender} onValueChange={(value) => setNewPatientForm({...newPatientForm, gender: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="성별 선택" />
@@ -314,8 +343,8 @@ export function PatientRequest() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>중증도</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-muted-foreground">중증도 *</Label>
                     <Select value={newPatientForm.severity} onValueChange={(value) => setNewPatientForm({...newPatientForm, severity: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="중증도 선택" />
@@ -329,19 +358,21 @@ export function PatientRequest() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="condition">주요 증상</Label>
-                  <Input 
-                    id="condition" 
+                <Separator />
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="condition" className="text-sm font-medium text-muted-foreground">주요 증상 *</Label>
+                  <Input
+                    id="condition"
                     placeholder="주요 증상을 입력하세요"
                     value={newPatientForm.condition}
                     onChange={(e) => setNewPatientForm({...newPatientForm, condition: e.target.value})}
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="symptoms">상세 증상</Label>
-                  <Textarea 
+                <div className="space-y-1.5">
+                  <Label htmlFor="symptoms" className="text-sm font-medium text-muted-foreground">상세 증상</Label>
+                  <Textarea
                     id="symptoms"
                     placeholder="환자의 상세한 증상과 현장 상황을 기록하세요..."
                     value={newPatientForm.symptoms}
@@ -349,54 +380,59 @@ export function PatientRequest() {
                   />
                 </div>
 
+                <Separator />
+
                 {/* 바이탈 사인 */}
-                <div>
-                  <Label className="text-base font-medium">바이탈 사인 (선택사항)</Label>
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <div>
-                      <Label htmlFor="consciousness" className="text-sm">의식 상태</Label>
-                      <Input 
-                        id="consciousness" 
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Thermometer size={16} className="text-muted-foreground" />
+                    <Label className="text-sm font-medium text-muted-foreground">바이탈 사인 (선택사항)</Label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="consciousness" className="text-xs font-medium text-muted-foreground">의식 상태</Label>
+                      <Input
+                        id="consciousness"
                         placeholder="명료/혼미/혼수 등"
                         value={newPatientForm.vitals.consciousness}
                         onChange={(e) => setNewPatientForm({
-                          ...newPatientForm, 
+                          ...newPatientForm,
                           vitals: {...newPatientForm.vitals, consciousness: e.target.value}
                         })}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="bloodPressure" className="text-sm">혈압</Label>
-                      <Input 
-                        id="bloodPressure" 
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bloodPressure" className="text-xs font-medium text-muted-foreground">혈압</Label>
+                      <Input
+                        id="bloodPressure"
                         placeholder="120/80"
                         value={newPatientForm.vitals.bloodPressure}
                         onChange={(e) => setNewPatientForm({
-                          ...newPatientForm, 
+                          ...newPatientForm,
                           vitals: {...newPatientForm.vitals, bloodPressure: e.target.value}
                         })}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="pulse" className="text-sm">맥박</Label>
-                      <Input 
-                        id="pulse" 
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pulse" className="text-xs font-medium text-muted-foreground">맥박</Label>
+                      <Input
+                        id="pulse"
                         placeholder="80 bpm"
                         value={newPatientForm.vitals.pulse}
                         onChange={(e) => setNewPatientForm({
-                          ...newPatientForm, 
+                          ...newPatientForm,
                           vitals: {...newPatientForm.vitals, pulse: e.target.value}
                         })}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="respiration" className="text-sm">호흡</Label>
-                      <Input 
-                        id="respiration" 
+                    <div className="space-y-1.5">
+                      <Label htmlFor="respiration" className="text-xs font-medium text-muted-foreground">호흡</Label>
+                      <Input
+                        id="respiration"
                         placeholder="20 /min"
                         value={newPatientForm.vitals.respiration}
                         onChange={(e) => setNewPatientForm({
-                          ...newPatientForm, 
+                          ...newPatientForm,
                           vitals: {...newPatientForm.vitals, respiration: e.target.value}
                         })}
                       />
@@ -409,47 +445,45 @@ export function PatientRequest() {
 
           {/* 요청 버튼 */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Send size={18} />
                 병원 요청
               </CardTitle>
+              <p className="text-xs text-muted-foreground">환자 상태에 따라 요청 유형을 선택하세요</p>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
-                size="lg"
+              <Button
+                className="w-full bg-red-600 hover:bg-red-700 text-white text-base font-semibold h-14 shadow-lg shadow-red-600/20"
                 onClick={() => handleRequest('emergency')}
               >
-                <AlertTriangle size={16} className="mr-2" />
+                <AlertTriangle size={20} className="mr-2" />
                 응급 요청 (위급)
               </Button>
-              
-              <Button 
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                size="lg"
+
+              <Button
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold h-12"
                 onClick={() => handleRequest('urgent')}
               >
-                <Heart size={16} className="mr-2" />
+                <Heart size={18} className="mr-2" />
                 응급 요청 (긴급)
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
-                className="w-full"
-                size="lg"
+                className="w-full border-2 border-primary text-primary hover:bg-primary/10 font-medium h-11"
                 onClick={() => handleRequest('normal')}
               >
                 <Activity size={16} className="mr-2" />
                 일반 이송 요청
               </Button>
 
-              <div className="pt-2">
-                <Button variant="ghost" className="w-full" size="sm">
-                  <Phone size={14} className="mr-2" />
-                  병원과 직접 통화
-                </Button>
-              </div>
+              <Separator className="my-1" />
+
+              <Button variant="ghost" className="w-full text-muted-foreground" size="sm">
+                <Phone size={14} className="mr-2" />
+                병원과 직접 통화
+              </Button>
             </CardContent>
           </Card>
         </div>
