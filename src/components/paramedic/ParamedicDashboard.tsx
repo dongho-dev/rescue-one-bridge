@@ -4,7 +4,7 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
-import { InfoCard, StatChip } from "../common/InfoCard";
+import { InfoCard } from "../common/InfoCard";
 import { MiniMapPlaceholder } from "../common/MiniMapPlaceholder";
 import { generateMockRequests, generateMockHospitals, MockHospital } from "../common/models";
 import {
@@ -188,7 +188,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
           </div>
           <div className="flex gap-1 mt-2">
             {hospital.specialties.slice(0, 3).map((specialty, i) => (
-              <StatChip key={i} label={specialty} value={0} size="sm" />
+              <Badge key={i} variant="outline" className="text-xs">{specialty}</Badge>
             ))}
           </div>
         </div>

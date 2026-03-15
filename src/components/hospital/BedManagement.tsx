@@ -170,7 +170,7 @@ export function BedManagement() {
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1>병상 관리</h1>
+          <h1 className="text-2xl font-bold tracking-tight">병상 관리</h1>
           <p className="text-muted-foreground">응급실 병상 현황을 실시간으로 관리합니다</p>
         </div>
       </div>

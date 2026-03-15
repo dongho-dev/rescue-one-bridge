@@ -150,7 +150,7 @@ export function PatientDetails() {
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1>환자 관리</h1>
+          <h1 className="text-2xl font-bold tracking-tight">환자 관리</h1>
           <p className="text-muted-foreground">응급실 내 환자 정보를 관리합니다</p>
         </div>
         <Button onClick={handleAddPatient} className="flex items-center gap-2">

@@ -211,7 +211,7 @@ export function EquipmentStatus() {
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1>장비 현황</h1>
+          <h1 className="text-2xl font-bold tracking-tight">장비 현황</h1>
           <p className="text-muted-foreground">응급실 의료 장비 상태를 실시간으로 모니터링합니다</p>
         </div>
         <Button onClick={handleAddEquipment} className="flex items-center gap-2">
