@@ -7,13 +7,10 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { InfoCard, StatChip } from "../common/InfoCard";
 import { MiniMapPlaceholder } from "../common/MiniMapPlaceholder";
 import { generateMockRequests, generateMockHospitals, MockHospital } from "../common/models";
-import { 
-  Ambulance, 
-  Phone, 
-  Share2, 
-  Heart, 
-  Brain, 
-  Activity,
+import {
+  Ambulance,
+  Phone,
+  Share2,
   Clock,
   MapPin,
   AlertTriangle,
@@ -27,9 +24,8 @@ const recentEvents = [
   { time: '23분 전', message: '응급호출 3건 신규 접수', type: 'warning' },
 ];
 
-export function ResponderDashboard() {
+export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState('all');
   const [hospitals] = useState(generateMockHospitals());
   const [requests] = useState(generateMockRequests());
 
@@ -53,20 +49,6 @@ export function ResponderDashboard() {
   };
 
   const statusCounts = getStatusCounts();
-
-  const getSeverityColor = (severity: number) => {
-    if (severity >= 4) return 'destructive';
-    if (severity >= 3) return 'warning';
-    return 'success';
-  };
-
-  const getSpecialtyIcon = (specialty: string) => {
-    switch (specialty) {
-      case '심장내과': return <Heart size={16} />;
-      case '신경외과': return <Brain size={16} />;
-      default: return <Activity size={16} />;
-    }
-  };
 
   return (
     <div className="space-y-6">
