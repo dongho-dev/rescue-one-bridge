@@ -50,15 +50,15 @@ function ThemeToggle() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme("light")}>
           <Sun size={16} className="mr-2" />
-          Light
+          밝게
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           <Moon size={16} className="mr-2" />
-          Dark
+          어둡게
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")}>
           <Monitor size={16} className="mr-2" />
-          System
+          시스템
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -146,7 +146,7 @@ export function PatientRequest() {
             <Ambulance size={24} />
           </div>
           <div>
-            <h1>구급대원 환자 요청</h1>
+            <h1 className="text-2xl font-bold tracking-tight">구급대원 환자 요청</h1>
             <p className="text-muted-foreground">환자 정보를 선택하고 병원에 요청하세요</p>
           </div>
         </div>

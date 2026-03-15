@@ -208,7 +208,7 @@ export function StaffManagement() {
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1>직원 관리</h1>
+          <h1 className="text-2xl font-bold tracking-tight">직원 관리</h1>
           <p className="text-muted-foreground">응급실 직원 현황 및 근무 관리</p>
         </div>
         <Button onClick={handleAddStaff} className="flex items-center gap-2">
