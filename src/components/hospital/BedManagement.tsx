@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -134,6 +134,7 @@ export function BedManagement() {
   const [selectedSection, setSelectedSection] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedBed, setSelectedBed] = useState<BedInfo | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const sections = ['A', 'B', 'C'];
   
@@ -312,58 +313,10 @@ export function BedManagement() {
               )}
 
               <div className="flex gap-1 pt-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={() => setSelectedBed(bed)}>
-                      <Settings size={14} />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>병상 {bed.id} 관리</DialogTitle>
-                    </DialogHeader>
-                    {selectedBed && (
-                      <div className="space-y-4">
-                        <div>
-                          <Label>상태 변경</Label>
-                          <Select defaultValue={selectedBed.status} onValueChange={(value) => handleBedStatusChange(selectedBed.id, value)}>
-                            <SelectTrigger className="mt-2">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="available">사용가능</SelectItem>
-                              <SelectItem value="occupied">사용중</SelectItem>
-                              <SelectItem value="cleaning">청소중</SelectItem>
-                              <SelectItem value="maintenance">점검중</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedBed(bed); setDialogOpen(true); }}>
+                  <Settings size={14} />
+                </Button>
 
-                        <div>
-                          <Label htmlFor="notes">메모</Label>
-                          <Textarea 
-                            id="notes" 
-                            placeholder="병상 관련 특이사항을 입력하세요..."
-                            defaultValue={selectedBed.notes}
-                            className="mt-2"
-                          />
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button variant="outline" onClick={() => handleMaintenanceRequest(selectedBed.id)}>
-                            유지보수 요청
-                          </Button>
-                          {selectedBed.status === 'available' && (
-                            <Button onClick={() => handleAssignPatient(selectedBed.id)}>
-                              환자 배정
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </DialogContent>
-                </Dialog>
-                
                 {bed.status === 'available' && (
                   <Button size="sm" onClick={() => handleAssignPatient(bed.id)}>
                     <Plus size={14} />
@@ -374,6 +327,55 @@ export function BedManagement() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          {selectedBed && (
+            <>
+              <DialogHeader>
+                <DialogTitle>병상 {selectedBed.id} 관리</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>상태 변경</Label>
+                  <Select defaultValue={selectedBed.status} onValueChange={(value) => handleBedStatusChange(selectedBed.id, value)}>
+                    <SelectTrigger className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">사용가능</SelectItem>
+                      <SelectItem value="occupied">사용중</SelectItem>
+                      <SelectItem value="cleaning">청소중</SelectItem>
+                      <SelectItem value="maintenance">점검중</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">메모</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="병상 관련 특이사항을 입력하세요..."
+                    defaultValue={selectedBed.notes}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleMaintenanceRequest(selectedBed.id)}>
+                    유지보수 요청
+                  </Button>
+                  {selectedBed.status === 'available' && (
+                    <Button onClick={() => handleAssignPatient(selectedBed.id)}>
+                      환자 배정
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

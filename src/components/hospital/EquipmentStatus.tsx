@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Progress } from "../ui/progress";
@@ -169,6 +169,7 @@ export function EquipmentStatus() {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const filteredEquipment = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -390,92 +391,16 @@ export function EquipmentStatus() {
                 )}
 
                 <div className="flex gap-1 pt-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedEquipment(item)}>
-                        <Settings size={14} />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>장비 관리 - {item.name}</DialogTitle>
-                      </DialogHeader>
-                      {selectedEquipment && (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label>장비 ID</Label>
-                              <p>{selectedEquipment.id}</p>
-                            </div>
-                            <div>
-                              <Label>장비명</Label>
-                              <p>{selectedEquipment.name}</p>
-                            </div>
-                            <div>
-                              <Label>제조사</Label>
-                              <p>{selectedEquipment.manufacturer}</p>
-                            </div>
-                            <div>
-                              <Label>모델</Label>
-                              <p>{selectedEquipment.model}</p>
-                            </div>
-                            <div>
-                              <Label>위치</Label>
-                              <p>{selectedEquipment.location}</p>
-                            </div>
-                            <div>
-                              <Label>사용 시간</Label>
-                              <p>{selectedEquipment.usageHours}시간</p>
-                            </div>
-                          </div>
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedEquipment(item); setDialogOpen(true); }}>
+                    <Settings size={14} />
+                  </Button>
 
-                          <div>
-                            <Label>상태 변경</Label>
-                            <Select defaultValue={selectedEquipment.status} onValueChange={(value) => handleStatusChange(selectedEquipment.id, value)}>
-                              <SelectTrigger className="mt-2">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="operational">정상</SelectItem>
-                                <SelectItem value="maintenance">점검중</SelectItem>
-                                <SelectItem value="error">오류</SelectItem>
-                                <SelectItem value="offline">오프라인</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="notes">메모</Label>
-                            <Textarea 
-                              id="notes" 
-                              placeholder="장비 관련 특이사항을 입력하세요..."
-                              defaultValue={selectedEquipment.notes}
-                              className="mt-2"
-                            />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => handleMaintenanceRequest(selectedEquipment.id)}>
-                              유지보수 요청
-                            </Button>
-                            <Button variant="destructive" onClick={() => handleEmergencyAlert(selectedEquipment.id)}>
-                              긴급 알림
-                            </Button>
-                            <Button onClick={() => toast.success("장비 정보가 저장되었습니다.")}>
-                              저장
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </DialogContent>
-                  </Dialog>
-                  
                   {item.status === 'error' && (
                     <Button size="sm" variant="destructive" onClick={() => handleEmergencyAlert(item.id)}>
                       <AlertTriangle size={14} />
                     </Button>
                   )}
-                  
+
                   <Button size="sm" variant="outline" onClick={() => handleMaintenanceRequest(item.id)}>
                     <Calendar size={14} />
                   </Button>
@@ -485,6 +410,83 @@ export function EquipmentStatus() {
           );
         })}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          {selectedEquipment && (
+            <>
+              <DialogHeader>
+                <DialogTitle>장비 관리 - {selectedEquipment.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>장비 ID</Label>
+                    <p>{selectedEquipment.id}</p>
+                  </div>
+                  <div>
+                    <Label>장비명</Label>
+                    <p>{selectedEquipment.name}</p>
+                  </div>
+                  <div>
+                    <Label>제조사</Label>
+                    <p>{selectedEquipment.manufacturer}</p>
+                  </div>
+                  <div>
+                    <Label>모델</Label>
+                    <p>{selectedEquipment.model}</p>
+                  </div>
+                  <div>
+                    <Label>위치</Label>
+                    <p>{selectedEquipment.location}</p>
+                  </div>
+                  <div>
+                    <Label>사용 시간</Label>
+                    <p>{selectedEquipment.usageHours}시간</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>상태 변경</Label>
+                  <Select defaultValue={selectedEquipment.status} onValueChange={(value) => handleStatusChange(selectedEquipment.id, value)}>
+                    <SelectTrigger className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="operational">정상</SelectItem>
+                      <SelectItem value="maintenance">점검중</SelectItem>
+                      <SelectItem value="error">오류</SelectItem>
+                      <SelectItem value="offline">오프라인</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">메모</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="장비 관련 특이사항을 입력하세요..."
+                    defaultValue={selectedEquipment.notes}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleMaintenanceRequest(selectedEquipment.id)}>
+                    유지보수 요청
+                  </Button>
+                  <Button variant="destructive" onClick={() => handleEmergencyAlert(selectedEquipment.id)}>
+                    긴급 알림
+                  </Button>
+                  <Button onClick={() => toast.success("장비 정보가 저장되었습니다.")}>
+                    저장
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

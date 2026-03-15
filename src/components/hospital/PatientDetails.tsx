@@ -5,7 +5,7 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
@@ -118,6 +118,7 @@ export function PatientDetails() {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
@@ -246,110 +247,9 @@ export function PatientDetails() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => handleViewDetails(patient)}>
-                              <Eye size={14} />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>환자 상세 정보 - {patient.name}</DialogTitle>
-                            </DialogHeader>
-                            {selectedPatient && (
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label>환자 ID</Label>
-                                    <p>{selectedPatient.id}</p>
-                                  </div>
-                                  <div>
-                                    <Label>이름</Label>
-                                    <p>{selectedPatient.name}</p>
-                                  </div>
-                                  <div>
-                                    <Label>나이</Label>
-                                    <p>{selectedPatient.age}세</p>
-                                  </div>
-                                  <div>
-                                    <Label>성별</Label>
-                                    <p>{selectedPatient.gender}</p>
-                                  </div>
-                                  <div>
-                                    <Label>진단</Label>
-                                    <p>{selectedPatient.diagnosis}</p>
-                                  </div>
-                                  <div>
-                                    <Label>배정 병상</Label>
-                                    <p>{selectedPatient.bed}</p>
-                                  </div>
-                                </div>
-
-                                {/* 바이탈 사인 */}
-                                <div>
-                                  <h4 className="mb-3">바이탈 사인</h4>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <Card>
-                                      <CardContent className="pt-4">
-                                        <div className="flex items-center gap-2">
-                                          <Heart className="text-red-500" size={16} />
-                                          <span className="text-sm">심박수</span>
-                                        </div>
-                                        <p className="mt-1">{selectedPatient.vitals.heartRate} bpm</p>
-                                      </CardContent>
-                                    </Card>
-                                    <Card>
-                                      <CardContent className="pt-4">
-                                        <div className="flex items-center gap-2">
-                                          <Activity className="text-blue-500" size={16} />
-                                          <span className="text-sm">혈압</span>
-                                        </div>
-                                        <p className="mt-1">{selectedPatient.vitals.bloodPressure} mmHg</p>
-                                      </CardContent>
-                                    </Card>
-                                    <Card>
-                                      <CardContent className="pt-4">
-                                        <div className="flex items-center gap-2">
-                                          <Thermometer className="text-orange-500" size={16} />
-                                          <span className="text-sm">체온</span>
-                                        </div>
-                                        <p className="mt-1">{selectedPatient.vitals.temperature}°C</p>
-                                      </CardContent>
-                                    </Card>
-                                    <Card>
-                                      <CardContent className="pt-4">
-                                        <div className="flex items-center gap-2">
-                                          <Droplets className="text-green-500" size={16} />
-                                          <span className="text-sm">산소포화도</span>
-                                        </div>
-                                        <p className="mt-1">{selectedPatient.vitals.oxygenSaturation}%</p>
-                                      </CardContent>
-                                    </Card>
-                                  </div>
-                                </div>
-
-                                {/* 메모 */}
-                                <div>
-                                  <Label htmlFor="notes">진료 메모</Label>
-                                  <Textarea 
-                                    id="notes" 
-                                    placeholder="환자 상태, 치료 계획 등을 기록하세요..." 
-                                    className="mt-2"
-                                  />
-                                </div>
-
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" onClick={() => toast.success("환자 정보가 저장되었습니다.")}>
-                                    저장
-                                  </Button>
-                                  <Button onClick={() => handleUpdateStatus(selectedPatient.id, "updated")}>
-                                    상태 업데이트
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
+                        <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(patient); setDialogOpen(true); }}>
+                          <Eye size={14} />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => toast.success("환자 정보 수정 폼이 열렸습니다.")}>
                           <Edit size={14} />
                         </Button>
@@ -362,6 +262,108 @@ export function PatientDetails() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          {selectedPatient && (
+            <>
+              <DialogHeader>
+                <DialogTitle>환자 상세 정보 - {selectedPatient.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>환자 ID</Label>
+                    <p>{selectedPatient.id}</p>
+                  </div>
+                  <div>
+                    <Label>이름</Label>
+                    <p>{selectedPatient.name}</p>
+                  </div>
+                  <div>
+                    <Label>나이</Label>
+                    <p>{selectedPatient.age}세</p>
+                  </div>
+                  <div>
+                    <Label>성별</Label>
+                    <p>{selectedPatient.gender}</p>
+                  </div>
+                  <div>
+                    <Label>진단</Label>
+                    <p>{selectedPatient.diagnosis}</p>
+                  </div>
+                  <div>
+                    <Label>배정 병상</Label>
+                    <p>{selectedPatient.bed}</p>
+                  </div>
+                </div>
+
+                {/* 바이탈 사인 */}
+                <div>
+                  <h4 className="mb-3">바이탈 사인</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Heart className="text-red-500" size={16} />
+                          <span className="text-sm">심박수</span>
+                        </div>
+                        <p className="mt-1">{selectedPatient.vitals.heartRate} bpm</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Activity className="text-blue-500" size={16} />
+                          <span className="text-sm">혈압</span>
+                        </div>
+                        <p className="mt-1">{selectedPatient.vitals.bloodPressure} mmHg</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Thermometer className="text-orange-500" size={16} />
+                          <span className="text-sm">체온</span>
+                        </div>
+                        <p className="mt-1">{selectedPatient.vitals.temperature}°C</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Droplets className="text-green-500" size={16} />
+                          <span className="text-sm">산소포화도</span>
+                        </div>
+                        <p className="mt-1">{selectedPatient.vitals.oxygenSaturation}%</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* 메모 */}
+                <div>
+                  <Label htmlFor="notes">진료 메모</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="환자 상태, 치료 계획 등을 기록하세요..."
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => toast.success("환자 정보가 저장되었습니다.")}>
+                    저장
+                  </Button>
+                  <Button onClick={() => handleUpdateStatus(selectedPatient.id, "updated")}>
+                    상태 업데이트
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

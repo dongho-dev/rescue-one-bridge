@@ -5,7 +5,7 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { toast } from "sonner";
@@ -164,6 +164,7 @@ export function StaffManagement() {
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -383,93 +384,9 @@ export function StaffManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" onClick={() => handleViewDetails(member)}>
-                                <Eye size={14} />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>직원 상세 정보 - {member.name}</DialogTitle>
-                              </DialogHeader>
-                              {selectedStaff && (
-                                <div className="space-y-6">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <Label>직원 ID</Label>
-                                      <p>{selectedStaff.id}</p>
-                                    </div>
-                                    <div>
-                                      <Label>이름</Label>
-                                      <p>{selectedStaff.name}</p>
-                                    </div>
-                                    <div>
-                                      <Label>직종</Label>
-                                      <p>{getRoleText(selectedStaff.role)}</p>
-                                    </div>
-                                    <div>
-                                      <Label>부서</Label>
-                                      <p>{selectedStaff.department}</p>
-                                    </div>
-                                    <div>
-                                      <Label>경력</Label>
-                                      <p>{selectedStaff.yearsOfExperience}년</p>
-                                    </div>
-                                    <div>
-                                      <Label>전문분야</Label>
-                                      <p>{selectedStaff.specialization || '-'}</p>
-                                    </div>
-                                  </div>
-
-                                  <div>
-                                    <Label>자격증</Label>
-                                    <div className="flex gap-2 mt-2">
-                                      {selectedStaff.certifications.map((cert, index) => (
-                                        <Badge key={index} variant="outline">{cert}</Badge>
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <Label>연락처</Label>
-                                      <p>{selectedStaff.phone}</p>
-                                    </div>
-                                    <div>
-                                      <Label>이메일</Label>
-                                      <p>{selectedStaff.email}</p>
-                                    </div>
-                                    <div>
-                                      <Label>비상연락처</Label>
-                                      <p>{selectedStaff.emergencyContact}</p>
-                                    </div>
-                                    <div>
-                                      <Label>현재 위치</Label>
-                                      <p>{selectedStaff.currentLocation}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex gap-2">
-                                    <Select defaultValue={selectedStaff.status} onValueChange={(value) => handleStatusChange(selectedStaff.id, value)}>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="on-duty">근무중</SelectItem>
-                                        <SelectItem value="off-duty">비번</SelectItem>
-                                        <SelectItem value="break">휴식중</SelectItem>
-                                        <SelectItem value="emergency">응급호출</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <Button variant="destructive" onClick={() => handleEmergencyCall(selectedStaff.id)}>
-                                      응급호출
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
+                          <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }}>
+                            <Eye size={14} />
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
                             <Edit size={14} />
                           </Button>
@@ -486,6 +403,91 @@ export function StaffManagement() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          {selectedStaff && (
+            <>
+              <DialogHeader>
+                <DialogTitle>직원 상세 정보 - {selectedStaff.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>직원 ID</Label>
+                    <p>{selectedStaff.id}</p>
+                  </div>
+                  <div>
+                    <Label>이름</Label>
+                    <p>{selectedStaff.name}</p>
+                  </div>
+                  <div>
+                    <Label>직종</Label>
+                    <p>{getRoleText(selectedStaff.role)}</p>
+                  </div>
+                  <div>
+                    <Label>부서</Label>
+                    <p>{selectedStaff.department}</p>
+                  </div>
+                  <div>
+                    <Label>경력</Label>
+                    <p>{selectedStaff.yearsOfExperience}년</p>
+                  </div>
+                  <div>
+                    <Label>전문분야</Label>
+                    <p>{selectedStaff.specialization || '-'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>자격증</Label>
+                  <div className="flex gap-2 mt-2">
+                    {selectedStaff.certifications.map((cert, index) => (
+                      <Badge key={index} variant="outline">{cert}</Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>연락처</Label>
+                    <p>{selectedStaff.phone}</p>
+                  </div>
+                  <div>
+                    <Label>이메일</Label>
+                    <p>{selectedStaff.email}</p>
+                  </div>
+                  <div>
+                    <Label>비상연락처</Label>
+                    <p>{selectedStaff.emergencyContact}</p>
+                  </div>
+                  <div>
+                    <Label>현재 위치</Label>
+                    <p>{selectedStaff.currentLocation}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Select defaultValue={selectedStaff.status} onValueChange={(value) => handleStatusChange(selectedStaff.id, value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="on-duty">근무중</SelectItem>
+                      <SelectItem value="off-duty">비번</SelectItem>
+                      <SelectItem value="break">휴식중</SelectItem>
+                      <SelectItem value="emergency">응급호출</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="destructive" onClick={() => handleEmergencyCall(selectedStaff.id)}>
+                    응급호출
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
