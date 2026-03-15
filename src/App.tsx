@@ -1,18 +1,12 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
-import { HospitalDashboard } from "./components/hospital/HospitalDashboard";
-import { PatientDetails } from "./components/hospital/PatientDetails";
-import { BedManagement } from "./components/hospital/BedManagement";
-import { StaffManagement } from "./components/hospital/StaffManagement";
-import { EquipmentStatus } from "./components/hospital/EquipmentStatus";
-import { PatientRequest } from "./components/responder/PatientRequest";
 import { ThemeProvider, useTheme } from "./components/theme/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
-import { 
-  Building2, 
-  Sun, 
-  Moon, 
+import {
+  Building2,
+  Sun,
+  Moon,
   Monitor,
   Home,
   Users,
@@ -22,6 +16,13 @@ import {
   Ambulance
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
+
+const HospitalDashboard = lazy(() => import('./components/hospital/HospitalDashboard').then(m => ({ default: m.HospitalDashboard })));
+const PatientDetails = lazy(() => import('./components/hospital/PatientDetails').then(m => ({ default: m.PatientDetails })));
+const BedManagement = lazy(() => import('./components/hospital/BedManagement').then(m => ({ default: m.BedManagement })));
+const StaffManagement = lazy(() => import('./components/hospital/StaffManagement').then(m => ({ default: m.StaffManagement })));
+const EquipmentStatus = lazy(() => import('./components/hospital/EquipmentStatus').then(m => ({ default: m.EquipmentStatus })));
+const PatientRequest = lazy(() => import('./components/paramedic/PatientRequest').then(m => ({ default: m.PatientRequest })));
 
 type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request';
 
@@ -138,12 +139,14 @@ function AppContent() {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        {currentPage === 'dashboard' && <HospitalDashboard />}
-        {currentPage === 'patients' && <PatientDetails />}
-        {currentPage === 'beds' && <BedManagement />}
-        {currentPage === 'staff' && <StaffManagement />}
-        {currentPage === 'equipment' && <EquipmentStatus />}
-        {currentPage === 'request' && <PatientRequest />}
+        <Suspense fallback={<div className="flex items-center justify-center h-64"><p>로딩 중...</p></div>}>
+          {currentPage === 'dashboard' && <HospitalDashboard />}
+          {currentPage === 'patients' && <PatientDetails />}
+          {currentPage === 'beds' && <BedManagement />}
+          {currentPage === 'staff' && <StaffManagement />}
+          {currentPage === 'equipment' && <EquipmentStatus />}
+          {currentPage === 'request' && <PatientRequest />}
+        </Suspense>
       </div>
     </div>
   );
