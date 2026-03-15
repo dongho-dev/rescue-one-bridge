@@ -8,10 +8,11 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
-import { 
-  Bed, 
-  Plus, 
-  Settings, 
+import { getBedStatusColor, getBedStatusText } from "../../utils/statusHelpers";
+import {
+  Bed,
+  Plus,
+  Settings,
   MapPin,
   User,
   Calendar,
@@ -127,25 +128,6 @@ const mockBeds: BedInfo[] = [
   }
 ];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'occupied': return 'destructive';
-    case 'available': return 'default';
-    case 'maintenance': return 'secondary';
-    case 'cleaning': return 'outline';
-    default: return 'outline';
-  }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'occupied': return '사용중';
-    case 'available': return '사용가능';
-    case 'maintenance': return '점검중';
-    case 'cleaning': return '청소중';
-    default: return status;
-  }
-};
 
 export function BedManagement() {
   const [beds] = useState<BedInfo[]>(mockBeds);
@@ -170,7 +152,7 @@ export function BedManagement() {
   };
 
   const handleBedStatusChange = (bedId: string, newStatus: string) => {
-    toast.success(`병상 ${bedId}의 상태가 ${getStatusText(newStatus)}로 변경되었습니다.`);
+    toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleAssignPatient = (bedId: string) => {
@@ -281,8 +263,8 @@ export function BedManagement() {
                   <Bed size={18} />
                   {bed.id}
                 </CardTitle>
-                <Badge variant={getStatusColor(bed.status) as any}>
-                  {getStatusText(bed.status)}
+                <Badge variant={getBedStatusColor(bed.status)}>
+                  {getBedStatusText(bed.status)}
                 </Badge>
               </div>
             </CardHeader>

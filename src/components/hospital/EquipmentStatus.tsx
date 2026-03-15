@@ -9,10 +9,11 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Progress } from "../ui/progress";
 import { toast } from "sonner";
-import { 
-  Search, 
-  Plus, 
-  Settings, 
+import { getEquipmentStatusColor, getEquipmentStatusText, getEquipmentTypeText } from "../../utils/statusHelpers";
+import {
+  Search,
+  Plus,
+  Settings,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -150,26 +151,6 @@ const mockEquipment: Equipment[] = [
   }
 ];
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'operational': return 'default';
-    case 'maintenance': return 'secondary';
-    case 'error': return 'destructive';
-    case 'offline': return 'outline';
-    default: return 'outline';
-  }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'operational': return '정상';
-    case 'maintenance': return '점검중';
-    case 'error': return '오류';
-    case 'offline': return '오프라인';
-    default: return status;
-  }
-};
-
 const getTypeIcon = (type: string) => {
   switch (type) {
     case 'monitor': return Monitor;
@@ -179,18 +160,6 @@ const getTypeIcon = (type: string) => {
     case 'ultrasound': return Activity;
     case 'infusion': return Droplets;
     default: return Stethoscope;
-  }
-};
-
-const getTypeText = (type: string) => {
-  switch (type) {
-    case 'monitor': return '환자 모니터';
-    case 'ventilator': return '인공호흡기';
-    case 'defibrillator': return '제세동기';
-    case 'xray': return 'X-ray';
-    case 'ultrasound': return '초음파';
-    case 'infusion': return '수액 주입기';
-    default: return '기타';
   }
 };
 
@@ -228,7 +197,7 @@ export function EquipmentStatus() {
   };
 
   const handleStatusChange = (equipmentId: string, newStatus: string) => {
-    toast.success(`장비 ${equipmentId}의 상태가 ${getStatusText(newStatus)}로 변경되었습니다.`);
+    toast.success(`장비 ${equipmentId}의 상태가 ${getEquipmentStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleEmergencyAlert = (equipmentId: string) => {
@@ -359,15 +328,15 @@ export function EquipmentStatus() {
                     <TypeIcon size={18} />
                     {item.name}
                   </CardTitle>
-                  <Badge variant={getStatusColor(item.status) as any}>
-                    {getStatusText(item.status)}
+                  <Badge variant={getEquipmentStatusColor(item.status)}>
+                    {getEquipmentStatusText(item.status)}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{item.id}</p>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium">{getTypeText(item.type)}</p>
+                  <p className="text-sm font-medium">{getEquipmentTypeText(item.type)}</p>
                   <p className="text-sm text-muted-foreground">{item.manufacturer} {item.model}</p>
                 </div>
 

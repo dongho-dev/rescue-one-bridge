@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
-import { 
-  Search, 
-  Plus, 
-  Eye, 
+import { getSeverityColor, getSeverityText, getPatientStatusColor, getPatientStatusText } from "../../utils/statusHelpers";
+import {
+  Search,
+  Plus,
+  Eye,
   Edit,
   UserPlus,
   Clock,
@@ -112,24 +113,6 @@ const mockPatients: Patient[] = [
   }
 ];
 
-const getSeverityColor = (severity: string) => {
-  switch (severity) {
-    case 'critical': return 'destructive';
-    case 'urgent': return 'secondary';
-    case 'stable': return 'outline';
-    default: return 'outline';
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'treating': return 'default';
-    case 'waiting': return 'secondary';
-    case 'stable': return 'outline';
-    case 'discharged': return 'outline';
-    default: return 'outline';
-  }
-};
 
 export function PatientDetails() {
   const [patients] = useState<Patient[]>(mockPatients);
@@ -246,9 +229,8 @@ export function PatientDetails() {
                     <TableCell>{patient.age}세 / {patient.gender}</TableCell>
                     <TableCell>{patient.diagnosis}</TableCell>
                     <TableCell>
-                      <Badge variant={getSeverityColor(patient.severity) as any}>
-                        {patient.severity === 'critical' ? '위급' : 
-                         patient.severity === 'urgent' ? '응급' : '안정'}
+                      <Badge variant={getSeverityColor(patient.severity)}>
+                        {getSeverityText(patient.severity)}
                       </Badge>
                     </TableCell>
                     <TableCell className="flex items-center gap-1">
@@ -257,10 +239,8 @@ export function PatientDetails() {
                     </TableCell>
                     <TableCell>{patient.bed}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusColor(patient.status) as any}>
-                        {patient.status === 'waiting' ? '대기중' :
-                         patient.status === 'treating' ? '치료중' :
-                         patient.status === 'stable' ? '안정' : '퇴원'}
+                      <Badge variant={getPatientStatusColor(patient.status)}>
+                        {getPatientStatusText(patient.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
