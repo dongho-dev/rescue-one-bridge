@@ -314,6 +314,12 @@ export function EquipmentStatus() {
       </Card>
 
       {/* 장비 그리드 */}
+      {filteredEquipment.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <p className="text-lg font-medium">검색 결과가 없습니다</p>
+          <p className="text-sm mt-1">필터 조건을 변경해 보세요</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredEquipment.map((item) => {
           const TypeIcon = getTypeIcon(item.type);
@@ -410,6 +416,7 @@ export function EquipmentStatus() {
           );
         })}
       </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">
