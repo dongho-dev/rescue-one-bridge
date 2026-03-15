@@ -5,7 +5,7 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Label } from "../ui/label";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -385,7 +385,7 @@ export function StaffManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }}>
+                          <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }} aria-label="상세보기">
                             <Eye size={14} />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
@@ -429,6 +429,7 @@ export function StaffManagement() {
             <>
               <DialogHeader>
                 <DialogTitle>직원 상세 정보 - {selectedStaff.name}</DialogTitle>
+                <DialogDescription>직원 상세 정보입니다.</DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">

@@ -5,7 +5,7 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
@@ -247,7 +247,7 @@ export function PatientDetails() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(patient); setDialogOpen(true); }}>
+                        <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(patient); setDialogOpen(true); }} aria-label="상세보기">
                           <Eye size={14} />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => toast.success("환자 정보 수정 폼이 열렸습니다.")}>
@@ -269,6 +269,7 @@ export function PatientDetails() {
             <>
               <DialogHeader>
                 <DialogTitle>환자 상세 정보 - {selectedPatient.name}</DialogTitle>
+                <DialogDescription>환자 상세 정보입니다.</DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">

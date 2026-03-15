@@ -105,9 +105,10 @@ export function HospitalDashboard() {
             <span className={`text-sm ${accepting ? 'text-green-600' : 'text-red-600'}`}>
               {accepting ? '환자수용중' : '수용중단'}
             </span>
-            <Switch 
-              checked={accepting} 
+            <Switch
+              checked={accepting}
               onCheckedChange={handleAcceptingToggle}
+              aria-label="환자 수용 상태 전환"
             />
           </div>
         </div>
@@ -208,16 +209,18 @@ export function HospitalDashboard() {
                       <TableCell>
                         <div className="flex gap-2">
                           <RequestDetailDialog request={request} />
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             onClick={() => handleRequestAction(request.id, 'accept')}
+                            aria-label="수락"
                           >
                             <Check size={14} />
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleRequestAction(request.id, 'hold')}
+                            aria-label="보류"
                           >
                             <Pause size={14} />
                           </Button>
@@ -238,7 +241,7 @@ export function HospitalDashboard() {
             <CardHeader>
               <CardTitle>실시간 알림</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2" aria-live="polite">
               {recentAlerts.map((alert, index) => (
                 <div key={index} className="p-2 rounded bg-muted/50">
                   <p className="text-sm">{alert.message}</p>
@@ -303,7 +306,7 @@ function RequestDetailDialog({ request }: { request: MockRequest }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="outline" aria-label="상세보기">
           <Eye size={14} />
         </Button>
       </DialogTrigger>
