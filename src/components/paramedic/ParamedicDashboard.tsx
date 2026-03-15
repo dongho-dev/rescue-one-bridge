@@ -155,7 +155,7 @@ export function ParamedicDashboard() {
             실시간 알림
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent aria-live="polite">
           <div className="space-y-2">
             {recentEvents.map((event, index) => (
               <div key={index} className="flex items-center justify-between p-2 rounded bg-muted/50">

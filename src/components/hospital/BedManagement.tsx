@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -334,6 +334,7 @@ export function BedManagement() {
             <>
               <DialogHeader>
                 <DialogTitle>병상 {selectedBed.id} 관리</DialogTitle>
+                <DialogDescription>병상 상태를 관리합니다.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>

@@ -41,7 +41,7 @@ function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" aria-label="테마 변경">
           {theme === 'light' && <Sun size={16} />}
           {theme === 'dark' && <Moon size={16} />}
           {theme === 'system' && <Monitor size={16} />}
@@ -94,7 +94,7 @@ function AppContent() {
               </div>
               
               {/* Navigation */}
-              <nav className="hidden md:flex items-center gap-2 ml-8">
+              <nav aria-label="메인 메뉴" className="hidden md:flex items-center gap-2 ml-8">
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -117,7 +117,7 @@ function AppContent() {
           
           {/* Mobile Navigation */}
           <div className="md:hidden mt-3">
-            <div className="flex gap-1 overflow-x-auto">
+            <nav aria-label="모바일 메뉴" className="flex gap-1 overflow-x-auto">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -133,7 +133,7 @@ function AppContent() {
                   </Button>
                 );
               })}
-            </div>
+            </nav>
           </div>
         </div>
       </div>
