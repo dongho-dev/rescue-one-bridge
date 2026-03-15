@@ -5,21 +5,31 @@ import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
+import { Separator } from "../ui/separator";
+import { Progress } from "../ui/progress";
 import { toast } from "sonner";
-import { getBedStatusColor, getBedStatusText } from "../../utils/statusHelpers";
+import { getBedStatusText } from "../../utils/statusHelpers";
 import { mockBeds, type BedInfo } from "@/mocks/bedData";
 import {
   Bed,
   Plus,
   Settings,
-  MapPin,
   User,
   Calendar,
   Clock
 } from 'lucide-react';
 
+
+const getBedStatusBadgeClass = (status: string): string => {
+  switch (status) {
+    case 'occupied': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50';
+    case 'available': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    case 'maintenance': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+    case 'cleaning': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+  }
+};
 
 export function BedManagement() {
   const [beds, setBeds] = useState<BedInfo[]>(mockBeds);
@@ -29,7 +39,7 @@ export function BedManagement() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const sections = ['A', 'B', 'C'];
-  
+
   const filteredBeds = beds.filter(bed => {
     const matchesSection = selectedSection === 'all' || bed.section === selectedSection;
     const matchesStatus = selectedStatus === 'all' || bed.status === selectedStatus;
@@ -43,6 +53,8 @@ export function BedManagement() {
     maintenance: beds.filter(b => b.status === 'maintenance').length,
     cleaning: beds.filter(b => b.status === 'cleaning').length
   };
+
+  const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
 
   const handleBedStatusChange = (bedId: string, newStatus: string) => {
     setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus as BedInfo['status'] } : b));
@@ -60,66 +72,95 @@ export function BedManagement() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">병상 관리</h1>
-          <p className="text-muted-foreground">응급실 병상 현황을 실시간으로 관리합니다</p>
+          <p className="text-muted-foreground mt-1">응급실 병상 현황을 실시간으로 관리하고 배정 상태를 확인합니다</p>
         </div>
       </div>
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <Bed className="mx-auto mb-2 text-muted-foreground" size={20} />
+              <div className="bg-slate-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <Bed className="text-slate-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">전체 병상</p>
               <p className="text-2xl font-bold">{bedStats.total}</p>
+              <div className="mt-2">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>사용률</span>
+                  <span>{occupancyRate}%</span>
+                </div>
+                <Progress value={occupancyRate} className="h-1.5" />
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <User className="mx-auto mb-2 text-red-600" size={20} />
+              <div className="bg-red-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <User className="text-red-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">사용중</p>
               <p className="text-2xl font-bold text-red-600">{bedStats.occupied}</p>
+              <div className="mt-2">
+                <Progress value={bedStats.total > 0 ? (bedStats.occupied / bedStats.total) * 100 : 0} className="h-1.5 [&>div]:bg-red-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <Plus className="mx-auto mb-2 text-green-600" size={20} />
+              <div className="bg-green-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <Plus className="text-green-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">사용가능</p>
               <p className="text-2xl font-bold text-green-600">{bedStats.available}</p>
+              <div className="mt-2">
+                <Progress value={bedStats.total > 0 ? (bedStats.available / bedStats.total) * 100 : 0} className="h-1.5 [&>div]:bg-green-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <Settings className="mx-auto mb-2 text-yellow-600" size={20} />
+              <div className="bg-amber-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <Settings className="text-amber-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">점검중</p>
-              <p className="text-2xl font-bold text-yellow-600">{bedStats.maintenance}</p>
+              <p className="text-2xl font-bold text-amber-600">{bedStats.maintenance}</p>
+              <div className="mt-2">
+                <Progress value={bedStats.total > 0 ? (bedStats.maintenance / bedStats.total) * 100 : 0} className="h-1.5 [&>div]:bg-amber-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
-              <Clock className="mx-auto mb-2 text-blue-600" size={20} />
+              <div className="bg-blue-500/10 rounded-full p-2 w-fit mx-auto mb-2">
+                <Clock className="text-blue-600" size={20} />
+              </div>
               <p className="text-sm text-muted-foreground">청소중</p>
               <p className="text-2xl font-bold text-blue-600">{bedStats.cleaning}</p>
+              <div className="mt-2">
+                <Progress value={bedStats.total > 0 ? (bedStats.cleaning / bedStats.total) * 100 : 0} className="h-1.5 [&>div]:bg-blue-500" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* 필터 */}
-      <Card>
+      <Card className="shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <Select value={selectedSection} onValueChange={setSelectedSection}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="구역" />
@@ -156,10 +197,10 @@ export function BedManagement() {
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredBeds.map((bed) => (
-          <Card key={bed.id} className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${
+          <Card key={bed.id} className={`cursor-pointer shadow-sm hover:shadow-md transition-all border-l-4 ${
             bed.status === 'occupied' ? 'border-l-red-500' :
             bed.status === 'available' ? 'border-l-green-500' :
-            bed.status === 'maintenance' ? 'border-l-yellow-500' :
+            bed.status === 'maintenance' ? 'border-l-amber-500' :
             'border-l-blue-500'
           }`}>
             <CardHeader className="pb-3">
@@ -168,7 +209,7 @@ export function BedManagement() {
                   <Bed size={18} />
                   {bed.id}
                 </CardTitle>
-                <Badge variant={getBedStatusColor(bed.status)}>
+                <Badge variant="outline" className={getBedStatusBadgeClass(bed.status)}>
                   {getBedStatusText(bed.status)}
                 </Badge>
               </div>
@@ -242,7 +283,7 @@ export function BedManagement() {
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label>상태 변경</Label>
+                  <Label className="text-muted-foreground text-sm">상태 변경</Label>
                   <Select defaultValue={selectedBed.status} onValueChange={(value) => handleBedStatusChange(selectedBed.id, value)}>
                     <SelectTrigger className="mt-2">
                       <SelectValue />
@@ -256,8 +297,10 @@ export function BedManagement() {
                   </Select>
                 </div>
 
+                <Separator />
+
                 <div>
-                  <Label htmlFor="notes">메모</Label>
+                  <Label htmlFor="notes" className="text-muted-foreground text-sm">메모</Label>
                   <Textarea
                     id="notes"
                     placeholder="병상 관련 특이사항을 입력하세요..."

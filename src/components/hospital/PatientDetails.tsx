@@ -8,15 +8,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { Separator } from "../ui/separator";
 import { toast } from "sonner";
-import { getSeverityColor, getSeverityText, getPatientStatusColor, getPatientStatusText } from "../../utils/statusHelpers";
+import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
 import { mockPatients, type Patient } from "@/mocks/patientData";
 import {
   Search,
-  Plus,
+  UserPlus,
   Eye,
   Edit,
-  UserPlus,
   Clock,
   Heart,
   Thermometer,
@@ -25,6 +25,25 @@ import {
   Users
 } from 'lucide-react';
 
+
+const getSeverityBadgeClass = (severity: string): string => {
+  switch (severity) {
+    case 'critical': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50';
+    case 'urgent': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+    case 'stable': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+  }
+};
+
+const getPatientStatusBadgeClass = (status: string): string => {
+  switch (status) {
+    case 'treating': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50';
+    case 'waiting': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+    case 'stable': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    case 'discharged': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+  }
+};
 
 export function PatientDetails() {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
@@ -40,7 +59,7 @@ export function PatientDetails() {
                          patient.diagnosis.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSeverity = filterSeverity === 'all' || patient.severity === filterSeverity;
     const matchesStatus = filterStatus === 'all' || patient.status === filterStatus;
-    
+
     return matchesSearch && matchesSeverity && matchesStatus;
   });
 
@@ -60,10 +79,10 @@ export function PatientDetails() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">환자 관리</h1>
-          <p className="text-muted-foreground">응급실 내 환자 정보를 관리합니다</p>
+          <p className="text-muted-foreground mt-1">응급실 내 환자 정보를 조회하고 상태를 관리합니다</p>
         </div>
         <Button onClick={handleAddPatient} className="flex items-center gap-2">
           <UserPlus size={16} />
@@ -72,9 +91,9 @@ export function PatientDetails() {
       </div>
 
       {/* 검색 및 필터 */}
-      <Card>
+      <Card className="shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
               <Input
@@ -112,10 +131,12 @@ export function PatientDetails() {
       </Card>
 
       {/* 환자 목록 */}
-      <Card>
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users size={20} />
+            <div className="bg-primary/10 rounded-full p-2">
+              <Users size={20} className="text-primary" />
+            </div>
             현재 환자 목록 ({filteredPatients.length}명)
           </CardTitle>
         </CardHeader>
@@ -123,7 +144,7 @@ export function PatientDetails() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-muted/50">
                   <TableHead>환자 ID</TableHead>
                   <TableHead>이름</TableHead>
                   <TableHead>나이/성별</TableHead>
@@ -147,23 +168,25 @@ export function PatientDetails() {
                   </TableRow>
                 ) : (
                   filteredPatients.map((patient) => (
-                    <TableRow key={patient.id}>
-                      <TableCell>{patient.id}</TableCell>
-                      <TableCell>{patient.name}</TableCell>
+                    <TableRow key={patient.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-mono text-sm">{patient.id}</TableCell>
+                      <TableCell className="font-medium">{patient.name}</TableCell>
                       <TableCell>{patient.age}세 / {patient.gender}</TableCell>
                       <TableCell>{patient.diagnosis}</TableCell>
                       <TableCell>
-                        <Badge variant={getSeverityColor(patient.severity)}>
+                        <Badge variant="outline" className={getSeverityBadgeClass(patient.severity)}>
                           {getSeverityText(patient.severity)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="flex items-center gap-1">
-                        <Clock size={14} />
-                        {patient.admissionTime}
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock size={14} />
+                          {patient.admissionTime}
+                        </div>
                       </TableCell>
                       <TableCell>{patient.bed}</TableCell>
                       <TableCell>
-                        <Badge variant={getPatientStatusColor(patient.status)}>
+                        <Badge variant="outline" className={getPatientStatusBadgeClass(patient.status)}>
                           {getPatientStatusText(patient.status)}
                         </Badge>
                       </TableCell>
@@ -195,79 +218,95 @@ export function PatientDetails() {
                 <DialogDescription>환자 상세 정보입니다.</DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>환자 ID</Label>
-                    <p>{selectedPatient.id}</p>
-                  </div>
-                  <div>
-                    <Label>이름</Label>
-                    <p>{selectedPatient.name}</p>
-                  </div>
-                  <div>
-                    <Label>나이</Label>
-                    <p>{selectedPatient.age}세</p>
-                  </div>
-                  <div>
-                    <Label>성별</Label>
-                    <p>{selectedPatient.gender}</p>
-                  </div>
-                  <div>
-                    <Label>진단</Label>
-                    <p>{selectedPatient.diagnosis}</p>
-                  </div>
-                  <div>
-                    <Label>배정 병상</Label>
-                    <p>{selectedPatient.bed}</p>
+                {/* 기본 정보 섹션 */}
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">기본 정보</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground text-sm">환자 ID</Label>
+                      <p className="font-medium">{selectedPatient.id}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">이름</Label>
+                      <p className="font-medium">{selectedPatient.name}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">나이</Label>
+                      <p className="font-medium">{selectedPatient.age}세</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">성별</Label>
+                      <p className="font-medium">{selectedPatient.gender}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">진단</Label>
+                      <p className="font-medium">{selectedPatient.diagnosis}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground text-sm">배정 병상</Label>
+                      <p className="font-medium">{selectedPatient.bed}</p>
+                    </div>
                   </div>
                 </div>
+
+                <Separator />
 
                 {/* 바이탈 사인 */}
                 <div>
-                  <h4 className="mb-3">바이탈 사인</h4>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">바이탈 사인</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card>
+                    <Card className="shadow-sm border-red-100">
                       <CardContent className="pt-4">
-                        <div className="flex items-center gap-2">
-                          <Heart className="text-red-500" size={16} />
-                          <span className="text-sm">심박수</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="bg-red-500/10 rounded-full p-2">
+                            <Heart className="text-red-500" size={16} />
+                          </div>
+                          <span className="text-sm text-muted-foreground">심박수</span>
                         </div>
-                        <p className="mt-1">{selectedPatient.vitals.heartRate} bpm</p>
+                        <p className="text-lg font-semibold text-red-600">{selectedPatient.vitals.heartRate} <span className="text-sm font-normal text-muted-foreground">bpm</span></p>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="shadow-sm border-blue-100">
                       <CardContent className="pt-4">
-                        <div className="flex items-center gap-2">
-                          <Activity className="text-blue-500" size={16} />
-                          <span className="text-sm">혈압</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="bg-blue-500/10 rounded-full p-2">
+                            <Activity className="text-blue-500" size={16} />
+                          </div>
+                          <span className="text-sm text-muted-foreground">혈압</span>
                         </div>
-                        <p className="mt-1">{selectedPatient.vitals.bloodPressure} mmHg</p>
+                        <p className="text-lg font-semibold text-blue-600">{selectedPatient.vitals.bloodPressure} <span className="text-sm font-normal text-muted-foreground">mmHg</span></p>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="shadow-sm border-orange-100">
                       <CardContent className="pt-4">
-                        <div className="flex items-center gap-2">
-                          <Thermometer className="text-orange-500" size={16} />
-                          <span className="text-sm">체온</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="bg-orange-500/10 rounded-full p-2">
+                            <Thermometer className="text-orange-500" size={16} />
+                          </div>
+                          <span className="text-sm text-muted-foreground">체온</span>
                         </div>
-                        <p className="mt-1">{selectedPatient.vitals.temperature}°C</p>
+                        <p className="text-lg font-semibold text-orange-600">{selectedPatient.vitals.temperature}<span className="text-sm font-normal text-muted-foreground">°C</span></p>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="shadow-sm border-green-100">
                       <CardContent className="pt-4">
-                        <div className="flex items-center gap-2">
-                          <Droplets className="text-green-500" size={16} />
-                          <span className="text-sm">산소포화도</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="bg-green-500/10 rounded-full p-2">
+                            <Droplets className="text-green-500" size={16} />
+                          </div>
+                          <span className="text-sm text-muted-foreground">산소포화도</span>
                         </div>
-                        <p className="mt-1">{selectedPatient.vitals.oxygenSaturation}%</p>
+                        <p className="text-lg font-semibold text-green-600">{selectedPatient.vitals.oxygenSaturation}<span className="text-sm font-normal text-muted-foreground">%</span></p>
                       </CardContent>
                     </Card>
                   </div>
                 </div>
 
+                <Separator />
+
                 {/* 메모 */}
                 <div>
-                  <Label htmlFor="notes">진료 메모</Label>
+                  <Label htmlFor="notes" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">진료 메모</Label>
                   <Textarea
                     id="notes"
                     placeholder="환자 상태, 치료 계획 등을 기록하세요..."
