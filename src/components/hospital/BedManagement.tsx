@@ -130,7 +130,7 @@ const mockBeds: BedInfo[] = [
 
 
 export function BedManagement() {
-  const [beds] = useState<BedInfo[]>(mockBeds);
+  const [beds, setBeds] = useState<BedInfo[]>(mockBeds);
   const [selectedSection, setSelectedSection] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedBed, setSelectedBed] = useState<BedInfo | null>(null);
@@ -152,6 +152,7 @@ export function BedManagement() {
   };
 
   const handleBedStatusChange = (bedId: string, newStatus: string) => {
+    setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus as BedInfo['status'] } : b));
     toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(newStatus)}로 변경되었습니다.`);
   };
 

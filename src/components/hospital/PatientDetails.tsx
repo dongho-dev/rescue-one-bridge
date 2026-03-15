@@ -115,7 +115,7 @@ const mockPatients: Patient[] = [
 
 
 export function PatientDetails() {
-  const [patients] = useState<Patient[]>(mockPatients);
+  const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
@@ -140,6 +140,7 @@ export function PatientDetails() {
   };
 
   const handleUpdateStatus = (patientId: string, newStatus: string) => {
+    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: newStatus as Patient['status'] } : p));
     toast.success(`환자 ${patientId}의 상태가 ${newStatus}로 업데이트되었습니다.`);
   };
 

@@ -159,7 +159,7 @@ const getRoleIcon = (role: string) => {
 };
 
 export function StaffManagement() {
-  const [staff] = useState<StaffMember[]>(mockStaff);
+  const [staff, setStaff] = useState<StaffMember[]>(mockStaff);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -192,10 +192,12 @@ export function StaffManagement() {
   };
 
   const handleStatusChange = (staffId: string, newStatus: string) => {
+    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: newStatus as StaffMember['status'] } : s));
     toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleEmergencyCall = (staffId: string) => {
+    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: 'emergency' as StaffMember['status'] } : s));
     toast.success(`${staffId} 직원에게 응급호출이 발송되었습니다.`);
   };
 
