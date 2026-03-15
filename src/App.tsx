@@ -25,20 +25,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request';
 
-function App() {
-  return (
-    <ThemeProvider defaultTheme="system" storageKey="rescue-one-theme">
-      <AppContent />
-      <Toaster />
-    </ThemeProvider>
-  );
-}
+const navigationItems = [
+  { id: 'dashboard', label: '대시보드', icon: Home },
+  { id: 'patients', label: '환자 관리', icon: Users },
+  { id: 'beds', label: '병상 관리', icon: Bed },
+  { id: 'staff', label: '직원 관리', icon: UserCheck },
+  { id: 'equipment', label: '장비 현황', icon: Stethoscope },
+  { id: 'request', label: '구급대원 요청', icon: Ambulance },
+] as const;
 
-function AppContent() {
-  const [currentPage, setCurrentPage] = useState<CurrentPage>('dashboard');
+function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  const ThemeToggle = () => (
+  return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
@@ -63,15 +62,19 @@ function AppContent() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
 
-  const navigationItems = [
-    { id: 'dashboard', label: '대시보드', icon: Home },
-    { id: 'patients', label: '환자 관리', icon: Users },
-    { id: 'beds', label: '병상 관리', icon: Bed },
-    { id: 'staff', label: '직원 관리', icon: UserCheck },
-    { id: 'equipment', label: '장비 현황', icon: Stethoscope },
-    { id: 'request', label: '구급대원 요청', icon: Ambulance },
-  ] as const;
+function App() {
+  return (
+    <ThemeProvider defaultTheme="system" storageKey="rescue-one-theme">
+      <AppContent />
+      <Toaster />
+    </ThemeProvider>
+  );
+}
+
+function AppContent() {
+  const [currentPage, setCurrentPage] = useState<CurrentPage>('dashboard');
 
   return (
     <div className="min-h-screen bg-background">

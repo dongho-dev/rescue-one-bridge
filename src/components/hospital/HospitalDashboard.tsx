@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -24,6 +24,12 @@ import {
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
+const recentAlerts = [
+  { time: '5분 전', message: '중증 환자 3명 동시 접수', type: 'warning' },
+  { time: '12분 전', message: '병상 가용률 80% 달성', type: 'info' },
+  { time: '20분 전', message: '응급실 대기시간 단축', type: 'success' },
+];
+
 export function HospitalDashboard() {
   const [accepting, setAccepting] = useState(true);
   const [requests, setRequests] = useState(generateMockRequests());
@@ -47,16 +53,13 @@ export function HospitalDashboard() {
     ? requests.filter(req => req.status === 'pending')
     : requests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity);
 
-  const getKPIData = () => {
+  const kpiData = useMemo(() => {
     const availableBeds = 8;
     const erQueue = requests.filter(req => req.status === 'matched').length;
     const avgWaitTime = 25;
     const todayProcessed = requests.filter(req => req.status === 'completed').length;
-
     return { availableBeds, erQueue, avgWaitTime, todayProcessed };
-  };
-
-  const kpiData = getKPIData();
+  }, [requests]);
 
   const getSeverityColor = (severity: number) => {
     if (severity >= 4) return 'destructive';
@@ -76,21 +79,17 @@ export function HospitalDashboard() {
   };
 
   // 차트 데이터
-  const hourlyLoadData = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i}:00`,
-    patients: Math.floor(Math.random() * 15 + 5)
-  }));
+  const [hourlyLoadData] = useState(() =>
+    Array.from({ length: 24 }, (_, i) => ({
+      hour: `${i}:00`,
+      patients: Math.floor(Math.random() * 15 + 5)
+    }))
+  );
 
   const severityDistributionData = [
     { name: '경미', value: requests.filter(r => r.severity <= 2).length, color: '#10b981' },
     { name: '보통', value: requests.filter(r => r.severity === 3).length, color: '#f59e0b' },
     { name: '심각', value: requests.filter(r => r.severity >= 4).length, color: '#ef4444' },
-  ];
-
-  const recentAlerts = [
-    { time: '5분 전', message: '중증 환자 3명 동시 접수', type: 'warning' },
-    { time: '12분 전', message: '병상 가용률 80% 달성', type: 'info' },
-    { time: '20분 전', message: '응급실 대기시간 단축', type: 'success' },
   ];
 
   return (
