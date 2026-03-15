@@ -164,7 +164,7 @@ const getTypeIcon = (type: string) => {
 };
 
 export function EquipmentStatus() {
-  const [equipment] = useState<Equipment[]>(mockEquipment);
+  const [equipment, setEquipment] = useState<Equipment[]>(mockEquipment);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -197,6 +197,7 @@ export function EquipmentStatus() {
   };
 
   const handleStatusChange = (equipmentId: string, newStatus: string) => {
+    setEquipment(prev => prev.map(e => e.id === equipmentId ? { ...e, status: newStatus as Equipment['status'] } : e));
     toast.success(`장비 ${equipmentId}의 상태가 ${getEquipmentStatusText(newStatus)}로 변경되었습니다.`);
   };
 
