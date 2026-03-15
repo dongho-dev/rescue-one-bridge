@@ -122,34 +122,35 @@ export function PatientRequest() {
     toast.success("현재 위치가 업데이트되었습니다.");
   };
 
-  const handleEmergencyRequest = () => {
+  const handleRequest = (type: 'emergency' | 'urgent' | 'normal') => {
     if (!selectedPatient && !isNewPatient) {
       toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
       return;
     }
-    
-    const patientName = selectedPatient ? selectedPatient.name : newPatientForm.name;
-    toast.success(`${patientName} 환자의 응급 요청이 병원으로 전송되었습니다!`);
-  };
 
-  const handleUrgentRequest = () => {
-    if (!selectedPatient && !isNewPatient) {
-      toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
-      return;
+    if (isNewPatient) {
+      // 필수 필드 검증
+      if (!newPatientForm.name.trim()) {
+        toast.error("환자 이름을 입력해주세요.");
+        return;
+      }
+      if (!newPatientForm.age.trim()) {
+        toast.error("환자 나이를 입력해주세요.");
+        return;
+      }
+      if (!newPatientForm.severity) {
+        toast.error("중증도를 선택해주세요.");
+        return;
+      }
+      if (!newPatientForm.condition.trim()) {
+        toast.error("주요 증상을 입력해주세요.");
+        return;
+      }
     }
-    
-    const patientName = selectedPatient ? selectedPatient.name : newPatientForm.name;
-    toast.success(`${patientName} 환자의 응급 요청이 병원으로 전송되었습니다!`);
-  };
 
-  const handleNormalRequest = () => {
-    if (!selectedPatient && !isNewPatient) {
-      toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
-      return;
-    }
-    
     const patientName = selectedPatient ? selectedPatient.name : newPatientForm.name;
-    toast.success(`${patientName} 환자의 이송 요청이 병원으로 전송되었습니다.`);
+    const typeLabel = type === 'emergency' ? '위급' : type === 'urgent' ? '긴급' : '일반';
+    toast.success(`${patientName} 환자의 ${typeLabel} 요청이 병원으로 전송되었습니다!`);
   };
 
   return (
@@ -434,7 +435,7 @@ export function PatientRequest() {
               <Button 
                 className="w-full bg-red-600 hover:bg-red-700 text-white"
                 size="lg"
-                onClick={handleEmergencyRequest}
+                onClick={() => handleRequest('emergency')}
               >
                 <AlertTriangle size={16} className="mr-2" />
                 응급 요청 (위급)
@@ -443,7 +444,7 @@ export function PatientRequest() {
               <Button 
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white"
                 size="lg"
-                onClick={handleUrgentRequest}
+                onClick={() => handleRequest('urgent')}
               >
                 <Heart size={16} className="mr-2" />
                 응급 요청 (긴급)
@@ -453,7 +454,7 @@ export function PatientRequest() {
                 variant="outline"
                 className="w-full"
                 size="lg"
-                onClick={handleNormalRequest}
+                onClick={() => handleRequest('normal')}
               >
                 <Activity size={16} className="mr-2" />
                 일반 이송 요청
