@@ -1,8 +1,12 @@
-import { useState, Suspense, lazy } from 'react';
+import { useState, Suspense, lazy, useMemo } from 'react';
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import { ThemeProvider, useTheme } from "./components/theme/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import type { UserRole } from "./contexts/AuthContext";
+import { LoginPage } from "./components/auth/LoginPage";
+import { SignupPage } from "./components/auth/SignupPage";
 import {
   Building2,
   Sun,
@@ -15,7 +19,10 @@ import {
   Stethoscope,
   Ambulance,
   Menu,
-  X
+  X,
+  LogOut,
+  Loader2,
+  User
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 
@@ -28,14 +35,23 @@ const PatientRequest = lazy(() => import('./components/paramedic/PatientRequest'
 
 type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request';
 
-const navigationItems = [
-  { id: 'dashboard', label: '대시보드', icon: Home },
-  { id: 'patients', label: '환자 관리', icon: Users },
-  { id: 'beds', label: '병상 관리', icon: Bed },
-  { id: 'staff', label: '직원 관리', icon: UserCheck },
-  { id: 'equipment', label: '장비 현황', icon: Stethoscope },
-  { id: 'request', label: '구급대원 요청', icon: Ambulance },
-] as const;
+type AuthPage = 'login' | 'signup';
+
+interface NavigationItem {
+  id: CurrentPage;
+  label: string;
+  icon: typeof Home;
+  roles: UserRole[];
+}
+
+const allNavigationItems: NavigationItem[] = [
+  { id: 'dashboard', label: '대시보드', icon: Home, roles: ['hospital_staff'] },
+  { id: 'patients', label: '환자 관리', icon: Users, roles: ['hospital_staff'] },
+  { id: 'beds', label: '병상 관리', icon: Bed, roles: ['hospital_staff'] },
+  { id: 'staff', label: '직원 관리', icon: UserCheck, roles: ['hospital_staff'] },
+  { id: 'equipment', label: '장비 현황', icon: Stethoscope, roles: ['hospital_staff'] },
+  { id: 'request', label: '구급대원 요청', icon: Ambulance, roles: ['hospital_staff', 'paramedic'] },
+];
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -70,16 +86,63 @@ function ThemeToggle() {
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="rescue-one-theme">
-      <AppContent />
+      <AuthProvider>
+        <AuthGate />
+      </AuthProvider>
       <Toaster />
     </ThemeProvider>
   );
 }
 
+function AuthGate() {
+  const { user, loading } = useAuth();
+  const [authPage, setAuthPage] = useState<AuthPage>('login');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 flex flex-col items-center justify-center gap-4">
+        <div className="p-3 bg-blue-600 rounded-2xl shadow-lg">
+          <Building2 size={32} className="text-white" />
+        </div>
+        <Loader2 size={28} className="animate-spin text-blue-600 dark:text-blue-400" />
+        <p className="text-sm text-slate-500 dark:text-slate-400">인증 확인 중...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (authPage === 'signup') {
+      return <SignupPage onSwitchToLogin={() => setAuthPage('login')} />;
+    }
+    return <LoginPage onSwitchToSignup={() => setAuthPage('signup')} />;
+  }
+
+  return <AppContent />;
+}
+
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<CurrentPage>('dashboard');
+  const { user, profile, signOut } = useAuth();
+  const [currentPage, setCurrentPage] = useState<CurrentPage>(() => {
+    // Default page based on role
+    if (profile?.role === 'paramedic') return 'request';
+    return 'dashboard';
+  });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navigationItems = useMemo(() => {
+    if (!profile?.role) return allNavigationItems;
+    return allNavigationItems.filter(item =>
+      item.roles.includes(profile.role)
+    );
+  }, [profile?.role]);
+
+  const displayName = profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || '사용자';
+  const roleLabel = profile?.role === 'paramedic' ? '구급대원' : '병원 직원';
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -119,6 +182,40 @@ function AppContent() {
             );
           })}
         </nav>
+
+        {/* User Info & Logout (Desktop) */}
+        <div className="border-t border-sidebar-border p-3">
+          {sidebarOpen ? (
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
+                <User size={16} className="text-sidebar-foreground/70" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="shrink-0 text-sidebar-foreground/70 hover:text-red-500"
+                aria-label="로그아웃"
+              >
+                <LogOut size={16} />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="w-full text-sidebar-foreground/70 hover:text-red-500"
+              aria-label="로그아웃"
+            >
+              <LogOut size={16} />
+            </Button>
+          )}
+        </div>
       </aside>
 
       {/* Mobile Menu Overlay */}
@@ -163,6 +260,28 @@ function AppContent() {
                 );
               })}
             </nav>
+
+            {/* User Info & Logout (Mobile) */}
+            <div className="border-t border-sidebar-border p-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
+                  <User size={16} className="text-sidebar-foreground/70" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{displayName}</p>
+                  <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="shrink-0 text-sidebar-foreground/70 hover:text-red-500"
+                  aria-label="로그아웃"
+                >
+                  <LogOut size={16} />
+                </Button>
+              </div>
+            </div>
           </aside>
         </div>
       )}
