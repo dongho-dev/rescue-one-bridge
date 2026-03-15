@@ -13,7 +13,9 @@ import {
   Bed,
   UserCheck,
   Stethoscope,
-  Ambulance
+  Ambulance,
+  Menu,
+  X
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 
@@ -76,77 +78,127 @@ function App() {
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<CurrentPage>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-primary text-primary-foreground rounded-lg">
-                  <Building2 size={20} />
+    <div className="min-h-screen bg-background flex">
+      {/* Desktop Sidebar */}
+      <aside className={`${sidebarOpen ? 'w-60' : 'w-16'} bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 hidden md:flex flex-col shrink-0`}>
+        {/* Logo */}
+        <div className="p-4 flex items-center gap-3 border-b border-sidebar-border">
+          <div className="p-2 bg-sidebar-primary/20 rounded-lg shrink-0">
+            <Building2 size={24} className="text-sidebar-primary" />
+          </div>
+          {sidebarOpen && (
+            <div className="overflow-hidden">
+              <h1 className="font-bold text-sm whitespace-nowrap">Rescue One Bridge</h1>
+              <p className="text-xs text-sidebar-accent-foreground/70 whitespace-nowrap">응급실 관리 시스템</p>
+            </div>
+          )}
+        </div>
+
+        {/* Nav Items */}
+        <nav className="flex-1 p-3 space-y-1">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPage === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id as CurrentPage)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium'
+                    : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                }`}
+              >
+                <Icon size={18} className="shrink-0" />
+                {sidebarOpen && <span className="whitespace-nowrap">{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-60 bg-sidebar text-sidebar-foreground flex flex-col">
+            <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-sidebar-primary/20 rounded-lg shrink-0">
+                  <Building2 size={24} className="text-sidebar-primary" />
                 </div>
                 <div>
-                  <span className="font-semibold">Rescue One Bridge</span>
-                  <Badge variant="secondary" className="ml-2">병원 응급실</Badge>
+                  <h1 className="font-bold text-sm">Rescue One Bridge</h1>
+                  <p className="text-xs text-sidebar-accent-foreground/70">응급실 관리 시스템</p>
                 </div>
               </div>
-              
-              {/* Navigation */}
-              <nav aria-label="메인 메뉴" className="hidden md:flex items-center gap-2 ml-8">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Button
-                      key={item.id}
-                      variant={currentPage === item.id ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setCurrentPage(item.id as CurrentPage)}
-                      className="flex items-center gap-2"
-                    >
-                      <Icon size={16} />
-                      {item.label}
-                    </Button>
-                  );
-                })}
-              </nav>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+                <X size={20} />
+              </button>
             </div>
-            <ThemeToggle />
-          </div>
-          
-          {/* Mobile Navigation */}
-          <div className="md:hidden mt-3">
-            <nav aria-label="모바일 메뉴" className="flex gap-1 overflow-x-auto">
+            <nav className="flex-1 p-3 space-y-1">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = currentPage === item.id;
                 return (
-                  <Button
+                  <button
                     key={item.id}
-                    variant={currentPage === item.id ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setCurrentPage(item.id as CurrentPage)}
-                    className="flex items-center gap-2 whitespace-nowrap"
+                    onClick={() => {
+                      setCurrentPage(item.id as CurrentPage);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      isActive
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    }`}
                   >
-                    <Icon size={14} />
-                    {item.label}
-                  </Button>
+                    <Icon size={18} />
+                    <span>{item.label}</span>
+                  </button>
                 );
               })}
             </nav>
-          </div>
+          </aside>
         </div>
-      </div>
+      )}
 
-      <div className="container mx-auto px-4 py-6">
-        <Suspense fallback={<div className="flex items-center justify-center h-64"><p>로딩 중...</p></div>}>
-          {currentPage === 'dashboard' && <HospitalDashboard />}
-          {currentPage === 'patients' && <PatientDetails />}
-          {currentPage === 'beds' && <BedManagement />}
-          {currentPage === 'staff' && <StaffManagement />}
-          {currentPage === 'equipment' && <EquipmentStatus />}
-          {currentPage === 'request' && <PatientRequest />}
-        </Suspense>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <header className="h-14 border-b bg-card flex items-center justify-between px-6 shrink-0">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(true)} className="md:hidden">
+              <Menu size={18} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden md:flex">
+              <Menu size={18} />
+            </Button>
+            <h2 className="font-semibold text-lg">
+              {navigationItems.find(i => i.id === currentPage)?.label}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-800 dark:bg-green-950 hidden sm:flex">● 시스템 정상</Badge>
+            <ThemeToggle />
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-6 overflow-auto">
+          <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">로딩 중...</p></div>}>
+            {currentPage === 'dashboard' && <HospitalDashboard />}
+            {currentPage === 'patients' && <PatientDetails />}
+            {currentPage === 'beds' && <BedManagement />}
+            {currentPage === 'staff' && <StaffManagement />}
+            {currentPage === 'equipment' && <EquipmentStatus />}
+            {currentPage === 'request' && <PatientRequest />}
+          </Suspense>
+        </main>
       </div>
     </div>
   );
