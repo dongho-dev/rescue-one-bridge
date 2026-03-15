@@ -189,45 +189,56 @@ export function HospitalDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRequests.slice(0, 6).map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell>{request.time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</TableCell>
-                      <TableCell>
-                        <Badge variant={getSeverityColor(request.severity)}>
-                          {getSeverityLabel(request.severity)} ({request.severity})
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {request.distanceKm}km / {request.eta}분
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getSymptomIcon(request.symptom)}
-                          {request.symptom}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <RequestDetailDialog request={request} />
-                          <Button
-                            size="sm"
-                            onClick={() => handleRequestAction(request.id, 'accept')}
-                            aria-label="수락"
-                          >
-                            <Check size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRequestAction(request.id, 'hold')}
-                            aria-label="보류"
-                          >
-                            <Pause size={14} />
-                          </Button>
+                  {filteredRequests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5}>
+                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                          <p className="text-lg font-medium">검색 결과가 없습니다</p>
+                          <p className="text-sm mt-1">필터 조건을 변경해 보세요</p>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredRequests.slice(0, 6).map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>{request.time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</TableCell>
+                        <TableCell>
+                          <Badge variant={getSeverityColor(request.severity)}>
+                            {getSeverityLabel(request.severity)} ({request.severity})
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {request.distanceKm}km / {request.eta}분
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getSymptomIcon(request.symptom)}
+                            {request.symptom}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <RequestDetailDialog request={request} />
+                            <Button
+                              size="sm"
+                              onClick={() => handleRequestAction(request.id, 'accept')}
+                              aria-label="수락"
+                            >
+                              <Check size={14} />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRequestAction(request.id, 'hold')}
+                              aria-label="보류"
+                            >
+                              <Pause size={14} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

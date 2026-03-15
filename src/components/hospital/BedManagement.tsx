@@ -256,6 +256,12 @@ export function BedManagement() {
       </Card>
 
       {/* 병상 그리드 */}
+      {filteredBeds.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <p className="text-lg font-medium">검색 결과가 없습니다</p>
+          <p className="text-sm mt-1">필터 조건을 변경해 보세요</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredBeds.map((bed) => (
           <Card key={bed.id} className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${
@@ -332,6 +338,7 @@ export function BedManagement() {
           </Card>
         ))}
       </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

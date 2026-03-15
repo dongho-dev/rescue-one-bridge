@@ -224,39 +224,50 @@ export function PatientDetails() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPatients.map((patient) => (
-                  <TableRow key={patient.id}>
-                    <TableCell>{patient.id}</TableCell>
-                    <TableCell>{patient.name}</TableCell>
-                    <TableCell>{patient.age}세 / {patient.gender}</TableCell>
-                    <TableCell>{patient.diagnosis}</TableCell>
-                    <TableCell>
-                      <Badge variant={getSeverityColor(patient.severity)}>
-                        {getSeverityText(patient.severity)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="flex items-center gap-1">
-                      <Clock size={14} />
-                      {patient.admissionTime}
-                    </TableCell>
-                    <TableCell>{patient.bed}</TableCell>
-                    <TableCell>
-                      <Badge variant={getPatientStatusColor(patient.status)}>
-                        {getPatientStatusText(patient.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(patient); setDialogOpen(true); }} aria-label="상세보기">
-                          <Eye size={14} />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => toast.success("환자 정보 수정 폼이 열렸습니다.")}>
-                          <Edit size={14} />
-                        </Button>
+                {filteredPatients.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9}>
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <p className="text-lg font-medium">검색 결과가 없습니다</p>
+                        <p className="text-sm mt-1">필터 조건을 변경해 보세요</p>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredPatients.map((patient) => (
+                    <TableRow key={patient.id}>
+                      <TableCell>{patient.id}</TableCell>
+                      <TableCell>{patient.name}</TableCell>
+                      <TableCell>{patient.age}세 / {patient.gender}</TableCell>
+                      <TableCell>{patient.diagnosis}</TableCell>
+                      <TableCell>
+                        <Badge variant={getSeverityColor(patient.severity)}>
+                          {getSeverityText(patient.severity)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="flex items-center gap-1">
+                        <Clock size={14} />
+                        {patient.admissionTime}
+                      </TableCell>
+                      <TableCell>{patient.bed}</TableCell>
+                      <TableCell>
+                        <Badge variant={getPatientStatusColor(patient.status)}>
+                          {getPatientStatusText(patient.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(patient); setDialogOpen(true); }} aria-label="상세보기">
+                            <Eye size={14} />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => toast.success("환자 정보 수정 폼이 열렸습니다.")}>
+                            <Edit size={14} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

@@ -341,95 +341,106 @@ export function StaffManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStaff.map((member) => {
-                  const RoleIcon = getRoleIcon(member.role);
-                  return (
-                    <TableRow key={member.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback>
-                              <RoleIcon size={16} />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{member.name}</p>
-                            <p className="text-sm text-muted-foreground">{member.id}</p>
+                {filteredStaff.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8}>
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <p className="text-lg font-medium">검색 결과가 없습니다</p>
+                        <p className="text-sm mt-1">필터 조건을 변경해 보세요</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredStaff.map((member) => {
+                    const RoleIcon = getRoleIcon(member.role);
+                    return (
+                      <TableRow key={member.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarFallback>
+                                <RoleIcon size={16} />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{member.name}</p>
+                              <p className="text-sm text-muted-foreground">{member.id}</p>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleColor(member.role)}>
-                          {getRoleText(member.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{member.department}</TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <p>{member.shiftStart} - {member.shiftEnd}</p>
-                          <p className="text-muted-foreground">{member.shift === 'day' ? '주간' : member.shift === 'night' ? '야간' : '저녁'}근무</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <MapPin size={14} className="text-muted-foreground" />
-                          {member.currentLocation}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span aria-hidden="true">{getStaffStatusIcon(member.status)}</span>
-                          <Badge variant={getStaffStatusColor(member.status)}>
-                            {getStaffStatusText(member.status)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getRoleColor(member.role)}>
+                            {getRoleText(member.role)}
                           </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-sm">
-                            <Phone size={12} />
-                            {member.phone}
+                        </TableCell>
+                        <TableCell>{member.department}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <p>{member.shiftStart} - {member.shiftEnd}</p>
+                            <p className="text-muted-foreground">{member.shift === 'day' ? '주간' : member.shift === 'night' ? '야간' : '저녁'}근무</p>
                           </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Mail size={12} />
-                            {member.email}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <MapPin size={14} className="text-muted-foreground" />
+                            {member.currentLocation}
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }} aria-label="상세보기">
-                            <Eye size={14} />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
-                            <Edit size={14} />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm" aria-label="응급호출">
-                                <Shield size={14} />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>응급호출 확인</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {member.name}에게 응급호출을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>취소</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleEmergencyCall(member.id)}>
-                                  호출 발송
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <span aria-hidden="true">{getStaffStatusIcon(member.status)}</span>
+                            <Badge variant={getStaffStatusColor(member.status)}>
+                              {getStaffStatusText(member.status)}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-sm">
+                              <Phone size={12} />
+                              {member.phone}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Mail size={12} />
+                              {member.email}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }} aria-label="상세보기">
+                              <Eye size={14} />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
+                              <Edit size={14} />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" aria-label="응급호출">
+                                  <Shield size={14} />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>응급호출 확인</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {member.name}에게 응급호출을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>취소</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleEmergencyCall(member.id)}>
+                                    호출 발송
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
