@@ -27,7 +27,7 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase!.auth.signInWithPassword({ email, password });
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
@@ -49,7 +49,7 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase!.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,

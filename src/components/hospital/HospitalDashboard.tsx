@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -6,7 +6,8 @@ import { Switch } from "../ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { InfoCard } from "../common/InfoCard";
-import { generateMockRequests, MockRequest } from "../common/models";
+import { useRequests } from "../../hooks/useRequests";
+import type { MockRequest } from "../common/models";
 import {
   Building2,
   Users,
@@ -33,26 +34,25 @@ const recentAlerts = [
 
 export function HospitalDashboard() {
   const [accepting, setAccepting] = useState(true);
-  const [requests, setRequests] = useState(generateMockRequests());
+  const { requests, updateRequestStatus } = useRequests();
   const [selectedSeverity, setSelectedSeverity] = useState('all');
 
-  const handleAcceptingToggle = (isAccepting: boolean) => {
+  const handleAcceptingToggle = useCallback((isAccepting: boolean) => {
     setAccepting(isAccepting);
     toast(isAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
-  };
+  }, []);
 
-  const handleRequestAction = (requestId: string, action: 'accept' | 'hold') => {
-    setRequests(prev => prev.map(req =>
-      req.id === requestId
-        ? { ...req, status: action === 'accept' ? 'matched' : 'pending' }
-        : req
-    ));
+  const handleRequestAction = useCallback((requestId: string, action: 'accept' | 'hold') => {
+    updateRequestStatus(requestId, action === 'accept' ? 'matched' : 'pending');
     toast(action === 'accept' ? "요청을 수락했습니다" : "요청을 보류했습니다");
-  };
+  }, [updateRequestStatus]);
 
-  const filteredRequests = selectedSeverity === 'all'
-    ? requests.filter(req => req.status === 'pending')
-    : requests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity);
+  const filteredRequests = useMemo(() =>
+    selectedSeverity === 'all'
+      ? requests.filter(req => req.status === 'pending')
+      : requests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity),
+    [requests, selectedSeverity]
+  );
 
   const kpiData = useMemo(() => {
     const availableBeds = 8;
@@ -105,11 +105,11 @@ export function HospitalDashboard() {
     }))
   );
 
-  const severityDistributionData = [
+  const severityDistributionData = useMemo(() => [
     { name: '경미', value: requests.filter(r => r.severity <= 2).length, color: 'var(--chart-3)' },
     { name: '보통', value: requests.filter(r => r.severity === 3).length, color: 'var(--chart-4)' },
     { name: '심각', value: requests.filter(r => r.severity >= 4).length, color: 'var(--chart-5)' },
-  ];
+  ], [requests]);
 
   return (
     <div className="space-y-6">

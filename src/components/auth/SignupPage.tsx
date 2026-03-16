@@ -49,7 +49,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const fetchHospitals = async () => {
     setLoadingHospitals(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('hospitals')
         .select('id, name')
         .order('name');
@@ -93,7 +93,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase!.auth.signUp({
         email,
         password,
         options: {
@@ -125,7 +125,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase!.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,

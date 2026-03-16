@@ -9,6 +9,7 @@ import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityColor, getSeverityText } from "../../utils/statusHelpers";
+import { useRequests } from "../../hooks/useRequests";
 import {
   Ambulance,
   User,
@@ -68,10 +69,11 @@ const quickPatients: QuickPatient[] = [
 
 
 export function PatientRequest() {
+  const { createRequest } = useRequests();
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
   const [isNewPatient, setIsNewPatient] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState('서울시 강남구 역삼동 123-45');
-  const [estimatedTime, setEstimatedTime] = useState('15분');
+  const [currentLocation] = useState('서울시 강남구 역삼동 123-45');
+  const [estimatedTime] = useState('15분');
 
   // 새 환자 폼 상태
   const [newPatientForm, setNewPatientForm] = useState({
@@ -106,7 +108,7 @@ export function PatientRequest() {
     toast.success("현재 위치가 업데이트되었습니다.");
   };
 
-  const handleRequest = (type: 'emergency' | 'urgent' | 'normal') => {
+  const handleRequest = async (type: 'emergency' | 'urgent' | 'normal') => {
     if (!selectedPatient && !isNewPatient) {
       toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
       return;
@@ -134,6 +136,21 @@ export function PatientRequest() {
 
     const patientName = selectedPatient ? selectedPatient.name : newPatientForm.name;
     const typeLabel = type === 'emergency' ? '위급' : type === 'urgent' ? '긴급' : '일반';
+
+    const severityMap = { emergency: 5, urgent: 3, normal: 1 } as const;
+    const symptom = selectedPatient ? selectedPatient.condition : newPatientForm.condition;
+    await createRequest({
+      symptom,
+      severity: severityMap[type],
+      priority: type,
+      patientName,
+      patientAge: isNewPatient && newPatientForm.age ? parseInt(newPatientForm.age) : undefined,
+      patientGender: isNewPatient ? newPatientForm.gender : undefined,
+      vitals: isNewPatient ? newPatientForm.vitals : undefined,
+      locationText: currentLocation,
+      notes: isNewPatient ? newPatientForm.symptoms : undefined,
+    });
+
     toast.success(`${patientName} 환자의 ${typeLabel} 요청이 병원으로 전송되었습니다!`);
   };
 

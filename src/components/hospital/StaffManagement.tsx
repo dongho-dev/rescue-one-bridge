@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getRoleText, getStaffStatusText } from "../../utils/statusHelpers";
-import { mockStaff, type StaffMember } from "@/mocks/staffData";
+import { useStaff } from "../../hooks/useStaff";
+import type { StaffMember } from "@/mocks/staffData";
 import {
   Search,
   Plus,
@@ -27,7 +28,8 @@ import {
   Users,
   Stethoscope,
   Activity,
-  Shield
+  Shield,
+  Loader2
 } from 'lucide-react';
 
 
@@ -82,7 +84,7 @@ const getAvatarBgClass = (role: string): string => {
 };
 
 export function StaffManagement() {
-  const [staff, setStaff] = useState<StaffMember[]>(mockStaff);
+  const { staff, loading, error, updateStaffStatus } = useStaff();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -116,14 +118,26 @@ export function StaffManagement() {
   };
 
   const handleStatusChange = (staffId: string, newStatus: string) => {
-    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: newStatus as StaffMember['status'] } : s));
+    updateStaffStatus(staffId, newStatus as StaffMember['status']);
     toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleEmergencyCall = (staffId: string) => {
-    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: 'emergency' as StaffMember['status'] } : s));
+    updateStaffStatus(staffId, 'emergency');
     toast.success(`${staffId} 직원에게 응급호출이 발송되었습니다.`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    toast.error(error);
+  }
 
   return (
     <div className="space-y-6">

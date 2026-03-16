@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -6,7 +6,9 @@ import { Switch } from "../ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { InfoCard } from "../common/InfoCard";
 import { MiniMapPlaceholder } from "../common/MiniMapPlaceholder";
-import { generateMockRequests, generateMockHospitals, MockHospital } from "../common/models";
+import { useHospitals } from "../../hooks/useHospitals";
+import { useRequests } from "../../hooks/useRequests";
+import type { MockHospital } from "../common/models";
 import {
   Ambulance,
   Phone,
@@ -28,15 +30,15 @@ const recentEvents = [
 
 export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
-  const [hospitals] = useState(generateMockHospitals());
-  const [requests] = useState(generateMockRequests());
+  const { hospitals } = useHospitals();
+  const { requests } = useRequests();
 
-  const handleStatusToggle = (online: boolean) => {
+  const handleStatusToggle = useCallback((online: boolean) => {
     setIsOnline(online);
     toast(online ? "온라인 상태로 전환되었습니다" : "오프라인 상태로 전환되었습니다");
-  };
+  }, []);
 
-  const getStatusCounts = () => {
+  const statusCounts = useMemo(() => {
     const counts = requests.reduce((acc, req) => {
       acc[req.status] = (acc[req.status] || 0) + 1;
       return acc;
@@ -48,9 +50,7 @@ export function ParamedicDashboard() {
       enRoute: counts.enRoute || 0,
       completed: counts.completed || 0
     };
-  };
-
-  const statusCounts = getStatusCounts();
+  }, [requests]);
 
   const getEventColorBar = (type: string) => {
     switch (type) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -10,14 +10,16 @@ import { Separator } from "../ui/separator";
 import { Progress } from "../ui/progress";
 import { toast } from "sonner";
 import { getBedStatusText } from "../../utils/statusHelpers";
-import { mockBeds, type BedInfo } from "@/mocks/bedData";
+import { useBeds } from "../../hooks/useBeds";
+import type { BedInfo } from "@/mocks/bedData";
 import {
   Bed,
   Plus,
   Settings,
   User,
   Calendar,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 
 
@@ -32,7 +34,7 @@ const getBedStatusBadgeClass = (status: string): string => {
 };
 
 export function BedManagement() {
-  const [beds, setBeds] = useState<BedInfo[]>(mockBeds);
+  const { beds, loading, error, updateBedStatus } = useBeds();
   const [selectedSection, setSelectedSection] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedBed, setSelectedBed] = useState<BedInfo | null>(null);
@@ -40,26 +42,44 @@ export function BedManagement() {
 
   const sections = ['A', 'B', 'C'];
 
-  const filteredBeds = beds.filter(bed => {
-    const matchesSection = selectedSection === 'all' || bed.section === selectedSection;
-    const matchesStatus = selectedStatus === 'all' || bed.status === selectedStatus;
-    return matchesSection && matchesStatus;
-  });
+  const filteredBeds = useMemo(() =>
+    beds.filter(bed => {
+      const matchesSection = selectedSection === 'all' || bed.section === selectedSection;
+      const matchesStatus = selectedStatus === 'all' || bed.status === selectedStatus;
+      return matchesSection && matchesStatus;
+    }),
+    [beds, selectedSection, selectedStatus]
+  );
 
-  const bedStats = {
+  const bedStats = useMemo(() => ({
     total: beds.length,
     occupied: beds.filter(b => b.status === 'occupied').length,
     available: beds.filter(b => b.status === 'available').length,
     maintenance: beds.filter(b => b.status === 'maintenance').length,
     cleaning: beds.filter(b => b.status === 'cleaning').length
-  };
+  }), [beds]);
 
-  const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
+  const occupancyRate = useMemo(() =>
+    bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0,
+    [bedStats]
+  );
 
-  const handleBedStatusChange = (bedId: string, newStatus: string) => {
-    setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus as BedInfo['status'] } : b));
+  const handleBedStatusChange = useCallback((bedId: string, newStatus: string) => {
+    updateBedStatus(bedId, newStatus as BedInfo['status']);
     toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(newStatus)}로 변경되었습니다.`);
-  };
+  }, [updateBedStatus]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    toast.error(error);
+  }
 
   const handleAssignPatient = (bedId: string) => {
     toast.success(`병상 ${bedId}에 환자 배정 폼이 열렸습니다.`);
