@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Separator } from '../ui/separator';
 import { Building2, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAuthErrorMessage } from '../../utils/errorMessages';
 
 interface LoginPageProps {
   onSwitchToSignup: () => void;
@@ -27,15 +28,9 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase!.auth.signInWithPassword({ email, password });
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('이메일 인증이 완료되지 않았습니다. 이메일을 확인해주세요.');
-        } else {
-          toast.error(`로그인 실패: ${error.message}`);
-        }
+        toast.error(getAuthErrorMessage(error));
       } else {
         toast.success('로그인 성공!');
       }
@@ -49,14 +44,14 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase!.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
         },
       });
       if (error) {
-        toast.error(`Google 로그인 실패: ${error.message}`);
+        toast.error(getAuthErrorMessage(error));
         setLoading(false);
       }
       // No setLoading(false) on success - page will redirect

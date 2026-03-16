@@ -16,6 +16,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  isDemoMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  isDemoMode: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -32,7 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isDemoMode = supabase === null;
+
   const fetchProfile = useCallback(async (userId: string) => {
+    if (!supabase) return;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -41,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        // Profile might not exist yet (new user via OAuth)
         console.warn('Profile fetch failed:', error.message);
         setProfile(null);
         return;
@@ -59,6 +63,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!supabase) {
+      // Demo mode: skip auth, provide default profile
+      setProfile({ role: 'hospital_staff', hospital_id: null, display_name: 'Demo User' });
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
@@ -92,14 +103,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setSession(null);
     setProfile(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signOut, isDemoMode }}>
       {children}
     </AuthContext.Provider>
   );

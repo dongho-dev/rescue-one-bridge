@@ -11,7 +11,9 @@ import { Textarea } from "../ui/textarea";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
-import { mockPatients, type Patient } from "@/mocks/patientData";
+import { getHookErrorMessage } from "../../utils/errorMessages";
+import { usePatients } from "../../hooks/usePatients";
+import type { Patient } from "@/mocks/patientData";
 import {
   Search,
   UserPlus,
@@ -22,7 +24,8 @@ import {
   Thermometer,
   Droplets,
   Activity,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 
 
@@ -46,7 +49,7 @@ const getPatientStatusBadgeClass = (status: string): string => {
 };
 
 export function PatientDetails() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const { patients, loading, error, updatePatientStatus } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -72,12 +75,25 @@ export function PatientDetails() {
   };
 
   const handleUpdateStatus = (patientId: string, newStatus: string) => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: newStatus as Patient['status'] } : p));
+    updatePatientStatus(patientId, newStatus as Patient['status']);
     toast.success(`환자 ${patientId}의 상태가 ${newStatus}로 업데이트되었습니다.`);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+          {getHookErrorMessage(error)}
+        </div>
+      )}
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>

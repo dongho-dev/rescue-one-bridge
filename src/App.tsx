@@ -95,7 +95,7 @@ function App() {
 }
 
 function AuthGate() {
-  const { user, loading } = useAuth();
+  const { user, loading, isDemoMode } = useAuth();
   const [authPage, setAuthPage] = useState<AuthPage>('login');
 
   if (loading) {
@@ -108,6 +108,11 @@ function AuthGate() {
         <p className="text-sm text-slate-500 dark:text-slate-400">인증 확인 중...</p>
       </div>
     );
+  }
+
+  // Demo mode: skip login, go straight to app
+  if (isDemoMode) {
+    return <AppContent />;
   }
 
   if (!user) {
@@ -137,7 +142,7 @@ function AppContent() {
     );
   }, [profile?.role]);
 
-  const displayName = profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || '사용자';
+  const displayName = profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Demo User';
   const roleLabel = profile?.role === 'paramedic' ? '구급대원' : '병원 직원';
 
   const handleSignOut = async () => {

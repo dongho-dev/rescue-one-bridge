@@ -15,6 +15,7 @@ import {
 } from '../ui/select';
 import { Building2, Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAuthErrorMessage } from '../../utils/errorMessages';
 import type { UserRole } from '../../contexts/AuthContext';
 
 interface SignupPageProps {
@@ -49,7 +50,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const fetchHospitals = async () => {
     setLoadingHospitals(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('hospitals')
         .select('id, name')
         .order('name');
@@ -93,7 +94,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase!.auth.signUp({
         email,
         password,
         options: {
@@ -106,11 +107,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
-          toast.error('이미 등록된 이메일입니다. 로그인해주세요.');
-        } else {
-          toast.error(`회원가입 실패: ${error.message}`);
-        }
+        toast.error(getAuthErrorMessage(error));
       } else {
         toast.success('회원가입이 완료되었습니다! 이메일을 확인하여 인증을 완료해주세요.');
         onSwitchToLogin();
@@ -125,14 +122,14 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase!.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
         },
       });
       if (error) {
-        toast.error(`Google 회원가입 실패: ${error.message}`);
+        toast.error(getAuthErrorMessage(error));
         setLoading(false);
       }
     } catch {
