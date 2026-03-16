@@ -7,7 +7,7 @@ export type UserRole = 'hospital_staff' | 'paramedic';
 export interface UserProfile {
   role: UserRole;
   hospital_id: string | null;
-  display_name: string | null;
+  display_name: string;
 }
 
 interface AuthContextType {
@@ -47,10 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      const validRoles: UserRole[] = ['hospital_staff', 'paramedic'];
+      const role = validRoles.includes(data.role as UserRole)
+        ? (data.role as UserRole)
+        : 'paramedic'; // 안전한 기본값
+
       setProfile({
-        role: data.role as UserRole,
+        role,
         hospital_id: data.hospital_id,
-        display_name: data.display_name,
+        display_name: data.display_name ?? '',
       });
     } catch (err) {
       console.error('Unexpected error fetching profile:', err);

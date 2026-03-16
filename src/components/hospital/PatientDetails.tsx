@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -11,7 +11,8 @@ import { Textarea } from "../ui/textarea";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
-import { mockPatients, type Patient } from "@/mocks/patientData";
+import { usePatients } from "../../hooks/usePatients";
+import type { Patient } from "@/mocks/patientData";
 import {
   Search,
   UserPlus,
@@ -22,7 +23,8 @@ import {
   Thermometer,
   Droplets,
   Activity,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 
 
@@ -46,12 +48,18 @@ const getPatientStatusBadgeClass = (status: string): string => {
 };
 
 export function PatientDetails() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const { patients, loading, error, updatePatientStatus } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,9 +80,26 @@ export function PatientDetails() {
   };
 
   const handleUpdateStatus = (patientId: string, newStatus: string) => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: newStatus as Patient['status'] } : p));
+    updatePatientStatus(patientId, newStatus as Patient['status']);
     toast.success(`환자 ${patientId}의 상태가 ${newStatus}로 업데이트되었습니다.`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <p className="text-lg font-medium">데이터를 불러오지 못했습니다</p>
+        <p className="text-sm mt-1">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

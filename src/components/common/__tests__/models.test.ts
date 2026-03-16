@@ -35,7 +35,7 @@ describe('generateMockRequests', () => {
   });
 
   it('status should be one of the valid values', () => {
-    const validStatuses = ['pending', 'matched', 'enRoute', 'completed'];
+    const validStatuses = ['pending', 'matched', 'enRoute', 'completed', 'cancelled'];
     const requests = generateMockRequests();
     for (const req of requests) {
       expect(validStatuses).toContain(req.status);

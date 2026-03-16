@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -6,7 +6,9 @@ import { Switch } from "../ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { InfoCard } from "../common/InfoCard";
 import { MiniMapPlaceholder } from "../common/MiniMapPlaceholder";
-import { generateMockRequests, generateMockHospitals, MockHospital } from "../common/models";
+import { useHospitals } from "../../hooks/useHospitals";
+import { useRequests } from "../../hooks/useRequests";
+import type { MockHospital } from "../common/models";
 import {
   Ambulance,
   Phone,
@@ -16,7 +18,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Bed,
-  Route
+  Route,
+  Loader2
 } from 'lucide-react';
 import { toast } from "sonner";
 
@@ -28,8 +31,15 @@ const recentEvents = [
 
 export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
-  const [hospitals] = useState(generateMockHospitals());
-  const [requests] = useState(generateMockRequests());
+  const { hospitals, loading: hospitalsLoading, error: hospitalsError } = useHospitals();
+  const { requests, loading: requestsLoading, error: requestsError } = useRequests();
+
+  useEffect(() => {
+    if (hospitalsError) toast.error(hospitalsError);
+    if (requestsError) toast.error(requestsError);
+  }, [hospitalsError, requestsError]);
+
+  const isLoading = hospitalsLoading || requestsLoading;
 
   const handleStatusToggle = (online: boolean) => {
     setIsOnline(online);
@@ -60,6 +70,14 @@ export function ParamedicDashboard() {
       default: return 'border-l-4 border-l-gray-500 bg-muted/50';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

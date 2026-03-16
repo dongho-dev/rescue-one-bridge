@@ -12,6 +12,7 @@ export interface BedInfo {
   equipment: string[];
   lastCleaned: string;
   notes?: string;
+  _supabaseId?: string;  // Supabase에서 fetch한 경우에만 존재
 }
 
 export const mockBeds: BedInfo[] = [

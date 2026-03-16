@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -10,14 +10,16 @@ import { Separator } from "../ui/separator";
 import { Progress } from "../ui/progress";
 import { toast } from "sonner";
 import { getBedStatusText } from "../../utils/statusHelpers";
-import { mockBeds, type BedInfo } from "@/mocks/bedData";
+import { useBeds } from "../../hooks/useBeds";
+import type { BedInfo } from "@/mocks/bedData";
 import {
   Bed,
   Plus,
   Settings,
   User,
   Calendar,
-  Clock
+  Clock,
+  Loader2
 } from 'lucide-react';
 
 
@@ -32,11 +34,17 @@ const getBedStatusBadgeClass = (status: string): string => {
 };
 
 export function BedManagement() {
-  const [beds, setBeds] = useState<BedInfo[]>(mockBeds);
+  const { beds, loading, error, updateBedStatus } = useBeds();
   const [selectedSection, setSelectedSection] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedBed, setSelectedBed] = useState<BedInfo | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const sections = ['A', 'B', 'C'];
 
@@ -57,9 +65,26 @@ export function BedManagement() {
   const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
 
   const handleBedStatusChange = (bedId: string, newStatus: string) => {
-    setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus as BedInfo['status'] } : b));
+    updateBedStatus(bedId, newStatus as BedInfo['status']);
     toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(newStatus)}로 변경되었습니다.`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <p className="text-lg font-medium">데이터를 불러오지 못했습니다</p>
+        <p className="text-sm mt-1">{error}</p>
+      </div>
+    );
+  }
 
   const handleAssignPatient = (bedId: string) => {
     toast.success(`병상 ${bedId}에 환자 배정 폼이 열렸습니다.`);

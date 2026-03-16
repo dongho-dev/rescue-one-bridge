@@ -13,6 +13,7 @@ export interface Equipment {
   alerts: string[];
   assignedTo?: string;
   notes?: string;
+  _supabaseId?: string;  // Supabase에서 fetch한 경우에만 존재
 }
 
 export const mockEquipment: Equipment[] = [

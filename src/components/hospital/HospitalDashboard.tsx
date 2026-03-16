@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -6,7 +6,8 @@ import { Switch } from "../ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { InfoCard } from "../common/InfoCard";
-import { generateMockRequests, MockRequest } from "../common/models";
+import { useRequests } from "../../hooks/useRequests";
+import type { MockRequest } from "../common/models";
 import {
   Building2,
   Users,
@@ -20,7 +21,8 @@ import {
   Heart,
   Activity,
   Brain,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -33,8 +35,14 @@ const recentAlerts = [
 
 export function HospitalDashboard() {
   const [accepting, setAccepting] = useState(true);
-  const [requests, setRequests] = useState(generateMockRequests());
+  const { requests, loading: requestsLoading, error: requestsError, updateRequestStatus } = useRequests();
   const [selectedSeverity, setSelectedSeverity] = useState('all');
+
+  useEffect(() => {
+    if (requestsError) {
+      toast.error(requestsError);
+    }
+  }, [requestsError]);
 
   const handleAcceptingToggle = (isAccepting: boolean) => {
     setAccepting(isAccepting);
@@ -42,11 +50,7 @@ export function HospitalDashboard() {
   };
 
   const handleRequestAction = (requestId: string, action: 'accept' | 'hold') => {
-    setRequests(prev => prev.map(req =>
-      req.id === requestId
-        ? { ...req, status: action === 'accept' ? 'matched' : 'pending' }
-        : req
-    ));
+    updateRequestStatus(requestId, action === 'accept' ? 'matched' : 'pending');
     toast(action === 'accept' ? "요청을 수락했습니다" : "요청을 보류했습니다");
   };
 
@@ -110,6 +114,14 @@ export function HospitalDashboard() {
     { name: '보통', value: requests.filter(r => r.severity === 3).length, color: 'var(--chart-4)' },
     { name: '심각', value: requests.filter(r => r.severity >= 4).length, color: 'var(--chart-5)' },
   ];
+
+  if (requestsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

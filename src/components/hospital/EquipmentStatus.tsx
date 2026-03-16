@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -11,7 +11,8 @@ import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getEquipmentStatusText, getEquipmentTypeText } from "../../utils/statusHelpers";
-import { mockEquipment, type Equipment } from "@/mocks/equipmentData";
+import { useEquipment } from "../../hooks/useEquipment";
+import type { Equipment } from "@/mocks/equipmentData";
 import {
   Search,
   Plus,
@@ -25,7 +26,8 @@ import {
   Activity,
   Zap,
   Monitor,
-  Droplets
+  Droplets,
+  Loader2
 } from 'lucide-react';
 
 const getTypeIcon = (type: string) => {
@@ -63,12 +65,18 @@ const getBatteryTextClass = (level: number): string => {
 };
 
 export function EquipmentStatus() {
-  const [equipment, setEquipment] = useState<Equipment[]>(mockEquipment);
+  const { equipment, loading, error, updateEquipmentStatus } = useEquipment();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const filteredEquipment = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -97,13 +105,30 @@ export function EquipmentStatus() {
   };
 
   const handleStatusChange = (equipmentId: string, newStatus: string) => {
-    setEquipment(prev => prev.map(e => e.id === equipmentId ? { ...e, status: newStatus as Equipment['status'] } : e));
+    updateEquipmentStatus(equipmentId, newStatus as Equipment['status']);
     toast.success(`장비 ${equipmentId}의 상태가 ${getEquipmentStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleEmergencyAlert = (equipmentId: string) => {
     toast.error(`장비 ${equipmentId}에서 응급 알림이 발생했습니다!`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <p className="text-lg font-medium">데이터를 불러오지 못했습니다</p>
+        <p className="text-sm mt-1">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

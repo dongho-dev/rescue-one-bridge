@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getRoleText, getStaffStatusText } from "../../utils/statusHelpers";
-import { mockStaff, type StaffMember } from "@/mocks/staffData";
+import { useStaff } from "../../hooks/useStaff";
+import type { StaffMember } from "@/mocks/staffData";
 import {
   Search,
   Plus,
@@ -27,7 +28,8 @@ import {
   Users,
   Stethoscope,
   Activity,
-  Shield
+  Shield,
+  Loader2
 } from 'lucide-react';
 
 
@@ -53,10 +55,10 @@ const getRoleBadgeClass = (role: string): string => {
 
 const getStaffStatusIcon = (status: string) => {
   switch (status) {
-    case 'on-duty': return '\u25CF'; // ●
-    case 'break': return '\u25CB';   // ○
-    case 'off-duty': return '\u2014'; // —
-    case 'emergency': return '\u26A0'; // ⚠
+    case 'on-duty': return '\u25CF'; // filled circle
+    case 'break': return '\u25CB';   // empty circle
+    case 'off-duty': return '\u2014'; // em dash
+    case 'emergency': return '\u26A0'; // warning
     default: return '';
   }
 };
@@ -82,12 +84,18 @@ const getAvatarBgClass = (role: string): string => {
 };
 
 export function StaffManagement() {
-  const [staff, setStaff] = useState<StaffMember[]>(mockStaff);
+  const { staff, loading, error, updateStaffStatus } = useStaff();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,14 +124,31 @@ export function StaffManagement() {
   };
 
   const handleStatusChange = (staffId: string, newStatus: string) => {
-    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: newStatus as StaffMember['status'] } : s));
+    updateStaffStatus(staffId, newStatus as StaffMember['status']);
     toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(newStatus)}로 변경되었습니다.`);
   };
 
   const handleEmergencyCall = (staffId: string) => {
-    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: 'emergency' as StaffMember['status'] } : s));
+    updateStaffStatus(staffId, 'emergency');
     toast.success(`${staffId} 직원에게 응급호출이 발송되었습니다.`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <p className="text-lg font-medium">데이터를 불러오지 못했습니다</p>
+        <p className="text-sm mt-1">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

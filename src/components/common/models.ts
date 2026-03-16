@@ -4,10 +4,11 @@ export interface MockRequest {
   severity: number; // 1(경미) ~ 5(중증)
   distanceKm: number;
   symptom: string;
-  status: 'pending' | 'matched' | 'enRoute' | 'completed';
+  status: 'pending' | 'matched' | 'enRoute' | 'completed' | 'cancelled';
   patientAge?: string;
   allergies?: string[];
   eta?: number; // minutes
+  _supabaseId?: string;  // Supabase에서 fetch한 경우에만 존재
 }
 
 export interface MockHospital {
@@ -20,12 +21,13 @@ export interface MockHospital {
   distanceKm: number;
   contact?: string;
   avgWaitTime?: number; // minutes
+  _supabaseId?: string;  // Supabase에서 fetch한 경우에만 존재
 }
 
 // 목 데이터 생성
 export const generateMockRequests = (): MockRequest[] => {
   const symptoms = ['흉통', '호흡곤란', '외상', '복통', '두통', '발열', '의식잃음', '심정지'];
-  const statuses: Array<'pending' | 'matched' | 'enRoute' | 'completed'> = ['pending', 'matched', 'enRoute', 'completed'];
+  const statuses: Array<'pending' | 'matched' | 'enRoute' | 'completed' | 'cancelled'> = ['pending', 'matched', 'enRoute', 'completed', 'cancelled'];
   
   return Array.from({ length: 12 }, (_, i) => ({
     id: `RQ-${String(1001 + i).padStart(4, '0')}`,
