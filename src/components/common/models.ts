@@ -17,7 +17,7 @@ export interface MockHospital {
   queue: number; // ER 대기열
   beds: number; // 가용 병상 수
   specialties: string[];
-  distanceKm: number;
+  distanceKm: number | null; // null when geolocation is unavailable
   contact?: string;
   avgWaitTime?: number; // minutes
 }
@@ -52,15 +52,21 @@ export const generateMockHospitals = (): MockHospital[] => {
   
   const specialties = ['심장내과', '신경외과', '외상외과', '소아과', '정형외과'];
   
+  const fixedDistances = [2.3, 4.1, 1.8, 6.5, 3.2, 5.7];
+  const fixedQueues = [3, 7, 2, 10, 5, 8];
+  const fixedBeds = [4, 1, 3, 0, 2, 1];
+  const fixedAccepting = [true, true, true, false, true, true];
+  const fixedWaitTimes = [25, 40, 15, 55, 30, 45];
+
   return hospitalNames.map((name, i) => ({
     id: `H-${String(i + 1).padStart(3, '0')}`,
     name,
-    accepting: Math.random() > 0.3,
-    queue: Math.floor(Math.random() * 15),
-    beds: Math.floor(Math.random() * 5),
-    specialties: specialties.slice(0, Math.floor(Math.random() * 3) + 1),
-    distanceKm: Math.round((Math.random() * 8 + 0.5) * 10) / 10,
-    contact: `02-${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
-    avgWaitTime: Math.floor(Math.random() * 60 + 10)
+    accepting: fixedAccepting[i],
+    queue: fixedQueues[i],
+    beds: fixedBeds[i],
+    specialties: specialties.slice(0, (i % 3) + 1),
+    distanceKm: fixedDistances[i],
+    contact: `02-${2000 + i * 111}-${3000 + i * 222}`,
+    avgWaitTime: fixedWaitTimes[i],
   }));
 };

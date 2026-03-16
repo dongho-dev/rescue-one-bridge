@@ -93,14 +93,15 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // Role is sent via user_metadata but validated server-side in handle_new_user trigger.
+      // hospital_id is NOT sent via metadata — linked via RPC after signup.
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             display_name: displayName,
             role,
-            hospital_id: role === 'hospital_staff' ? hospitalId || null : null,
           },
         },
       });
@@ -112,6 +113,14 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
           toast.error(`회원가입 실패: ${error.message}`);
         }
       } else {
+        // Link hospital via server-side RPC if hospital_staff
+        if (role === 'hospital_staff' && hospitalId && signUpData?.user) {
+          try {
+            await supabase.rpc('link_hospital', { p_hospital_id: hospitalId });
+          } catch (rpcErr) {
+            console.warn('Hospital link failed (will retry on login):', rpcErr);
+          }
+        }
         toast.success('회원가입이 완료되었습니다! 이메일을 확인하여 인증을 완료해주세요.');
         onSwitchToLogin();
       }

@@ -213,7 +213,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
             <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
               <Route size={11} />
-              {hospital.distanceKm}km
+              {hospital.distanceKm != null ? `${hospital.distanceKm}km` : '거리 미확인'}
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
               <Clock size={11} />
@@ -248,7 +248,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
             <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">거리</p>
-                <p className="text-sm font-semibold">{hospital.distanceKm}km</p>
+                <p className="text-sm font-semibold">{hospital.distanceKm != null ? `${hospital.distanceKm}km` : '미확인'}</p>
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">ER 대기</p>

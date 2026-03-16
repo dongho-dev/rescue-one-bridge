@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
 
 export type UserRole = 'hospital_staff' | 'paramedic';
 
@@ -16,6 +16,8 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  isDemoMode: boolean;
+  isEnvMissing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,6 +26,8 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  isDemoMode: false,
+  isEnvMissing: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -59,7 +63,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Get initial session
+    // If env vars are missing (and no explicit demo mode), stop loading immediately
+    if (isEnvMissing) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
+    // If explicit demo mode is on, set up demo user
+    if (explicitDemoMode) {
+      setUser({ id: 'demo-user' } as User);
+      setProfile({
+        role: 'hospital_staff',
+        hospital_id: 'demo-hospital',
+        display_name: 'Demo User',
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Normal Supabase auth flow
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -99,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signOut, isDemoMode: explicitDemoMode, isEnvMissing }}>
       {children}
     </AuthContext.Provider>
   );

@@ -261,7 +261,7 @@ export function HospitalDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1.5">
-                            <RequestDetailDialog request={request} />
+                            <RequestDetailDialog request={request} onAccept={(id) => handleRequestAction(id, 'accept')} />
                             <Button
                               size="sm"
                               className="h-7 px-2"
@@ -399,7 +399,7 @@ export function HospitalDashboard() {
   );
 }
 
-function RequestDetailDialog({ request }: { request: MockRequest }) {
+function RequestDetailDialog({ request, onAccept }: { request: MockRequest; onAccept: (requestId: string) => void }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -430,11 +430,11 @@ function RequestDetailDialog({ request }: { request: MockRequest }) {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button className="flex-1">
+            <Button className="flex-1" onClick={() => onAccept(request.id)}>
               <Check size={16} className="mr-2" />
               수락
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={() => toast.info(`요청 ${request.id}에 대해 연락을 시도합니다.`)}>
               <Phone size={16} className="mr-2" />
               연락
             </Button>
