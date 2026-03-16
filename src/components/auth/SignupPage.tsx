@@ -125,6 +125,12 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const handleGoogleSignup = async () => {
     setLoading(true);
     try {
+      // Save selected role info to localStorage before OAuth redirect
+      localStorage.setItem('pending_signup_role', role);
+      if (role === 'hospital_staff' && hospitalId) {
+        localStorage.setItem('pending_signup_hospital_id', hospitalId);
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -132,10 +138,14 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
         },
       });
       if (error) {
+        localStorage.removeItem('pending_signup_role');
+        localStorage.removeItem('pending_signup_hospital_id');
         toast.error(`Google 회원가입 실패: ${error.message}`);
         setLoading(false);
       }
     } catch {
+      localStorage.removeItem('pending_signup_role');
+      localStorage.removeItem('pending_signup_hospital_id');
       toast.error('Google 회원가입 중 오류가 발생했습니다.');
       setLoading(false);
     }

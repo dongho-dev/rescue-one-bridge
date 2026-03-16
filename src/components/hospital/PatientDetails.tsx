@@ -12,6 +12,7 @@ import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
 import { mockPatients, type Patient } from "@/mocks/patientData";
+import { supabase } from "../../lib/supabase";
 import {
   Search,
   UserPlus,
@@ -314,12 +315,45 @@ export function PatientDetails() {
                   />
                 </div>
 
+                {/* 상태 변경 */}
+                <div>
+                  <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">상태 변경</Label>
+                  <Select
+                    defaultValue={selectedPatient.status}
+                    onValueChange={(value) => handleUpdateStatus(selectedPatient.id, value)}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="waiting">대기중</SelectItem>
+                      <SelectItem value="treating">치료중</SelectItem>
+                      <SelectItem value="stable">안정</SelectItem>
+                      <SelectItem value="discharged">퇴원</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => toast.success("환자 정보가 저장되었습니다.")}>
+                  <Button variant="outline" onClick={async () => {
+                    const notesEl = document.getElementById('notes') as HTMLTextAreaElement;
+                    const notesValue = notesEl?.value ?? '';
+                    if (supabase) {
+                      const supabaseId = (selectedPatient as unknown as Record<string, unknown>)?._supabaseId as string | undefined;
+                      if (supabaseId) {
+                        const { error } = await supabase
+                          .from('patients')
+                          .update({ notes: notesValue })
+                          .eq('id', supabaseId);
+                        if (error) {
+                          toast.error('저장에 실패했습니다.');
+                          return;
+                        }
+                      }
+                    }
+                    toast.success("환자 정보가 저장되었습니다.");
+                  }}>
                     저장
-                  </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedPatient.id, "updated")}>
-                    상태 업데이트
                   </Button>
                 </div>
               </div>
