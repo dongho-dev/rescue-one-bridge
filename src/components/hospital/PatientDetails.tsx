@@ -101,6 +101,7 @@ export function PatientDetails() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="환자 검색"
               />
             </div>
             <Select value={filterSeverity} onValueChange={setFilterSeverity}>
@@ -195,7 +196,7 @@ export function PatientDetails() {
                           <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(patient); setDialogOpen(true); }} aria-label="상세보기">
                             <Eye size={14} />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => toast.success("환자 정보 수정 폼이 열렸습니다.")}>
+                          <Button variant="ghost" size="sm" onClick={() => toast.success("환자 정보 수정 폼이 열렸습니다.")} aria-label="환자 정보 수정">
                             <Edit size={14} />
                           </Button>
                         </div>

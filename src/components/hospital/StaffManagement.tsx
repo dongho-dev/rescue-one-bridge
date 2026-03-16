@@ -209,6 +209,7 @@ export function StaffManagement() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="직원 검색"
               />
             </div>
             <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -337,7 +338,7 @@ export function StaffManagement() {
                             <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }} aria-label="상세보기">
                               <Eye size={14} />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
+                            <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")} aria-label="직원 정보 수정">
                               <Edit size={14} />
                             </Button>
                             <AlertDialog>
@@ -465,9 +466,25 @@ export function StaffManagement() {
                       <SelectItem value="emergency">응급호출</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="destructive" onClick={() => handleEmergencyCall(selectedStaff.id)}>
-                    응급호출
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">응급호출</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>응급호출 확인</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {selectedStaff.name}에게 응급호출을 발송하시겠습니까?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleEmergencyCall(selectedStaff.id)}>
+                          호출 발송
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </>

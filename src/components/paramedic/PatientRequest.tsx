@@ -122,6 +122,11 @@ export function PatientRequest() {
         toast.error("환자 나이를 입력해주세요.");
         return;
       }
+      const age = parseInt(newPatientForm.age, 10);
+      if (isNaN(age) || age < 0 || age > 150) {
+        toast.error("환자 나이는 0~150 사이의 숫자여야 합니다.");
+        return;
+      }
       if (!newPatientForm.severity) {
         toast.error("중증도를 선택해주세요.");
         return;
@@ -317,6 +322,7 @@ export function PatientRequest() {
                     <Input
                       id="name"
                       placeholder="이름을 입력하세요"
+                      maxLength={50}
                       value={newPatientForm.name}
                       onChange={(e) => setNewPatientForm({...newPatientForm, name: e.target.value})}
                     />
@@ -326,6 +332,8 @@ export function PatientRequest() {
                     <Input
                       id="age"
                       type="number"
+                      min="0"
+                      max="150"
                       placeholder="나이"
                       value={newPatientForm.age}
                       onChange={(e) => setNewPatientForm({...newPatientForm, age: e.target.value})}

@@ -76,6 +76,16 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       return;
     }
 
+    if (displayName.trim().length < 1) {
+      toast.error('이름을 입력해주세요.');
+      return;
+    }
+
+    if (displayName.trim().length > 50) {
+      toast.error('이름은 50자 이내로 입력해주세요.');
+      return;
+    }
+
     if (password.length < 6) {
       toast.error('비밀번호는 6자 이상이어야 합니다.');
       return;
@@ -169,6 +179,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   id="displayName"
                   type="text"
                   placeholder="홍길동"
+                  maxLength={50}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   disabled={loading}

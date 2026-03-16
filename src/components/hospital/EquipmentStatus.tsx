@@ -189,6 +189,7 @@ export function EquipmentStatus() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="장비 검색"
               />
             </div>
             <Select value={selectedType} onValueChange={setSelectedType}>
@@ -306,17 +307,17 @@ export function EquipmentStatus() {
                 )}
 
                 <div className="flex gap-1 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => { setSelectedEquipment(item); setDialogOpen(true); }}>
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedEquipment(item); setDialogOpen(true); }} aria-label="장비 설정">
                     <Settings size={14} />
                   </Button>
 
                   {item.status === 'error' && (
-                    <Button size="sm" variant="destructive" onClick={() => handleEmergencyAlert(item.id)}>
+                    <Button size="sm" variant="destructive" onClick={() => handleEmergencyAlert(item.id)} aria-label="긴급 알림">
                       <AlertTriangle size={14} />
                     </Button>
                   )}
 
-                  <Button size="sm" variant="outline" onClick={() => handleMaintenanceRequest(item.id)}>
+                  <Button size="sm" variant="outline" onClick={() => handleMaintenanceRequest(item.id)} aria-label="유지보수 요청">
                     <Calendar size={14} />
                   </Button>
                 </div>

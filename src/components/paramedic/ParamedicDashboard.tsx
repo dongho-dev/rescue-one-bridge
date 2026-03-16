@@ -86,6 +86,7 @@ export function ParamedicDashboard() {
             <Switch
               checked={isOnline}
               onCheckedChange={handleStatusToggle}
+              aria-label="온/오프라인 상태 전환"
             />
           </div>
         </div>
@@ -203,7 +204,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="w-full text-left p-4 border rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 hover:scale-[1.01]">
+        <button className="w-full text-left p-4 border rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 hover:scale-[1.01]" aria-label={`${hospital.name} 상세 정보 보기`}>
           <div className="flex items-center justify-between mb-2.5">
             <h4 className="font-medium text-sm">{hospital.name}</h4>
             <Badge variant={hospital.accepting ? "default" : "destructive"}>

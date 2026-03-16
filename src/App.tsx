@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import type { UserRole } from "./contexts/AuthContext";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./components/ui/alert-dialog";
 import {
   Building2,
   Sun,
@@ -129,6 +131,7 @@ function AppContent() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const navigationItems = useMemo(() => {
     if (!profile?.role) return allNavigationItems;
@@ -140,7 +143,12 @@ function AppContent() {
   const displayName = profile?.display_name || user?.user_metadata?.display_name || user?.email?.split('@')[0] || '사용자';
   const roleLabel = profile?.role === 'paramedic' ? '구급대원' : '병원 직원';
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setConfirmLogout(true);
+  };
+
+  const confirmSignOut = async () => {
+    setConfirmLogout(false);
     await signOut();
   };
 
@@ -233,7 +241,7 @@ function AppContent() {
                   <p className="text-xs text-sidebar-accent-foreground/70">응급실 관리 시스템</p>
                 </div>
               </div>
-              <button onClick={() => setMobileMenuOpen(false)} className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+              <button onClick={() => setMobileMenuOpen(false)} className="text-sidebar-foreground/70 hover:text-sidebar-foreground" aria-label="메뉴 닫기">
                 <X size={20} />
               </button>
             </div>
@@ -308,17 +316,40 @@ function AppContent() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">로딩 중...</p></div>}>
-            {currentPage === 'dashboard' && <HospitalDashboard />}
-            {currentPage === 'patients' && <PatientDetails />}
-            {currentPage === 'beds' && <BedManagement />}
-            {currentPage === 'staff' && <StaffManagement />}
-            {currentPage === 'equipment' && <EquipmentStatus />}
-            {currentPage === 'request' && <PatientRequest />}
+        <main className="flex-1 p-6 overflow-auto" role="main">
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64" role="status" aria-label="로딩 중">
+              <Loader2 className="animate-spin text-muted-foreground" size={32} />
+              <span className="sr-only">로딩 중...</span>
+            </div>
+          }>
+            <ErrorBoundary>
+              {currentPage === 'dashboard' && <HospitalDashboard />}
+              {currentPage === 'patients' && <PatientDetails />}
+              {currentPage === 'beds' && <BedManagement />}
+              {currentPage === 'staff' && <StaffManagement />}
+              {currentPage === 'equipment' && <EquipmentStatus />}
+              {currentPage === 'request' && <PatientRequest />}
+            </ErrorBoundary>
           </Suspense>
         </main>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={confirmLogout} onOpenChange={setConfirmLogout}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>로그아웃</AlertDialogTitle>
+            <AlertDialogDescription>
+              로그아웃 하시겠습니까? 현재 세션이 종료됩니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSignOut}>로그아웃</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -257,12 +257,12 @@ export function BedManagement() {
               )}
 
               <div className="flex gap-1 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { setSelectedBed(bed); setDialogOpen(true); }}>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedBed(bed); setDialogOpen(true); }} aria-label="병상 설정">
                   <Settings size={14} />
                 </Button>
 
                 {bed.status === 'available' && (
-                  <Button size="sm" onClick={() => handleAssignPatient(bed.id)}>
+                  <Button size="sm" onClick={() => handleAssignPatient(bed.id)} aria-label="환자 배정">
                     <Plus size={14} />
                   </Button>
                 )}

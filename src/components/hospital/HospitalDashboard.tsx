@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { InfoCard } from "../common/InfoCard";
 import { generateMockRequests, MockRequest } from "../common/models";
 import {
@@ -35,10 +36,21 @@ export function HospitalDashboard() {
   const [accepting, setAccepting] = useState(true);
   const [requests, setRequests] = useState(generateMockRequests());
   const [selectedSeverity, setSelectedSeverity] = useState('all');
+  const [confirmStopAccepting, setConfirmStopAccepting] = useState(false);
 
   const handleAcceptingToggle = (isAccepting: boolean) => {
-    setAccepting(isAccepting);
-    toast(isAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
+    if (!isAccepting) {
+      setConfirmStopAccepting(true);
+      return;
+    }
+    setAccepting(true);
+    toast("환자 수용을 시작합니다");
+  };
+
+  const confirmStopAcceptingAction = () => {
+    setAccepting(false);
+    toast("환자 수용을 중단합니다");
+    setConfirmStopAccepting(false);
   };
 
   const handleRequestAction = (requestId: string, action: 'accept' | 'hold') => {
@@ -395,6 +407,22 @@ export function HospitalDashboard() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* Stop Accepting Confirmation Dialog */}
+      <AlertDialog open={confirmStopAccepting} onOpenChange={setConfirmStopAccepting}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>환자 수용 중단</AlertDialogTitle>
+            <AlertDialogDescription>
+              환자 수용을 중단하시겠습니까? 이 동작은 대기 중인 구급대원에게 영향을 줍니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStopAcceptingAction}>중단</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
