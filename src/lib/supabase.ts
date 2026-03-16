@@ -1,10 +1,25 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const isDemoModeEnv = import.meta.env.VITE_DEMO_MODE === 'true';
+const isProduction = import.meta.env.PROD === true;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL과 Anon Key를 .env 파일에 설정해주세요.');
+/** True when env vars are missing and demo mode is NOT explicitly enabled */
+export const isEnvMissing = (!supabaseUrl || !supabaseAnonKey) && !isDemoModeEnv;
+
+/** True only when VITE_DEMO_MODE=true is explicitly set and Supabase is not configured */
+export const explicitDemoMode = isDemoModeEnv && (!supabaseUrl || !supabaseAnonKey);
+
+let _supabase: SupabaseClient | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  _supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else if (isProduction && !isDemoModeEnv) {
+  console.error(
+    '[rescue-one-bridge] 프로덕션 환경에서 Supabase 환경변수가 누락되었습니다. ' +
+    'VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 설정해주세요.'
+  );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = _supabase as SupabaseClient;
