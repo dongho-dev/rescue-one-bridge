@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
+import type { UserRole } from '../types/database';
 
-export type UserRole = 'hospital_staff' | 'paramedic';
+export type { UserRole };
 
 export interface UserProfile {
   role: UserRole;
@@ -45,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        // Profile might not exist yet (new user via OAuth)
         console.warn('Profile fetch failed:', error.message);
         setProfile(null);
         return;
@@ -83,16 +83,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Normal Supabase auth flow
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    supabase.auth.getSession()
+      .then(({ data: { session: currentSession }, error }) => {
+        if (error) {
+          console.error('Failed to get session:', error.message);
+          setLoading(false);
+          return;
+        }
 
-      if (currentSession?.user) {
-        fetchProfile(currentSession.user.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          fetchProfile(currentSession.user.id).finally(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
+      });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -115,10 +122,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out failed:', error.message);
+      }
+    } catch (err) {
+      console.error('Unexpected error during sign out:', err);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+    }
   }, []);
 
   return (

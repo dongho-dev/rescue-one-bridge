@@ -11,7 +11,8 @@ import { Textarea } from "../ui/textarea";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
-import { mockPatients, type Patient } from "@/mocks/patientData";
+import { usePatients } from "@/hooks/usePatients";
+import type { Patient, PatientStatus } from "@/types/database";
 import {
   Search,
   UserPlus,
@@ -46,7 +47,7 @@ const getPatientStatusBadgeClass = (status: string): string => {
 };
 
 export function PatientDetails() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const { patients, updatePatientStatus } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,7 +57,7 @@ export function PatientDetails() {
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          patient.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.diagnosis.toLowerCase().includes(searchTerm.toLowerCase());
+                         (patient.diagnosis ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSeverity = filterSeverity === 'all' || patient.severity === filterSeverity;
     const matchesStatus = filterStatus === 'all' || patient.status === filterStatus;
 
@@ -72,7 +73,7 @@ export function PatientDetails() {
   };
 
   const handleUpdateStatus = (patientId: string, newStatus: string) => {
-    setPatients(prev => prev.map(p => p.id === patientId ? { ...p, status: newStatus as Patient['status'] } : p));
+    updatePatientStatus(patientId, newStatus as PatientStatus);
     toast.success(`환자 ${patientId}의 상태가 ${newStatus}로 업데이트되었습니다.`);
   };
 
@@ -172,7 +173,7 @@ export function PatientDetails() {
                       <TableCell className="font-mono text-sm">{patient.id}</TableCell>
                       <TableCell className="font-medium">{patient.name}</TableCell>
                       <TableCell>{patient.age}세 / {patient.gender}</TableCell>
-                      <TableCell>{patient.diagnosis}</TableCell>
+                      <TableCell>{patient.diagnosis ?? '-'}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={getSeverityBadgeClass(patient.severity)}>
                           {getSeverityText(patient.severity)}
@@ -181,10 +182,10 @@ export function PatientDetails() {
                       <TableCell>
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Clock size={14} />
-                          {patient.admissionTime}
+                          {new Date(patient.admission_time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </TableCell>
-                      <TableCell>{patient.bed}</TableCell>
+                      <TableCell>{patient.bed_id ?? '-'}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={getPatientStatusBadgeClass(patient.status)}>
                           {getPatientStatusText(patient.status)}
@@ -240,11 +241,11 @@ export function PatientDetails() {
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">진단</Label>
-                      <p className="font-medium">{selectedPatient.diagnosis}</p>
+                      <p className="font-medium">{selectedPatient.diagnosis ?? '-'}</p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">배정 병상</Label>
-                      <p className="font-medium">{selectedPatient.bed}</p>
+                      <p className="font-medium">{selectedPatient.bed_id ?? '-'}</p>
                     </div>
                   </div>
                 </div>
@@ -263,7 +264,7 @@ export function PatientDetails() {
                           </div>
                           <span className="text-sm text-muted-foreground">심박수</span>
                         </div>
-                        <p className="text-lg font-semibold text-red-600">{selectedPatient.vitals.heartRate} <span className="text-sm font-normal text-muted-foreground">bpm</span></p>
+                        <p className="text-lg font-semibold text-red-600">{selectedPatient.vitals.heart_rate} <span className="text-sm font-normal text-muted-foreground">bpm</span></p>
                       </CardContent>
                     </Card>
                     <Card className="shadow-sm border-blue-100">
@@ -274,7 +275,7 @@ export function PatientDetails() {
                           </div>
                           <span className="text-sm text-muted-foreground">혈압</span>
                         </div>
-                        <p className="text-lg font-semibold text-blue-600">{selectedPatient.vitals.bloodPressure} <span className="text-sm font-normal text-muted-foreground">mmHg</span></p>
+                        <p className="text-lg font-semibold text-blue-600">{selectedPatient.vitals.blood_pressure} <span className="text-sm font-normal text-muted-foreground">mmHg</span></p>
                       </CardContent>
                     </Card>
                     <Card className="shadow-sm border-orange-100">
@@ -296,7 +297,7 @@ export function PatientDetails() {
                           </div>
                           <span className="text-sm text-muted-foreground">산소포화도</span>
                         </div>
-                        <p className="text-lg font-semibold text-green-600">{selectedPatient.vitals.oxygenSaturation}<span className="text-sm font-normal text-muted-foreground">%</span></p>
+                        <p className="text-lg font-semibold text-green-600">{selectedPatient.vitals.oxygen_saturation}<span className="text-sm font-normal text-muted-foreground">%</span></p>
                       </CardContent>
                     </Card>
                   </div>

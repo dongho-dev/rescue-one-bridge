@@ -45,7 +45,7 @@ export function ParamedicDashboard() {
     return {
       pending: counts.pending || 0,
       matched: counts.matched || 0,
-      enRoute: counts.enRoute || 0,
+      enRoute: counts.en_route || 0,
       completed: counts.completed || 0
     };
   };
@@ -193,7 +193,8 @@ export function ParamedicDashboard() {
   );
 }
 
-function getBedCountColor(beds: number): string {
+function getBedCountColor(available_beds: number): string {
+  const beds = available_beds;
   if (beds === 0) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
   if (beds <= 3) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
   return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
@@ -213,15 +214,15 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
             <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
               <Route size={11} />
-              {hospital.distanceKm != null ? `${hospital.distanceKm}km` : '거리 미확인'}
+              {hospital.distance_km}km
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
               <Clock size={11} />
               대기 {hospital.queue}명
             </Badge>
-            <Badge className={`flex items-center gap-1 text-xs font-medium border-0 ${getBedCountColor(hospital.beds)}`}>
+            <Badge className={`flex items-center gap-1 text-xs font-medium border-0 ${getBedCountColor(hospital.available_beds)}`}>
               <Bed size={11} />
-              병상 {hospital.beds}개
+              병상 {hospital.available_beds}개
             </Badge>
           </div>
           <div className="flex gap-1.5">
@@ -248,19 +249,19 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
             <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">거리</p>
-                <p className="text-sm font-semibold">{hospital.distanceKm != null ? `${hospital.distanceKm}km` : '미확인'}</p>
+                <p className="text-sm font-semibold">{hospital.distance_km}km</p>
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">ER 대기</p>
                 <p className="text-sm font-semibold">{hospital.queue}명</p>
               </div>
-              <div className={`p-2 rounded-lg text-center ${getBedCountColor(hospital.beds)}`}>
+              <div className={`p-2 rounded-lg text-center ${getBedCountColor(hospital.available_beds)}`}>
                 <p className="text-xs opacity-80">가용 병상</p>
-                <p className="text-sm font-semibold">{hospital.beds}개</p>
+                <p className="text-sm font-semibold">{hospital.available_beds}개</p>
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">평균 대기</p>
-                <p className="text-sm font-semibold">{hospital.avgWaitTime}분</p>
+                <p className="text-sm font-semibold">{hospital.avg_wait_time}분</p>
               </div>
             </div>
           </div>

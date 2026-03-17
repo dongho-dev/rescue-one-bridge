@@ -10,7 +10,9 @@ import { Separator } from "../ui/separator";
 import { Progress } from "../ui/progress";
 import { toast } from "sonner";
 import { getBedStatusText } from "../../utils/statusHelpers";
-import { mockBeds, type BedInfo } from "@/mocks/bedData";
+import { useBeds } from "@/hooks/useBeds";
+import { usePatients } from "@/hooks/usePatients";
+import type { Bed as BedType, BedStatus } from "@/types/database";
 import {
   Bed,
   Plus,
@@ -32,10 +34,11 @@ const getBedStatusBadgeClass = (status: string): string => {
 };
 
 export function BedManagement() {
-  const [beds, setBeds] = useState<BedInfo[]>(mockBeds);
+  const { beds, updateBedStatus } = useBeds();
+  const { patients: allPatients } = usePatients();
   const [selectedSection, setSelectedSection] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedBed, setSelectedBed] = useState<BedInfo | null>(null);
+  const [selectedBed, setSelectedBed] = useState<BedType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const sections = ['A', 'B', 'C'];
@@ -57,8 +60,9 @@ export function BedManagement() {
   const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
 
   const handleBedStatusChange = (bedId: string, newStatus: string) => {
-    setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus as BedInfo['status'] } : b));
-    toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(newStatus)}로 변경되었습니다.`);
+    const status = newStatus as BedStatus;
+    updateBedStatus(bedId, status);
+    toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(status)}로 변경되었습니다.`);
   };
 
   const handleAssignPatient = (bedId: string) => {
@@ -215,40 +219,34 @@ export function BedManagement() {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {bed.patient && (
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <User size={14} />
-                    <span className="font-medium">{bed.patient.name}</span>
+              {bed.status === 'occupied' && (() => {
+                const patient = allPatients.find(p => p.bed_id === bed.id);
+                return patient ? (
+                  <div className="bg-muted/50 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User size={14} />
+                      <span className="font-medium">{patient.name}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      환자 ID: {patient.id}
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      진단: {patient.diagnosis ?? '-'}
+                    </p>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Clock size={12} />
+                      입원: {new Date(patient.admission_time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    환자 ID: {bed.patient.id}
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    진단: {bed.patient.diagnosis}
-                  </p>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Clock size={12} />
-                    입원: {bed.patient.admissionTime}
-                  </div>
+                ) : null;
+              })()}
+
+              {bed.last_cleaned && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Calendar size={12} />
+                  마지막 청소: {new Date(bed.last_cleaned).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               )}
-
-              <div>
-                <p className="text-sm font-medium mb-2">장비</p>
-                <div className="flex flex-wrap gap-1">
-                  {bed.equipment.map((item, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {item}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Calendar size={12} />
-                마지막 청소: {bed.lastCleaned}
-              </div>
 
               {bed.notes && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded text-sm">
@@ -304,7 +302,7 @@ export function BedManagement() {
                   <Textarea
                     id="notes"
                     placeholder="병상 관련 특이사항을 입력하세요..."
-                    defaultValue={selectedBed.notes}
+                    defaultValue={selectedBed.notes ?? ''}
                     className="mt-2"
                   />
                 </div>

@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getRoleText, getStaffStatusText } from "../../utils/statusHelpers";
-import { mockStaff, type StaffMember } from "@/mocks/staffData";
+import { useStaff } from "@/hooks/useStaff";
+import type { Staff, StaffStatus } from "@/types/database";
 import {
   Search,
   Plus,
@@ -33,8 +34,8 @@ import {
 
 const getStaffStatusBadgeClass = (status: string): string => {
   switch (status) {
-    case 'on-duty': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
-    case 'off-duty': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+    case 'on_duty': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    case 'off_duty': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
     case 'break': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
     case 'emergency': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50';
     default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
@@ -53,9 +54,9 @@ const getRoleBadgeClass = (role: string): string => {
 
 const getStaffStatusIcon = (status: string) => {
   switch (status) {
-    case 'on-duty': return '\u25CF'; // ●
+    case 'on_duty': return '\u25CF'; // ●
     case 'break': return '\u25CB';   // ○
-    case 'off-duty': return '\u2014'; // —
+    case 'off_duty': return '\u2014'; // —
     case 'emergency': return '\u26A0'; // ⚠
     default: return '';
   }
@@ -82,17 +83,17 @@ const getAvatarBgClass = (role: string): string => {
 };
 
 export function StaffManagement() {
-  const [staff, setStaff] = useState<StaffMember[]>(mockStaff);
+  const { staff, updateStaffStatus } = useStaff();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.department.toLowerCase().includes(searchTerm.toLowerCase());
+                         (member.department ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === 'all' || member.role === selectedRole;
     const matchesStatus = selectedStatus === 'all' || member.status === selectedStatus;
 
@@ -101,8 +102,8 @@ export function StaffManagement() {
 
   const staffStats = {
     total: staff.length,
-    onDuty: staff.filter(s => s.status === 'on-duty').length,
-    offDuty: staff.filter(s => s.status === 'off-duty').length,
+    onDuty: staff.filter(s => s.status === 'on_duty').length,
+    offDuty: staff.filter(s => s.status === 'off_duty').length,
     onBreak: staff.filter(s => s.status === 'break').length,
     emergency: staff.filter(s => s.status === 'emergency').length
   };
@@ -111,17 +112,18 @@ export function StaffManagement() {
     toast.success("새 직원 등록 폼이 열렸습니다.");
   };
 
-  const handleViewDetails = (member: StaffMember) => {
+  const handleViewDetails = (member: Staff) => {
     setSelectedStaff(member);
   };
 
   const handleStatusChange = (staffId: string, newStatus: string) => {
-    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: newStatus as StaffMember['status'] } : s));
-    toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(newStatus)}로 변경되었습니다.`);
+    const status = newStatus as StaffStatus;
+    updateStaffStatus(staffId, status);
+    toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(status)}로 변경되었습니다.`);
   };
 
   const handleEmergencyCall = (staffId: string) => {
-    setStaff(prev => prev.map(s => s.id === staffId ? { ...s, status: 'emergency' as StaffMember['status'] } : s));
+    updateStaffStatus(staffId, 'emergency');
     toast.success(`${staffId} 직원에게 응급호출이 발송되었습니다.`);
   };
 
@@ -229,8 +231,8 @@ export function StaffManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">모든 상태</SelectItem>
-                <SelectItem value="on-duty">근무중</SelectItem>
-                <SelectItem value="off-duty">비번</SelectItem>
+                <SelectItem value="on_duty">근무중</SelectItem>
+                <SelectItem value="off_duty">비번</SelectItem>
                 <SelectItem value="break">휴식중</SelectItem>
                 <SelectItem value="emergency">응급호출</SelectItem>
               </SelectContent>
@@ -302,14 +304,14 @@ export function StaffManagement() {
                         <TableCell>{member.department}</TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <p>{member.shiftStart} - {member.shiftEnd}</p>
+                            <p>{member.shift_start} - {member.shift_end}</p>
                             <p className="text-muted-foreground">{member.shift === 'day' ? '주간' : member.shift === 'night' ? '야간' : '저녁'}근무</p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <MapPin size={14} className="text-muted-foreground" />
-                            {member.currentLocation}
+                            {member.current_location}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -404,7 +406,7 @@ export function StaffManagement() {
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">경력</Label>
-                      <p className="font-medium">{selectedStaff.yearsOfExperience}년</p>
+                      <p className="font-medium">{selectedStaff.years_of_experience}년</p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">전문분야</Label>
@@ -441,11 +443,11 @@ export function StaffManagement() {
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">비상연락처</Label>
-                      <p className="font-medium">{selectedStaff.emergencyContact}</p>
+                      <p className="font-medium">{selectedStaff.emergency_contact}</p>
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">현재 위치</Label>
-                      <p className="font-medium">{selectedStaff.currentLocation}</p>
+                      <p className="font-medium">{selectedStaff.current_location}</p>
                     </div>
                   </div>
                 </div>
@@ -459,8 +461,8 @@ export function StaffManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="on-duty">근무중</SelectItem>
-                      <SelectItem value="off-duty">비번</SelectItem>
+                      <SelectItem value="on_duty">근무중</SelectItem>
+                      <SelectItem value="off_duty">비번</SelectItem>
                       <SelectItem value="break">휴식중</SelectItem>
                       <SelectItem value="emergency">응급호출</SelectItem>
                     </SelectContent>

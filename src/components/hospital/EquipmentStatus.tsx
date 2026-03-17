@@ -11,7 +11,8 @@ import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getEquipmentStatusText, getEquipmentTypeText } from "../../utils/statusHelpers";
-import { mockEquipment, type Equipment } from "@/mocks/equipmentData";
+import { useEquipment } from "@/hooks/useEquipment";
+import type { Equipment, EquipmentStatus as EquipmentStatusType } from "@/types/database";
 import {
   Search,
   Plus,
@@ -63,7 +64,7 @@ const getBatteryTextClass = (level: number): string => {
 };
 
 export function EquipmentStatus() {
-  const [equipment, setEquipment] = useState<Equipment[]>(mockEquipment);
+  const { equipment, updateEquipmentStatus } = useEquipment();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -73,7 +74,7 @@ export function EquipmentStatus() {
   const filteredEquipment = equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.model.toLowerCase().includes(searchTerm.toLowerCase());
+                         (item.model ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || item.type === selectedType;
     const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
 
@@ -97,8 +98,9 @@ export function EquipmentStatus() {
   };
 
   const handleStatusChange = (equipmentId: string, newStatus: string) => {
-    setEquipment(prev => prev.map(e => e.id === equipmentId ? { ...e, status: newStatus as Equipment['status'] } : e));
-    toast.success(`장비 ${equipmentId}의 상태가 ${getEquipmentStatusText(newStatus)}로 변경되었습니다.`);
+    const status = newStatus as EquipmentStatusType;
+    updateEquipmentStatus(equipmentId, status);
+    toast.success(`장비 ${equipmentId}의 상태가 ${getEquipmentStatusText(status)}로 변경되었습니다.`);
   };
 
   const handleEmergencyAlert = (equipmentId: string) => {
@@ -262,27 +264,27 @@ export function EquipmentStatus() {
                   {item.location}
                 </div>
 
-                {item.assignedTo && (
+                {item.assigned_bed_id && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded text-sm">
-                    <p className="font-medium">사용 중: {item.assignedTo}</p>
+                    <p className="font-medium">배정 병상: {item.assigned_bed_id}</p>
                   </div>
                 )}
 
-                {item.batteryLevel !== undefined && (
+                {item.battery_level != null && (
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>배터리</span>
-                      <span className={`font-medium ${getBatteryTextClass(item.batteryLevel)}`}>{item.batteryLevel}%</span>
+                      <span className={`font-medium ${getBatteryTextClass(item.battery_level)}`}>{item.battery_level}%</span>
                     </div>
-                    <Progress value={item.batteryLevel} className={`h-2 ${getBatteryColorClass(item.batteryLevel)}`} />
+                    <Progress value={item.battery_level} className={`h-2 ${getBatteryColorClass(item.battery_level)}`} />
                   </div>
                 )}
 
                 <div className="text-sm">
-                  <p className="text-muted-foreground">사용 시간: {item.usageHours}h</p>
+                  <p className="text-muted-foreground">사용 시간: {item.usage_hours}h</p>
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <Calendar size={12} />
-                    다음 점검: {item.nextMaintenance}
+                    다음 점검: {item.next_maintenance ?? '-'}
                   </div>
                 </div>
 
@@ -362,7 +364,7 @@ export function EquipmentStatus() {
                     </div>
                     <div>
                       <Label className="text-muted-foreground text-sm">사용 시간</Label>
-                      <p className="font-medium">{selectedEquipment.usageHours}시간</p>
+                      <p className="font-medium">{selectedEquipment.usage_hours}시간</p>
                     </div>
                   </div>
                 </div>
@@ -391,7 +393,7 @@ export function EquipmentStatus() {
                   <Textarea
                     id="notes"
                     placeholder="장비 관련 특이사항을 입력하세요..."
-                    defaultValue={selectedEquipment.notes}
+                    defaultValue={selectedEquipment.notes ?? ''}
                     className="mt-2"
                   />
                 </div>

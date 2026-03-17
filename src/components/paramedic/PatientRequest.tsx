@@ -70,7 +70,6 @@ const quickPatients: QuickPatient[] = [
 export function PatientRequest() {
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
   const [isNewPatient, setIsNewPatient] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentLocation] = useState('서울시 강남구 역삼동 123-45');
   const [estimatedTime] = useState('15분');
 
@@ -107,9 +106,7 @@ export function PatientRequest() {
     toast.success("현재 위치가 업데이트되었습니다.");
   };
 
-  const handleRequest = async (type: 'emergency' | 'urgent' | 'normal') => {
-    if (isSubmitting) return;
-
+  const handleRequest = (type: 'emergency' | 'urgent' | 'normal') => {
     if (!selectedPatient && !isNewPatient) {
       toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
       return;
@@ -137,32 +134,7 @@ export function PatientRequest() {
 
     const patientName = selectedPatient ? selectedPatient.name : newPatientForm.name;
     const typeLabel = type === 'emergency' ? '위급' : type === 'urgent' ? '긴급' : '일반';
-
-    setIsSubmitting(true);
-    try {
-      // Simulate createRequest in demo mode (no hook import needed for standalone component)
-      const success = await new Promise<boolean>((resolve) => {
-        // Demo mode: simulate success after brief delay
-        setTimeout(() => resolve(true), 300);
-      });
-
-      if (success) {
-        toast.success(`${patientName} 환자의 ${typeLabel} 요청이 병원으로 전송되었습니다!`);
-        // Reset form
-        setSelectedPatient(null);
-        setIsNewPatient(false);
-        setNewPatientForm({
-          name: '', age: '', gender: '', condition: '', severity: '', symptoms: '',
-          vitals: { consciousness: '', bloodPressure: '', pulse: '', respiration: '', temperature: '' }
-        });
-      } else {
-        toast.error('요청 전송에 실패했습니다. 다시 시도해주세요.');
-      }
-    } catch {
-      toast.error('요청 전송에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    toast.success(`${patientName} 환자의 ${typeLabel} 요청이 병원으로 전송되었습니다!`);
   };
 
   return (
@@ -484,26 +456,23 @@ export function PatientRequest() {
               <Button
                 className="w-full bg-red-600 hover:bg-red-700 text-white text-base font-semibold h-14 shadow-lg shadow-red-600/20"
                 onClick={() => handleRequest('emergency')}
-                disabled={isSubmitting}
               >
                 <AlertTriangle size={20} className="mr-2" />
-                {isSubmitting ? '전송 중...' : '응급 요청 (위급)'}
+                응급 요청 (위급)
               </Button>
 
               <Button
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold h-12"
                 onClick={() => handleRequest('urgent')}
-                disabled={isSubmitting}
               >
                 <Heart size={18} className="mr-2" />
-                {isSubmitting ? '전송 중...' : '응급 요청 (긴급)'}
+                응급 요청 (긴급)
               </Button>
 
               <Button
                 variant="outline"
                 className="w-full border-2 border-primary text-primary hover:bg-primary/10 font-medium h-11"
                 onClick={() => handleRequest('normal')}
-                disabled={isSubmitting}
               >
                 <Activity size={16} className="mr-2" />
                 일반 이송 요청

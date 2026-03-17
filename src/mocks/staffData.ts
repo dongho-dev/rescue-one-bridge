@@ -1,74 +1,75 @@
-export interface StaffMember {
-  id: string;
-  name: string;
-  role: 'doctor' | 'nurse' | 'technician' | 'admin';
-  department: string;
-  shift: 'day' | 'night' | 'evening';
-  status: 'on-duty' | 'off-duty' | 'break' | 'emergency';
-  phone: string;
-  email: string;
-  specialization?: string;
-  yearsOfExperience: number;
-  currentLocation: string;
-  shiftStart: string;
-  shiftEnd: string;
-  certifications: string[];
-  emergencyContact: string;
-}
+import type { Staff } from '@/types/database';
+
+export type StaffMember = Staff;
 
 export const mockStaff: StaffMember[] = [
   {
     id: 'DOC001',
+    hospital_id: '',
+    profile_id: null,
     name: '김의사',
     role: 'doctor',
     department: '응급의학과',
     shift: 'day',
-    status: 'on-duty',
+    status: 'on_duty',
     phone: '010-0000-0001',
     email: 'staff1@example.com',
     specialization: '외상외과',
-    yearsOfExperience: 8,
-    currentLocation: '응급실 A구역',
-    shiftStart: '08:00',
-    shiftEnd: '18:00',
+    years_of_experience: 8,
+    current_location: '응급실 A구역',
+    shift_start: '08:00',
+    shift_end: '18:00',
     certifications: ['ACLS', 'ATLS', 'BLS'],
-    emergencyContact: '010-0000-1001'
+    emergency_contact: '010-0000-1001',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'DOC002',
+    hospital_id: '',
+    profile_id: null,
     name: '이의사',
     role: 'doctor',
     department: '응급의학과',
     shift: 'night',
-    status: 'off-duty',
+    status: 'off_duty',
     phone: '010-0000-0002',
     email: 'staff2@example.com',
     specialization: '내과',
-    yearsOfExperience: 12,
-    currentLocation: '대기실',
-    shiftStart: '18:00',
-    shiftEnd: '08:00',
+    years_of_experience: 12,
+    current_location: '대기실',
+    shift_start: '18:00',
+    shift_end: '08:00',
     certifications: ['ACLS', 'BLS', 'PALS'],
-    emergencyContact: '010-0000-1002'
+    emergency_contact: '010-0000-1002',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'NUR001',
+    hospital_id: '',
+    profile_id: null,
     name: '박간호사',
     role: 'nurse',
     department: '응급실',
     shift: 'day',
-    status: 'on-duty',
+    status: 'on_duty',
     phone: '010-0000-0003',
     email: 'staff3@example.com',
-    yearsOfExperience: 5,
-    currentLocation: '응급실 B구역',
-    shiftStart: '08:00',
-    shiftEnd: '18:00',
+    specialization: null,
+    years_of_experience: 5,
+    current_location: '응급실 B구역',
+    shift_start: '08:00',
+    shift_end: '18:00',
     certifications: ['BLS', 'ACLS'],
-    emergencyContact: '010-0000-1003'
+    emergency_contact: '010-0000-1003',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'NUR002',
+    hospital_id: '',
+    profile_id: null,
     name: '최간호사',
     role: 'nurse',
     department: '응급실',
@@ -76,44 +77,56 @@ export const mockStaff: StaffMember[] = [
     status: 'break',
     phone: '010-0000-0004',
     email: 'staff4@example.com',
-    yearsOfExperience: 3,
-    currentLocation: '휴게실',
-    shiftStart: '14:00',
-    shiftEnd: '22:00',
+    specialization: null,
+    years_of_experience: 3,
+    current_location: '휴게실',
+    shift_start: '14:00',
+    shift_end: '22:00',
     certifications: ['BLS'],
-    emergencyContact: '010-0000-1004'
+    emergency_contact: '010-0000-1004',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'TEC001',
+    hospital_id: '',
+    profile_id: null,
     name: '정기사',
     role: 'technician',
     department: '방사선과',
     shift: 'day',
-    status: 'on-duty',
+    status: 'on_duty',
     phone: '010-0000-0005',
     email: 'staff5@example.com',
     specialization: 'X-ray, CT',
-    yearsOfExperience: 7,
-    currentLocation: '영상의학과',
-    shiftStart: '08:00',
-    shiftEnd: '18:00',
+    years_of_experience: 7,
+    current_location: '영상의학과',
+    shift_start: '08:00',
+    shift_end: '18:00',
     certifications: ['방사선사', 'CT 전문'],
-    emergencyContact: '010-0000-1005'
+    emergency_contact: '010-0000-1005',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'ADM001',
+    hospital_id: '',
+    profile_id: null,
     name: '송관리자',
     role: 'admin',
     department: '응급실 관리',
     shift: 'day',
-    status: 'on-duty',
+    status: 'on_duty',
     phone: '010-0000-0006',
     email: 'staff6@example.com',
-    yearsOfExperience: 10,
-    currentLocation: '관리실',
-    shiftStart: '08:00',
-    shiftEnd: '18:00',
+    specialization: null,
+    years_of_experience: 10,
+    current_location: '관리실',
+    shift_start: '08:00',
+    shift_end: '18:00',
     certifications: ['병원관리사'],
-    emergencyContact: '010-0000-1006'
+    emergency_contact: '010-0000-1006',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 ];

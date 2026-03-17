@@ -1,121 +1,139 @@
-export interface Equipment {
-  id: string;
-  name: string;
-  type: 'monitor' | 'ventilator' | 'defibrillator' | 'xray' | 'ultrasound' | 'infusion' | 'other';
-  model: string;
-  manufacturer: string;
-  status: 'operational' | 'maintenance' | 'error' | 'offline';
-  location: string;
-  lastMaintenance: string;
-  nextMaintenance: string;
-  batteryLevel?: number;
-  usageHours: number;
-  alerts: string[];
-  assignedTo?: string;
-  notes?: string;
-}
+import type { Equipment } from '@/types/database';
+
+export type { Equipment };
 
 export const mockEquipment: Equipment[] = [
   {
     id: 'EQ001',
+    hospital_id: '',
+    assigned_bed_id: 'A-01',
     name: '환자 모니터 #1',
     type: 'monitor',
     model: 'PhilipsX40',
     manufacturer: 'Philips',
     status: 'operational',
     location: '응급실 A-01',
-    lastMaintenance: '2024-01-15',
-    nextMaintenance: '2024-04-15',
-    batteryLevel: 85,
-    usageHours: 1250,
+    last_maintenance: '2024-01-15',
+    next_maintenance: '2024-04-15',
+    battery_level: 85,
+    usage_hours: 1250,
     alerts: [],
-    assignedTo: '김민수 (P001)'
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'EQ002',
+    hospital_id: '',
+    assigned_bed_id: 'A-02',
     name: '인공호흡기 #1',
     type: 'ventilator',
     model: 'DrägerV500',
     manufacturer: 'Dräger',
     status: 'operational',
     location: '응급실 A-02',
-    lastMaintenance: '2024-02-01',
-    nextMaintenance: '2024-05-01',
-    batteryLevel: 92,
-    usageHours: 890,
+    last_maintenance: '2024-02-01',
+    next_maintenance: '2024-05-01',
+    battery_level: 92,
+    usage_hours: 890,
     alerts: [],
-    assignedTo: '박철수 (P003)'
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'EQ003',
+    hospital_id: '',
+    assigned_bed_id: null,
     name: '제세동기 #1',
     type: 'defibrillator',
     model: 'ZollR Plus',
     manufacturer: 'Zoll',
     status: 'maintenance',
     location: '정비실',
-    lastMaintenance: '2024-02-20',
-    nextMaintenance: '2024-03-20',
-    batteryLevel: 100,
-    usageHours: 450,
+    last_maintenance: '2024-02-20',
+    next_maintenance: '2024-03-20',
+    battery_level: 100,
+    usage_hours: 450,
     alerts: ['정기 점검 중'],
-    notes: '전극 패드 교체 예정'
+    notes: '전극 패드 교체 예정',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'EQ004',
+    hospital_id: '',
+    assigned_bed_id: null,
     name: 'X-ray 촬영기',
     type: 'xray',
     model: 'SiemensArios',
     manufacturer: 'Siemens',
     status: 'operational',
     location: '영상의학과',
-    lastMaintenance: '2024-01-10',
-    nextMaintenance: '2024-04-10',
-    usageHours: 2150,
-    alerts: []
+    last_maintenance: '2024-01-10',
+    next_maintenance: '2024-04-10',
+    battery_level: null,
+    usage_hours: 2150,
+    alerts: [],
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'EQ005',
+    hospital_id: '',
+    assigned_bed_id: null,
     name: '초음파 진단기',
     type: 'ultrasound',
     model: 'GELogiq',
     manufacturer: 'GE Healthcare',
     status: 'error',
     location: '응급실 B구역',
-    lastMaintenance: '2024-01-25',
-    nextMaintenance: '2024-04-25',
-    usageHours: 1680,
+    last_maintenance: '2024-01-25',
+    next_maintenance: '2024-04-25',
+    battery_level: null,
+    usage_hours: 1680,
     alerts: ['프로브 연결 오류', '긴급 수리 필요'],
-    notes: '프로브 케이블 손상으로 인한 오류'
+    notes: '프로브 케이블 손상으로 인한 오류',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'EQ006',
+    hospital_id: '',
+    assigned_bed_id: 'B-03',
     name: '수액 주입기 #1',
     type: 'infusion',
     model: 'B.BraunPerfusor',
     manufacturer: 'B.Braun',
     status: 'operational',
     location: '응급실 B-03',
-    lastMaintenance: '2024-02-05',
-    nextMaintenance: '2024-05-05',
-    batteryLevel: 78,
-    usageHours: 820,
+    last_maintenance: '2024-02-05',
+    next_maintenance: '2024-05-05',
+    battery_level: 78,
+    usage_hours: 820,
     alerts: [],
-    assignedTo: '이영희 (P002)'
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'EQ007',
+    hospital_id: '',
+    assigned_bed_id: null,
     name: '환자 모니터 #2',
     type: 'monitor',
     model: 'PhilipsX40',
     manufacturer: 'Philips',
     status: 'offline',
     location: '창고',
-    lastMaintenance: '2024-01-20',
-    nextMaintenance: '2024-04-20',
-    batteryLevel: 0,
-    usageHours: 2890,
+    last_maintenance: '2024-01-20',
+    next_maintenance: '2024-04-20',
+    battery_level: 0,
+    usage_hours: 2890,
     alerts: ['배터리 방전', '전원 공급 필요'],
-    notes: '예비 장비로 보관 중'
+    notes: '예비 장비로 보관 중',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 ];

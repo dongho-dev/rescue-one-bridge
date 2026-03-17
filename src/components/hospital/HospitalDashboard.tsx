@@ -250,7 +250,7 @@ export function HospitalDashboard() {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">
-                            {request.distanceKm}km / <span className="font-medium">{request.eta}분</span>
+                            {request.distance_km}km / <span className="font-medium">{request.eta_minutes}분</span>
                           </span>
                         </TableCell>
                         <TableCell>
@@ -416,7 +416,7 @@ function RequestDetailDialog({ request, onAccept }: { request: MockRequest; onAc
           <div>
             <h4 className="font-medium">환자 정보</h4>
             <p className="text-sm text-muted-foreground">
-              연령: {request.patientAge}<br/>
+              연령: {request.patient_age}<br/>
               증상: {request.symptom}<br/>
               중증도: {request.severity}/5<br/>
               {request.allergies && `알레르기: ${request.allergies.join(', ')}`}
@@ -425,8 +425,8 @@ function RequestDetailDialog({ request, onAccept }: { request: MockRequest; onAc
           <div>
             <h4 className="font-medium">위치 정보</h4>
             <p className="text-sm text-muted-foreground">
-              거리: {request.distanceKm}km<br/>
-              예상 도착시간: {request.eta}분
+              거리: {request.distance_km}km<br/>
+              예상 도착시간: {request.eta_minutes}분
             </p>
           </div>
           <div className="flex gap-2">

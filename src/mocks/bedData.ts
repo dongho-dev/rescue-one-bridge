@@ -1,108 +1,94 @@
-export interface BedInfo {
-  id: string;
-  section: string;
-  number: string;
-  status: 'occupied' | 'available' | 'maintenance' | 'cleaning';
-  patient?: {
-    name: string;
-    id: string;
-    admissionTime: string;
-    diagnosis: string;
-  };
-  equipment: string[];
-  lastCleaned: string;
-  notes?: string;
-}
+import type { Bed } from '@/types/database';
+
+export type BedInfo = Bed;
 
 export const mockBeds: BedInfo[] = [
   {
     id: 'A-01',
+    hospital_id: '',
     section: 'A',
     number: '01',
     status: 'occupied',
-    patient: {
-      name: '김민수',
-      id: 'P001',
-      admissionTime: '14:25',
-      diagnosis: '급성 심근경색'
-    },
-    equipment: ['심전도', '산소공급', '링거'],
-    lastCleaned: '13:30',
-    notes: '중환자, 지속적인 모니터링 필요'
+    last_cleaned: '2026-03-17T13:30:00Z',
+    notes: '중환자, 지속적인 모니터링 필요',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'A-02',
+    hospital_id: '',
     section: 'A',
     number: '02',
     status: 'occupied',
-    patient: {
-      name: '박철수',
-      id: 'P003',
-      admissionTime: '12:30',
-      diagnosis: '호흡곤란'
-    },
-    equipment: ['산소공급', '호흡기'],
-    lastCleaned: '12:00',
+    last_cleaned: '2026-03-17T12:00:00Z',
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'A-03',
+    hospital_id: '',
     section: 'A',
     number: '03',
     status: 'available',
-    equipment: ['기본'],
-    lastCleaned: '15:00',
+    last_cleaned: '2026-03-17T15:00:00Z',
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'B-01',
+    hospital_id: '',
     section: 'B',
     number: '01',
     status: 'maintenance',
-    equipment: ['기본'],
-    lastCleaned: '10:00',
-    notes: '전기 시설 점검 중'
+    last_cleaned: '2026-03-17T10:00:00Z',
+    notes: '전기 시설 점검 중',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'B-02',
+    hospital_id: '',
     section: 'B',
     number: '02',
     status: 'cleaning',
-    equipment: ['기본'],
-    lastCleaned: '진행중',
+    last_cleaned: null,
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'B-03',
+    hospital_id: '',
     section: 'B',
     number: '03',
     status: 'occupied',
-    patient: {
-      name: '이영희',
-      id: 'P002',
-      admissionTime: '13:45',
-      diagnosis: '골절 의심'
-    },
-    equipment: ['X-ray 호환'],
-    lastCleaned: '13:15',
+    last_cleaned: '2026-03-17T13:15:00Z',
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'C-01',
+    hospital_id: '',
     section: 'C',
     number: '01',
     status: 'occupied',
-    patient: {
-      name: '최미영',
-      id: 'P004',
-      admissionTime: '11:15',
-      diagnosis: '두통 및 어지러움'
-    },
-    equipment: ['기본'],
-    lastCleaned: '11:00',
+    last_cleaned: '2026-03-17T11:00:00Z',
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'C-02',
+    hospital_id: '',
     section: 'C',
     number: '02',
     status: 'available',
-    equipment: ['기본'],
-    lastCleaned: '14:30',
+    last_cleaned: '2026-03-17T14:30:00Z',
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 ];

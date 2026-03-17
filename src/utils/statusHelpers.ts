@@ -1,8 +1,18 @@
+import type {
+  PatientSeverity,
+  PatientStatus,
+  BedStatus,
+  StaffRole,
+  StaffStatus,
+  EquipmentStatus,
+  EquipmentType,
+} from '@/types/database';
+
 export type BadgeVariant = 'default' | 'destructive' | 'secondary' | 'outline';
 
-// ── Severity (중증도) ──────────────────────────────────────────────
+// -- Severity (중증도) --
 
-export const getSeverityColor = (severity: string): BadgeVariant => {
+export const getSeverityColor = (severity: PatientSeverity): BadgeVariant => {
   switch (severity) {
     case 'critical': return 'destructive';
     case 'urgent': return 'secondary';
@@ -11,7 +21,7 @@ export const getSeverityColor = (severity: string): BadgeVariant => {
   }
 };
 
-export const getSeverityText = (severity: string): string => {
+export const getSeverityText = (severity: PatientSeverity): string => {
   switch (severity) {
     case 'critical': return '위급';
     case 'urgent': return '응급';
@@ -20,9 +30,9 @@ export const getSeverityText = (severity: string): string => {
   }
 };
 
-// ── Patient Status (환자 상태) ─────────────────────────────────────
+// -- Patient Status (환자 상태) --
 
-export const getPatientStatusColor = (status: string): BadgeVariant => {
+export const getPatientStatusColor = (status: PatientStatus): BadgeVariant => {
   switch (status) {
     case 'treating': return 'default';
     case 'waiting': return 'secondary';
@@ -32,7 +42,7 @@ export const getPatientStatusColor = (status: string): BadgeVariant => {
   }
 };
 
-export const getPatientStatusText = (status: string): string => {
+export const getPatientStatusText = (status: PatientStatus): string => {
   switch (status) {
     case 'waiting': return '대기중';
     case 'treating': return '치료중';
@@ -42,9 +52,9 @@ export const getPatientStatusText = (status: string): string => {
   }
 };
 
-// ── Bed Status (병상 상태) ─────────────────────────────────────────
+// -- Bed Status (병상 상태) --
 
-export const getBedStatusColor = (status: string): BadgeVariant => {
+export const getBedStatusColor = (status: BedStatus): BadgeVariant => {
   switch (status) {
     case 'occupied': return 'destructive';
     case 'available': return 'default';
@@ -54,7 +64,7 @@ export const getBedStatusColor = (status: string): BadgeVariant => {
   }
 };
 
-export const getBedStatusText = (status: string): string => {
+export const getBedStatusText = (status: BedStatus): string => {
   switch (status) {
     case 'occupied': return '사용중';
     case 'available': return '사용가능';
@@ -64,9 +74,9 @@ export const getBedStatusText = (status: string): string => {
   }
 };
 
-// ── Staff Role (직원 직종) ─────────────────────────────────────────
+// -- Staff Role (직원 직종) --
 
-export const getRoleColor = (role: string): BadgeVariant => {
+export const getRoleColor = (role: StaffRole): BadgeVariant => {
   switch (role) {
     case 'doctor': return 'default';
     case 'nurse': return 'secondary';
@@ -76,7 +86,7 @@ export const getRoleColor = (role: string): BadgeVariant => {
   }
 };
 
-export const getRoleText = (role: string): string => {
+export const getRoleText = (role: StaffRole): string => {
   switch (role) {
     case 'doctor': return '의사';
     case 'nurse': return '간호사';
@@ -86,31 +96,31 @@ export const getRoleText = (role: string): string => {
   }
 };
 
-// ── Staff Status (직원 상태) ───────────────────────────────────────
+// -- Staff Status (직원 상태) --
 
-export const getStaffStatusColor = (status: string): BadgeVariant => {
+export const getStaffStatusColor = (status: StaffStatus): BadgeVariant => {
   switch (status) {
-    case 'on-duty': return 'default';
-    case 'off-duty': return 'secondary';
+    case 'on_duty': return 'default';
+    case 'off_duty': return 'secondary';
     case 'break': return 'outline';
     case 'emergency': return 'destructive';
     default: return 'outline';
   }
 };
 
-export const getStaffStatusText = (status: string): string => {
+export const getStaffStatusText = (status: StaffStatus): string => {
   switch (status) {
-    case 'on-duty': return '근무중';
-    case 'off-duty': return '비번';
+    case 'on_duty': return '근무중';
+    case 'off_duty': return '비번';
     case 'break': return '휴식중';
     case 'emergency': return '응급호출';
     default: return status;
   }
 };
 
-// ── Equipment Status (장비 상태) ───────────────────────────────────
+// -- Equipment Status (장비 상태) --
 
-export const getEquipmentStatusColor = (status: string): BadgeVariant => {
+export const getEquipmentStatusColor = (status: EquipmentStatus): BadgeVariant => {
   switch (status) {
     case 'operational': return 'default';
     case 'maintenance': return 'secondary';
@@ -120,7 +130,7 @@ export const getEquipmentStatusColor = (status: string): BadgeVariant => {
   }
 };
 
-export const getEquipmentStatusText = (status: string): string => {
+export const getEquipmentStatusText = (status: EquipmentStatus): string => {
   switch (status) {
     case 'operational': return '정상';
     case 'maintenance': return '점검중';
@@ -130,9 +140,9 @@ export const getEquipmentStatusText = (status: string): string => {
   }
 };
 
-// ── Equipment Type (장비 종류) ─────────────────────────────────────
+// -- Equipment Type (장비 종류) --
 
-export const getEquipmentTypeText = (type: string): string => {
+export const getEquipmentTypeText = (type: EquipmentType): string => {
   switch (type) {
     case 'monitor': return '환자 모니터';
     case 'ventilator': return '인공호흡기';
@@ -140,6 +150,7 @@ export const getEquipmentTypeText = (type: string): string => {
     case 'xray': return 'X-ray';
     case 'ultrasound': return '초음파';
     case 'infusion': return '수액 주입기';
+    case 'other': return '기타';
     default: return '기타';
   }
 };

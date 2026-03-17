@@ -13,7 +13,7 @@ describe('generateMockRequests', () => {
       expect(req).toHaveProperty('id');
       expect(req).toHaveProperty('time');
       expect(req).toHaveProperty('severity');
-      expect(req).toHaveProperty('distanceKm');
+      expect(req).toHaveProperty('distance_km');
       expect(req).toHaveProperty('symptom');
       expect(req).toHaveProperty('status');
     }
@@ -35,7 +35,7 @@ describe('generateMockRequests', () => {
   });
 
   it('status should be one of the valid values', () => {
-    const validStatuses = ['pending', 'matched', 'enRoute', 'completed'];
+    const validStatuses = ['pending', 'matched', 'en_route', 'completed'];
     const requests = generateMockRequests();
     for (const req of requests) {
       expect(validStatuses).toContain(req.status);
@@ -49,10 +49,10 @@ describe('generateMockRequests', () => {
     }
   });
 
-  it('distanceKm should be a positive number', () => {
+  it('distance_km should be a positive number', () => {
     const requests = generateMockRequests();
     for (const req of requests) {
-      expect(req.distanceKm).toBeGreaterThan(0);
+      expect(req.distance_km).toBeGreaterThan(0);
     }
   });
 });
@@ -70,9 +70,9 @@ describe('generateMockHospitals', () => {
       expect(hospital).toHaveProperty('name');
       expect(hospital).toHaveProperty('accepting');
       expect(hospital).toHaveProperty('queue');
-      expect(hospital).toHaveProperty('beds');
+      expect(hospital).toHaveProperty('available_beds');
       expect(hospital).toHaveProperty('specialties');
-      expect(hospital).toHaveProperty('distanceKm');
+      expect(hospital).toHaveProperty('distance_km');
     }
   });
 
@@ -98,20 +98,20 @@ describe('generateMockHospitals', () => {
     }
   });
 
-  it('queue and beds should be non-negative integers', () => {
+  it('queue and available_beds should be non-negative integers', () => {
     const hospitals = generateMockHospitals();
     for (const hospital of hospitals) {
       expect(hospital.queue).toBeGreaterThanOrEqual(0);
       expect(Number.isInteger(hospital.queue)).toBe(true);
-      expect(hospital.beds).toBeGreaterThanOrEqual(0);
-      expect(Number.isInteger(hospital.beds)).toBe(true);
+      expect(hospital.available_beds).toBeGreaterThanOrEqual(0);
+      expect(Number.isInteger(hospital.available_beds)).toBe(true);
     }
   });
 
-  it('distanceKm should be a positive number', () => {
+  it('distance_km should be a positive number', () => {
     const hospitals = generateMockHospitals();
     for (const hospital of hospitals) {
-      expect(hospital.distanceKm).toBeGreaterThan(0);
+      expect(hospital.distance_km).toBeGreaterThan(0);
     }
   });
 });

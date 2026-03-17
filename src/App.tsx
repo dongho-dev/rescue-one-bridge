@@ -4,7 +4,7 @@ import { Badge } from "./components/ui/badge";
 import { ThemeProvider, useTheme } from "./components/theme/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import type { UserRole } from "./contexts/AuthContext";
+import type { UserRole } from "./types/database";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
 import {

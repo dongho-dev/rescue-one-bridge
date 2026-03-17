@@ -1,88 +1,98 @@
-export interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  diagnosis: string;
-  severity: 'critical' | 'urgent' | 'stable';
-  admissionTime: string;
-  bed: string;
-  vitals: {
-    heartRate: number;
-    bloodPressure: string;
-    temperature: number;
-    oxygenSaturation: number;
-  };
-  status: 'waiting' | 'treating' | 'stable' | 'discharged';
-}
+import type { Patient } from '@/types/database';
+
+export type { Patient };
 
 export const mockPatients: Patient[] = [
   {
     id: 'P001',
+    hospital_id: '',
+    bed_id: 'A-01',
     name: '김민수',
     age: 45,
     gender: '남성',
     diagnosis: '급성 심근경색',
     severity: 'critical',
-    admissionTime: '14:25',
-    bed: 'A-01',
+    status: 'treating',
+    admission_time: '2026-03-17T14:25:00Z',
+    discharge_time: null,
     vitals: {
-      heartRate: 95,
-      bloodPressure: '140/90',
+      heart_rate: 95,
+      blood_pressure: '140/90',
       temperature: 37.2,
-      oxygenSaturation: 98
+      oxygen_saturation: 98,
     },
-    status: 'treating'
+    allergies: [],
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'P002',
+    hospital_id: '',
+    bed_id: 'B-03',
     name: '이영희',
     age: 32,
     gender: '여성',
     diagnosis: '골절 의심',
     severity: 'urgent',
-    admissionTime: '13:45',
-    bed: 'B-03',
+    status: 'waiting',
+    admission_time: '2026-03-17T13:45:00Z',
+    discharge_time: null,
     vitals: {
-      heartRate: 82,
-      bloodPressure: '120/80',
+      heart_rate: 82,
+      blood_pressure: '120/80',
       temperature: 36.8,
-      oxygenSaturation: 99
+      oxygen_saturation: 99,
     },
-    status: 'waiting'
+    allergies: [],
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'P003',
+    hospital_id: '',
+    bed_id: 'A-02',
     name: '박철수',
     age: 67,
     gender: '남성',
     diagnosis: '호흡곤란',
     severity: 'urgent',
-    admissionTime: '12:30',
-    bed: 'A-02',
+    status: 'treating',
+    admission_time: '2026-03-17T12:30:00Z',
+    discharge_time: null,
     vitals: {
-      heartRate: 105,
-      bloodPressure: '160/95',
+      heart_rate: 105,
+      blood_pressure: '160/95',
       temperature: 38.1,
-      oxygenSaturation: 92
+      oxygen_saturation: 92,
     },
-    status: 'treating'
+    allergies: [],
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'P004',
+    hospital_id: '',
+    bed_id: 'C-01',
     name: '최미영',
     age: 28,
     gender: '여성',
     diagnosis: '두통 및 어지러움',
     severity: 'stable',
-    admissionTime: '11:15',
-    bed: 'C-01',
+    status: 'stable',
+    admission_time: '2026-03-17T11:15:00Z',
+    discharge_time: null,
     vitals: {
-      heartRate: 75,
-      bloodPressure: '115/75',
+      heart_rate: 75,
+      blood_pressure: '115/75',
       temperature: 36.5,
-      oxygenSaturation: 100
+      oxygen_saturation: 100,
     },
-    status: 'stable'
+    allergies: [],
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 ];
