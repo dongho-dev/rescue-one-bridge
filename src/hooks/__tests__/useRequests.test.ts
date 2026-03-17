@@ -49,9 +49,9 @@ describe('useRequests mock data', () => {
       expect(req.time).toBeInstanceOf(Date);
       expect(req.severity).toBeGreaterThanOrEqual(1);
       expect(req.severity).toBeLessThanOrEqual(5);
-      expect(typeof req.distanceKm).toBe('number');
+      expect(typeof req.distance_km).toBe('number');
       expect(req.symptom).toBeTruthy();
-      expect(['pending', 'matched', 'enRoute', 'completed']).toContain(req.status);
+      expect(['pending', 'matched', 'en_route', 'completed']).toContain(req.status);
     }
   });
 
@@ -62,11 +62,11 @@ describe('useRequests mock data', () => {
     }
   });
 
-  it('eta values are positive numbers', () => {
+  it('eta_minutes values are positive numbers', () => {
     const requests = generateMockRequests();
     for (const req of requests) {
-      if (req.eta !== undefined) {
-        expect(req.eta).toBeGreaterThan(0);
+      if (req.eta_minutes !== undefined) {
+        expect(req.eta_minutes).toBeGreaterThan(0);
       }
     }
   });

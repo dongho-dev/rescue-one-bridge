@@ -15,7 +15,7 @@ describe('useEquipment mock data', () => {
       expect(item.type).toBeTruthy();
       expect(item.status).toBeTruthy();
       expect(item.location).toBeTruthy();
-      expect(typeof item.usageHours).toBe('number');
+      expect(typeof item.usage_hours).toBe('number');
     }
   });
 
@@ -28,16 +28,16 @@ describe('useEquipment mock data', () => {
 
   it('battery levels are 0-100 when present', () => {
     for (const item of mockEquipment) {
-      if (item.batteryLevel !== undefined) {
-        expect(item.batteryLevel).toBeGreaterThanOrEqual(0);
-        expect(item.batteryLevel).toBeLessThanOrEqual(100);
+      if (item.battery_level != null) {
+        expect(item.battery_level).toBeGreaterThanOrEqual(0);
+        expect(item.battery_level).toBeLessThanOrEqual(100);
       }
     }
   });
 
   it('usage hours are non-negative', () => {
     for (const item of mockEquipment) {
-      expect(item.usageHours).toBeGreaterThanOrEqual(0);
+      expect(item.usage_hours).toBeGreaterThanOrEqual(0);
     }
   });
 

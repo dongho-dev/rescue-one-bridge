@@ -1,56 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { dbStatusToFrontend, frontendStatusToDb } from '../useStaff';
+import { mockStaff } from '../../mocks/staffData';
 
-describe('useStaff status conversion', () => {
-  describe('dbStatusToFrontend', () => {
-    it('converts on_duty to on-duty', () => {
-      expect(dbStatusToFrontend('on_duty')).toBe('on-duty');
-    });
+/**
+ * Staff status values are now aligned directly to DB ENUMs (snake_case).
+ * No conversion needed — DB and frontend use identical values.
+ */
 
-    it('converts off_duty to off-duty', () => {
-      expect(dbStatusToFrontend('off_duty')).toBe('off-duty');
-    });
-
-    it('passes through break unchanged', () => {
-      expect(dbStatusToFrontend('break')).toBe('break');
-    });
-
-    it('passes through emergency unchanged', () => {
-      expect(dbStatusToFrontend('emergency')).toBe('emergency');
-    });
+describe('useStaff data contracts', () => {
+  it('staff status values match DB ENUMs directly', () => {
+    const validStatuses = ['on_duty', 'off_duty', 'break', 'emergency'];
+    for (const member of mockStaff) {
+      expect(validStatuses).toContain(member.status);
+    }
   });
 
-  describe('frontendStatusToDb', () => {
-    it('converts on-duty to on_duty', () => {
-      expect(frontendStatusToDb('on-duty')).toBe('on_duty');
-    });
-
-    it('converts off-duty to off_duty', () => {
-      expect(frontendStatusToDb('off-duty')).toBe('off_duty');
-    });
-
-    it('passes through break unchanged', () => {
-      expect(frontendStatusToDb('break')).toBe('break');
-    });
-
-    it('passes through emergency unchanged', () => {
-      expect(frontendStatusToDb('emergency')).toBe('emergency');
-    });
-  });
-
-  describe('roundtrip conversion', () => {
-    it('should roundtrip on_duty correctly', () => {
-      const dbVal = 'on_duty';
-      const frontend = dbStatusToFrontend(dbVal);
-      const backToDb = frontendStatusToDb(frontend);
-      expect(backToDb).toBe(dbVal);
-    });
-
-    it('should roundtrip off_duty correctly', () => {
-      const dbVal = 'off_duty';
-      const frontend = dbStatusToFrontend(dbVal);
-      const backToDb = frontendStatusToDb(frontend);
-      expect(backToDb).toBe(dbVal);
-    });
+  it('staff roles match DB ENUMs directly', () => {
+    const validRoles = ['doctor', 'nurse', 'technician', 'admin'];
+    for (const member of mockStaff) {
+      expect(validRoles).toContain(member.role);
+    }
   });
 });

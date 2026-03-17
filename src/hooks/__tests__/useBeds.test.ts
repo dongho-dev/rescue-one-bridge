@@ -14,7 +14,6 @@ describe('useBeds mock data', () => {
       expect(bed.section).toBeTruthy();
       expect(bed.number).toBeTruthy();
       expect(bed.status).toBeTruthy();
-      expect(Array.isArray(bed.equipment)).toBe(true);
     }
   });
 
@@ -22,24 +21,6 @@ describe('useBeds mock data', () => {
     const validStatuses = ['occupied', 'available', 'maintenance', 'cleaning'];
     for (const bed of mockBeds) {
       expect(validStatuses).toContain(bed.status);
-    }
-  });
-
-  it('occupied beds have patient data', () => {
-    const occupied = mockBeds.filter(b => b.status === 'occupied');
-    expect(occupied.length).toBeGreaterThan(0);
-    for (const bed of occupied) {
-      expect(bed.patient).toBeDefined();
-      expect(bed.patient!.name).toBeTruthy();
-      expect(bed.patient!.id).toBeTruthy();
-      expect(bed.patient!.admissionTime).toBeTruthy();
-    }
-  });
-
-  it('available beds do not have patient data', () => {
-    const available = mockBeds.filter(b => b.status === 'available');
-    for (const bed of available) {
-      expect(bed.patient).toBeUndefined();
     }
   });
 

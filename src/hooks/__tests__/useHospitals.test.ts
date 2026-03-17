@@ -14,33 +14,33 @@ describe('useHospitals mock data', () => {
       expect(h.name).toBeTruthy();
       expect(typeof h.accepting).toBe('boolean');
       expect(typeof h.queue).toBe('number');
-      expect(typeof h.beds).toBe('number');
+      expect(typeof h.available_beds).toBe('number');
       expect(Array.isArray(h.specialties)).toBe(true);
       expect(h.specialties.length).toBeGreaterThan(0);
     }
   });
 
-  it('distanceKm is consistent between calls (no Math.random)', () => {
+  it('distance_km is consistent between calls (no Math.random)', () => {
     const first = generateMockHospitals();
     const second = generateMockHospitals();
     for (let i = 0; i < first.length; i++) {
-      expect(first[i].distanceKm).toBe(second[i].distanceKm);
+      expect(first[i].distance_km).toBe(second[i].distance_km);
     }
   });
 
-  it('distanceKm values are fixed numbers in mock data', () => {
+  it('distance_km values are fixed numbers in mock data', () => {
     const hospitals = generateMockHospitals();
     const expectedDistances = [2.3, 4.1, 1.8, 6.5, 3.2, 5.7];
     for (let i = 0; i < hospitals.length; i++) {
-      expect(hospitals[i].distanceKm).toBe(expectedDistances[i]);
+      expect(hospitals[i].distance_km).toBe(expectedDistances[i]);
     }
   });
 
-  it('distanceKm can be null in the interface (type check)', () => {
-    // This is a compile-time test that MockHospital.distanceKm accepts null
+  it('distance_km can be null in the interface (type check)', () => {
+    // This is a compile-time test that MockHospital.distance_km accepts null
     const testHospital = generateMockHospitals()[0];
-    const withNull = { ...testHospital, distanceKm: null };
-    expect(withNull.distanceKm).toBeNull();
+    const withNull = { ...testHospital, distance_km: null };
+    expect(withNull.distance_km).toBeNull();
   });
 
   it('each hospital has contact information', () => {
@@ -50,10 +50,10 @@ describe('useHospitals mock data', () => {
     }
   });
 
-  it('each hospital has avgWaitTime', () => {
+  it('each hospital has avg_wait_time', () => {
     const hospitals = generateMockHospitals();
     for (const h of hospitals) {
-      expect(h.avgWaitTime).toBeGreaterThan(0);
+      expect(h.avg_wait_time).toBeGreaterThan(0);
     }
   });
 });

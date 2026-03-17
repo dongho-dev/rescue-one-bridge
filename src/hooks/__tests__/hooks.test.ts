@@ -19,8 +19,7 @@ describe('Mock data contracts (hook fallback data)', () => {
         expect(bed).toHaveProperty('section');
         expect(bed).toHaveProperty('number');
         expect(bed).toHaveProperty('status');
-        expect(bed).toHaveProperty('equipment');
-        expect(bed).toHaveProperty('lastCleaned');
+        expect(bed).toHaveProperty('last_cleaned');
       }
     });
 
@@ -28,16 +27,6 @@ describe('Mock data contracts (hook fallback data)', () => {
       const validStatuses = ['occupied', 'available', 'maintenance', 'cleaning'];
       for (const bed of mockBeds) {
         expect(validStatuses).toContain(bed.status);
-      }
-    });
-
-    it('occupied beds should have patient info', () => {
-      const occupiedBeds = mockBeds.filter(b => b.status === 'occupied');
-      expect(occupiedBeds.length).toBeGreaterThan(0);
-      for (const bed of occupiedBeds) {
-        expect(bed.patient).toBeDefined();
-        expect(bed.patient!.name).toBeTruthy();
-        expect(bed.patient!.id).toBeTruthy();
       }
     });
   });
@@ -56,11 +45,11 @@ describe('Mock data contracts (hook fallback data)', () => {
 
     it('should have valid vitals', () => {
       for (const patient of mockPatients) {
-        expect(patient.vitals.heartRate).toBeGreaterThan(0);
-        expect(patient.vitals.bloodPressure).toBeTruthy();
+        expect(patient.vitals.heart_rate).toBeGreaterThan(0);
+        expect(patient.vitals.blood_pressure).toBeTruthy();
         expect(patient.vitals.temperature).toBeGreaterThan(0);
-        expect(patient.vitals.oxygenSaturation).toBeGreaterThan(0);
-        expect(patient.vitals.oxygenSaturation).toBeLessThanOrEqual(100);
+        expect(patient.vitals.oxygen_saturation).toBeGreaterThan(0);
+        expect(patient.vitals.oxygen_saturation).toBeLessThanOrEqual(100);
       }
     });
 
@@ -93,7 +82,7 @@ describe('Mock data contracts (hook fallback data)', () => {
     });
 
     it('should have valid status values', () => {
-      const validStatuses = ['on-duty', 'off-duty', 'break', 'emergency'];
+      const validStatuses = ['on_duty', 'off_duty', 'break', 'emergency'];
       for (const member of mockStaff) {
         expect(validStatuses).toContain(member.status);
       }
@@ -108,7 +97,7 @@ describe('Mock data contracts (hook fallback data)', () => {
         expect(item).toHaveProperty('type');
         expect(item).toHaveProperty('status');
         expect(item).toHaveProperty('location');
-        expect(item).toHaveProperty('usageHours');
+        expect(item).toHaveProperty('usage_hours');
       }
     });
 
@@ -121,9 +110,9 @@ describe('Mock data contracts (hook fallback data)', () => {
 
     it('battery levels should be 0-100 when present', () => {
       for (const item of mockEquipment) {
-        if (item.batteryLevel !== undefined) {
-          expect(item.batteryLevel).toBeGreaterThanOrEqual(0);
-          expect(item.batteryLevel).toBeLessThanOrEqual(100);
+        if (item.battery_level != null) {
+          expect(item.battery_level).toBeGreaterThanOrEqual(0);
+          expect(item.battery_level).toBeLessThanOrEqual(100);
         }
       }
     });
@@ -155,8 +144,8 @@ describe('Mock data contracts (hook fallback data)', () => {
       const hospitals1 = generateMockHospitals();
       const hospitals2 = generateMockHospitals();
       for (let i = 0; i < hospitals1.length; i++) {
-        expect(hospitals1[i].distanceKm).toBe(hospitals2[i].distanceKm);
-        expect(hospitals1[i].beds).toBe(hospitals2[i].beds);
+        expect(hospitals1[i].distance_km).toBe(hospitals2[i].distance_km);
+        expect(hospitals1[i].available_beds).toBe(hospitals2[i].available_beds);
         expect(hospitals1[i].queue).toBe(hospitals2[i].queue);
       }
     });

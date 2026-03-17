@@ -8,23 +8,23 @@ import { mockPatients } from '../../mocks/patientData';
  */
 
 describe('usePatients mock data', () => {
-  it('mock patients have valid vitals with camelCase keys', () => {
+  it('mock patients have valid vitals with snake_case keys', () => {
     for (const patient of mockPatients) {
-      expect(patient.vitals).toHaveProperty('heartRate');
-      expect(patient.vitals).toHaveProperty('bloodPressure');
+      expect(patient.vitals).toHaveProperty('heart_rate');
+      expect(patient.vitals).toHaveProperty('blood_pressure');
       expect(patient.vitals).toHaveProperty('temperature');
-      expect(patient.vitals).toHaveProperty('oxygenSaturation');
+      expect(patient.vitals).toHaveProperty('oxygen_saturation');
     }
   });
 
   it('vitals values are within expected ranges', () => {
     for (const patient of mockPatients) {
-      expect(patient.vitals.heartRate).toBeGreaterThan(0);
-      expect(patient.vitals.heartRate).toBeLessThan(300);
+      expect(patient.vitals.heart_rate).toBeGreaterThan(0);
+      expect(patient.vitals.heart_rate).toBeLessThan(300);
       expect(patient.vitals.temperature).toBeGreaterThan(30);
       expect(patient.vitals.temperature).toBeLessThan(45);
-      expect(patient.vitals.oxygenSaturation).toBeGreaterThanOrEqual(0);
-      expect(patient.vitals.oxygenSaturation).toBeLessThanOrEqual(100);
+      expect(patient.vitals.oxygen_saturation).toBeGreaterThanOrEqual(0);
+      expect(patient.vitals.oxygen_saturation).toBeLessThanOrEqual(100);
     }
   });
 
@@ -40,29 +40,19 @@ describe('usePatients mock data', () => {
 });
 
 describe('usePatients vitals DB key mapping', () => {
-  // This test documents the expected DB -> frontend key mapping
-  // that was fixed in issue #39
-  it('DB uses snake_case keys for vitals', () => {
-    // These are the keys used in the DB (from seed data)
-    const dbVitals = {
+  // Frontend now uses snake_case keys matching the DB schema directly
+  it('DB and frontend both use snake_case keys for vitals', () => {
+    const vitals = {
       heart_rate: 95,
       blood_pressure: '140/90',
       temperature: 37.2,
       oxygen_saturation: 98,
     };
 
-    // Frontend maps to camelCase
-    const frontendVitals = {
-      heartRate: dbVitals.heart_rate,
-      bloodPressure: dbVitals.blood_pressure,
-      temperature: dbVitals.temperature,
-      oxygenSaturation: dbVitals.oxygen_saturation,
-    };
-
-    expect(frontendVitals.heartRate).toBe(95);
-    expect(frontendVitals.bloodPressure).toBe('140/90');
-    expect(frontendVitals.temperature).toBe(37.2);
-    expect(frontendVitals.oxygenSaturation).toBe(98);
+    expect(vitals.heart_rate).toBe(95);
+    expect(vitals.blood_pressure).toBe('140/90');
+    expect(vitals.temperature).toBe(37.2);
+    expect(vitals.oxygen_saturation).toBe(98);
   });
 
   it('documents that camelCase keys from DB would return undefined', () => {
