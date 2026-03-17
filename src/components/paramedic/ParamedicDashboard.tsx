@@ -6,7 +6,11 @@ import { Switch } from "../ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { InfoCard } from "../common/InfoCard";
 import { MiniMapPlaceholder } from "../common/MiniMapPlaceholder";
-import { generateMockRequests, generateMockHospitals, MockHospital } from "../common/models";
+import { useRequests } from "@/hooks/useRequests";
+import { useHospitalAvailability } from "@/hooks/useHospitalAvailability";
+import { generateMockHospitals } from "../common/models";
+import type { HospitalAvailability } from "@/types/database";
+import { LoadingState } from "../common/LoadingState";
 import {
   Ambulance,
   Phone,
@@ -28,8 +32,11 @@ const recentEvents = [
 
 export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
-  const [hospitals] = useState(generateMockHospitals());
-  const [requests] = useState(generateMockRequests());
+  const { hospitals: dbHospitals, loading: hospitalsLoading, error: hospitalsError, refetch: refetchHospitals } = useHospitalAvailability();
+  const { requests: dbRequests, loading: requestsLoading, error: requestsError } = useRequests();
+  const hospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
+  const loading = hospitalsLoading || requestsLoading;
+  const error = hospitalsError || requestsError;
 
   const handleStatusToggle = (online: boolean) => {
     setIsOnline(online);
@@ -37,7 +44,7 @@ export function ParamedicDashboard() {
   };
 
   const getStatusCounts = () => {
-    const counts = requests.reduce((acc, req) => {
+    const counts = dbRequests.reduce((acc, req) => {
       acc[req.status] = (acc[req.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -62,7 +69,8 @@ export function ParamedicDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <LoadingState loading={loading} error={error} onRetry={refetchHospitals}>
+      <div className="space-y-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -133,9 +141,10 @@ export function ParamedicDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {hospitals.slice(0, 5).map((hospital) => (
-              <HospitalCard key={hospital.id} hospital={hospital} />
-            ))}
+            {hospitals.slice(0, 5).map((h) => {
+              const hospital = normalizeHospital(h);
+              return <HospitalCard key={hospital.id} hospital={hospital} />;
+            })}
           </CardContent>
         </Card>
 
@@ -190,7 +199,47 @@ export function ParamedicDashboard() {
         </CardContent>
       </Card>
     </div>
+    </LoadingState>
   );
+}
+
+type HospitalDisplay = {
+  id: string;
+  name: string;
+  accepting: boolean;
+  queue: number;
+  available_beds: number;
+  specialties: string[];
+  contact: string | null;
+  distance_km: number | null;
+  avg_wait_time: number | null;
+};
+
+function normalizeHospital(h: HospitalAvailability | ReturnType<typeof generateMockHospitals>[number]): HospitalDisplay {
+  if ('hospital_id' in h) {
+    return {
+      id: h.hospital_id,
+      name: h.hospital_name,
+      accepting: h.accepting,
+      queue: h.queue,
+      available_beds: h.available_beds,
+      specialties: h.specialties,
+      contact: h.contact,
+      distance_km: null,
+      avg_wait_time: h.avg_wait_time,
+    };
+  }
+  return {
+    id: h.id,
+    name: h.name,
+    accepting: h.accepting,
+    queue: h.queue,
+    available_beds: h.available_beds,
+    specialties: h.specialties,
+    contact: h.contact ?? null,
+    distance_km: h.distance_km,
+    avg_wait_time: h.avg_wait_time ?? null,
+  };
 }
 
 function getBedCountColor(available_beds: number): string {
@@ -200,7 +249,7 @@ function getBedCountColor(available_beds: number): string {
   return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
 }
 
-function HospitalCard({ hospital }: { hospital: MockHospital }) {
+function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -214,7 +263,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
             <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
               <Route size={11} />
-              {hospital.distance_km}km
+              {hospital.distance_km != null ? `${hospital.distance_km}km` : '거리 미확인'}
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1 text-xs font-normal">
               <Clock size={11} />
@@ -249,7 +298,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
             <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">거리</p>
-                <p className="text-sm font-semibold">{hospital.distance_km}km</p>
+                <p className="text-sm font-semibold">{hospital.distance_km != null ? `${hospital.distance_km}km` : '거리 미확인'}</p>
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">ER 대기</p>
@@ -261,7 +310,7 @@ function HospitalCard({ hospital }: { hospital: MockHospital }) {
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">평균 대기</p>
-                <p className="text-sm font-semibold">{hospital.avg_wait_time}분</p>
+                <p className="text-sm font-semibold">{hospital.avg_wait_time != null ? `${hospital.avg_wait_time}분` : '-'}</p>
               </div>
             </div>
           </div>

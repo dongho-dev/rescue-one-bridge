@@ -6,7 +6,10 @@ import { Switch } from "../ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { InfoCard } from "../common/InfoCard";
-import { generateMockRequests, MockRequest } from "../common/models";
+import { useRequests } from "@/hooks/useRequests";
+import { useBeds } from "@/hooks/useBeds";
+import { LoadingState } from "../common/LoadingState";
+import type { Request } from "@/types/database";
 import {
   Building2,
   Users,
@@ -33,7 +36,8 @@ const recentAlerts = [
 
 export function HospitalDashboard() {
   const [accepting, setAccepting] = useState(true);
-  const [requests, setRequests] = useState(generateMockRequests());
+  const { requests: dbRequests, loading, error, refetch, updateRequestStatus } = useRequests();
+  const { beds } = useBeds();
   const [selectedSeverity, setSelectedSeverity] = useState('all');
 
   const handleAcceptingToggle = (isAccepting: boolean) => {
@@ -42,25 +46,21 @@ export function HospitalDashboard() {
   };
 
   const handleRequestAction = (requestId: string, action: 'accept' | 'hold') => {
-    setRequests(prev => prev.map(req =>
-      req.id === requestId
-        ? { ...req, status: action === 'accept' ? 'matched' : 'pending' }
-        : req
-    ));
+    updateRequestStatus(requestId, action === 'accept' ? 'matched' : 'pending');
     toast(action === 'accept' ? "요청을 수락했습니다" : "요청을 보류했습니다");
   };
 
   const filteredRequests = selectedSeverity === 'all'
-    ? requests.filter(req => req.status === 'pending')
-    : requests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity);
+    ? dbRequests.filter(req => req.status === 'pending')
+    : dbRequests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity);
 
   const kpiData = useMemo(() => {
-    const availableBeds = 8;
-    const erQueue = requests.filter(req => req.status === 'matched').length;
+    const availableBeds = beds.filter(b => b.status === 'available').length;
+    const erQueue = dbRequests.filter(req => req.status === 'matched').length;
     const avgWaitTime = 25;
-    const todayProcessed = requests.filter(req => req.status === 'completed').length;
+    const todayProcessed = dbRequests.filter(req => req.status === 'completed').length;
     return { availableBeds, erQueue, avgWaitTime, todayProcessed };
-  }, [requests]);
+  }, [dbRequests, beds]);
 
   const getSeverityBadgeClasses = (severity: number) => {
     if (severity >= 4) return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800';
@@ -106,13 +106,14 @@ export function HospitalDashboard() {
   );
 
   const severityDistributionData = [
-    { name: '경미', value: requests.filter(r => r.severity <= 2).length, color: 'var(--chart-3)' },
-    { name: '보통', value: requests.filter(r => r.severity === 3).length, color: 'var(--chart-4)' },
-    { name: '심각', value: requests.filter(r => r.severity >= 4).length, color: 'var(--chart-5)' },
+    { name: '경미', value: dbRequests.filter(r => r.severity <= 2).length, color: 'var(--chart-3)' },
+    { name: '보통', value: dbRequests.filter(r => r.severity === 3).length, color: 'var(--chart-4)' },
+    { name: '심각', value: dbRequests.filter(r => r.severity >= 4).length, color: 'var(--chart-5)' },
   ];
 
   return (
-    <div className="space-y-6">
+    <LoadingState loading={loading} error={error} onRetry={refetch}>
+      <div className="space-y-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -238,7 +239,7 @@ export function HospitalDashboard() {
                     filteredRequests.slice(0, 6).map((request) => (
                       <TableRow key={request.id} className="hover:bg-muted/50 transition-colors">
                         <TableCell className="font-mono text-sm">
-                          {request.time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(request.requested_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -395,11 +396,12 @@ export function HospitalDashboard() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </LoadingState>
   );
 }
 
-function RequestDetailDialog({ request, onAccept }: { request: MockRequest; onAccept: (requestId: string) => void }) {
+function RequestDetailDialog({ request, onAccept }: { request: Request; onAccept: (requestId: string) => void }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -416,7 +418,7 @@ function RequestDetailDialog({ request, onAccept }: { request: MockRequest; onAc
           <div>
             <h4 className="font-medium">환자 정보</h4>
             <p className="text-sm text-muted-foreground">
-              연령: {request.patient_age}<br/>
+              연령: {request.patient_age}세<br/>
               증상: {request.symptom}<br/>
               중증도: {request.severity}/5<br/>
               {request.allergies && `알레르기: ${request.allergies.join(', ')}`}

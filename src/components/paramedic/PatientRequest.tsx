@@ -9,6 +9,8 @@ import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityColor, getSeverityText } from "../../utils/statusHelpers";
+import { useRequests } from "@/hooks/useRequests";
+import type { RequestPriority } from "@/types/database";
 import {
   Ambulance,
   User,
@@ -68,6 +70,8 @@ const quickPatients: QuickPatient[] = [
 
 
 export function PatientRequest() {
+  const { createRequest } = useRequests();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
   const [isNewPatient, setIsNewPatient] = useState(false);
   const [currentLocation] = useState('서울시 강남구 역삼동 123-45');
@@ -106,14 +110,15 @@ export function PatientRequest() {
     toast.success("현재 위치가 업데이트되었습니다.");
   };
 
-  const handleRequest = (type: 'emergency' | 'urgent' | 'normal') => {
+  const handleRequest = async (type: 'emergency' | 'urgent' | 'normal') => {
+    if (isSubmitting) return;
+
     if (!selectedPatient && !isNewPatient) {
       toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
       return;
     }
 
     if (isNewPatient) {
-      // 필수 필드 검증
       if (!newPatientForm.name.trim()) {
         toast.error("환자 이름을 입력해주세요.");
         return;
@@ -137,9 +142,40 @@ export function PatientRequest() {
       }
     }
 
-    const patientName = selectedPatient ? selectedPatient.name : newPatientForm.name;
-    const typeLabel = type === 'emergency' ? '위급' : type === 'urgent' ? '긴급' : '일반';
-    toast.success(`${patientName} 환자의 ${typeLabel} 요청이 병원으로 전송되었습니다!`);
+    const severityMap: Record<string, number> = { critical: 5, urgent: 3, stable: 1 };
+    const patientSeverity = selectedPatient
+      ? severityMap[selectedPatient.severity] ?? 3
+      : severityMap[newPatientForm.severity] ?? 3;
+
+    setIsSubmitting(true);
+    try {
+      await createRequest({
+        priority: type as RequestPriority,
+        severity: patientSeverity,
+        symptom: selectedPatient ? selectedPatient.condition : newPatientForm.condition,
+        patient_name: selectedPatient ? selectedPatient.name : newPatientForm.name || undefined,
+        patient_age: selectedPatient ? selectedPatient.age : (Number(newPatientForm.age) || undefined),
+        patient_gender: selectedPatient ? selectedPatient.gender : (newPatientForm.gender || undefined),
+        vitals: isNewPatient ? {
+          blood_pressure: newPatientForm.vitals.bloodPressure || undefined,
+          heart_rate: Number(newPatientForm.vitals.pulse) || undefined,
+          temperature: Number(newPatientForm.vitals.temperature) || undefined,
+        } : undefined,
+        notes: isNewPatient ? newPatientForm.symptoms || undefined : undefined,
+      });
+
+      // Reset form on success
+      setSelectedPatient(null);
+      setIsNewPatient(false);
+      setNewPatientForm({
+        name: '', age: '', gender: '', condition: '', severity: '', symptoms: '',
+        vitals: { consciousness: '', bloodPressure: '', pulse: '', respiration: '', temperature: '' }
+      });
+    } catch {
+      // Error already handled by the hook via toast
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -461,26 +497,29 @@ export function PatientRequest() {
               <Button
                 className="w-full bg-red-600 hover:bg-red-700 text-white text-base font-semibold h-14 shadow-lg shadow-red-600/20"
                 onClick={() => handleRequest('emergency')}
+                disabled={isSubmitting}
               >
                 <AlertTriangle size={20} className="mr-2" />
-                응급 요청 (위급)
+                {isSubmitting ? '전송 중...' : '응급 요청 (위급)'}
               </Button>
 
               <Button
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold h-12"
                 onClick={() => handleRequest('urgent')}
+                disabled={isSubmitting}
               >
                 <Heart size={18} className="mr-2" />
-                응급 요청 (긴급)
+                {isSubmitting ? '전송 중...' : '응급 요청 (긴급)'}
               </Button>
 
               <Button
                 variant="outline"
                 className="w-full border-2 border-primary text-primary hover:bg-primary/10 font-medium h-11"
                 onClick={() => handleRequest('normal')}
+                disabled={isSubmitting}
               >
                 <Activity size={16} className="mr-2" />
-                일반 이송 요청
+                {isSubmitting ? '전송 중...' : '일반 이송 요청'}
               </Button>
 
               <Separator className="my-1" />
