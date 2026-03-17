@@ -13,6 +13,7 @@ import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getRoleText, getStaffStatusText } from "../../utils/statusHelpers";
 import { useStaff } from "@/hooks/useStaff";
+import { LoadingState } from "../common/LoadingState";
 import type { Staff, StaffStatus } from "@/types/database";
 import {
   Search,
@@ -83,7 +84,7 @@ const getAvatarBgClass = (role: string): string => {
 };
 
 export function StaffManagement() {
-  const { staff, updateStaffStatus } = useStaff();
+  const { staff, loading, error, refetch, updateStaffStatus } = useStaff();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -128,6 +129,7 @@ export function StaffManagement() {
   };
 
   return (
+    <LoadingState loading={loading} error={error} onRetry={refetch}>
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -477,5 +479,6 @@ export function StaffManagement() {
         </DialogContent>
       </Dialog>
     </div>
+    </LoadingState>
   );
 }

@@ -2,6 +2,7 @@ import { useState, Suspense, lazy, useMemo } from 'react';
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import { ThemeProvider, useTheme } from "./components/theme/ThemeProvider";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import type { UserRole } from "./types/database";
@@ -339,14 +340,16 @@ function AppContent() {
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-auto">
-          <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">로딩 중...</p></div>}>
-            {currentPage === 'dashboard' && <HospitalDashboard />}
-            {currentPage === 'patients' && <PatientDetails />}
-            {currentPage === 'beds' && <BedManagement />}
-            {currentPage === 'staff' && <StaffManagement />}
-            {currentPage === 'equipment' && <EquipmentStatus />}
-            {currentPage === 'request' && <PatientRequest />}
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">로딩 중...</p></div>}>
+              {currentPage === 'dashboard' && <HospitalDashboard />}
+              {currentPage === 'patients' && <PatientDetails />}
+              {currentPage === 'beds' && <BedManagement />}
+              {currentPage === 'staff' && <StaffManagement />}
+              {currentPage === 'equipment' && <EquipmentStatus />}
+              {currentPage === 'request' && <PatientRequest />}
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
     </div>

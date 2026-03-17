@@ -12,6 +12,7 @@ import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getEquipmentStatusText, getEquipmentTypeText } from "../../utils/statusHelpers";
 import { useEquipment } from "@/hooks/useEquipment";
+import { LoadingState } from "../common/LoadingState";
 import type { Equipment, EquipmentStatus as EquipmentStatusType } from "@/types/database";
 import {
   Search,
@@ -64,7 +65,7 @@ const getBatteryTextClass = (level: number): string => {
 };
 
 export function EquipmentStatus() {
-  const { equipment, updateEquipmentStatus } = useEquipment();
+  const { equipment, loading, error, refetch, updateEquipmentStatus } = useEquipment();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -108,6 +109,7 @@ export function EquipmentStatus() {
   };
 
   return (
+    <LoadingState loading={loading} error={error} onRetry={refetch}>
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -415,5 +417,6 @@ export function EquipmentStatus() {
         </DialogContent>
       </Dialog>
     </div>
+    </LoadingState>
   );
 }

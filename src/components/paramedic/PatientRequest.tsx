@@ -122,6 +122,11 @@ export function PatientRequest() {
         toast.error("환자 나이를 입력해주세요.");
         return;
       }
+      const ageNum = Number(newPatientForm.age);
+      if (isNaN(ageNum) || ageNum < 0 || ageNum > 150) {
+        toast.error("나이는 0~150 사이의 숫자여야 합니다.");
+        return;
+      }
       if (!newPatientForm.severity) {
         toast.error("중증도를 선택해주세요.");
         return;

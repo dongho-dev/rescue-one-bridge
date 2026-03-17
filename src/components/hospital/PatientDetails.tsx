@@ -12,6 +12,7 @@ import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
 import { usePatients } from "@/hooks/usePatients";
+import { LoadingState } from "../common/LoadingState";
 import type { Patient, PatientStatus } from "@/types/database";
 import {
   Search,
@@ -47,7 +48,7 @@ const getPatientStatusBadgeClass = (status: string): string => {
 };
 
 export function PatientDetails() {
-  const { patients, updatePatientStatus } = usePatients();
+  const { patients, loading, error, refetch, updatePatientStatus } = usePatients();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,6 +79,7 @@ export function PatientDetails() {
   };
 
   return (
+    <LoadingState loading={loading} error={error} onRetry={refetch}>
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -329,5 +331,6 @@ export function PatientDetails() {
         </DialogContent>
       </Dialog>
     </div>
+    </LoadingState>
   );
 }

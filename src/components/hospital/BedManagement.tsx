@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { getBedStatusText } from "../../utils/statusHelpers";
 import { useBeds } from "@/hooks/useBeds";
 import { usePatients } from "@/hooks/usePatients";
+import { LoadingState } from "../common/LoadingState";
 import type { Bed as BedType, BedStatus } from "@/types/database";
 import {
   Bed,
@@ -34,7 +35,7 @@ const getBedStatusBadgeClass = (status: string): string => {
 };
 
 export function BedManagement() {
-  const { beds, updateBedStatus } = useBeds();
+  const { beds, loading, error, refetch, updateBedStatus } = useBeds();
   const { patients: allPatients } = usePatients();
   const [selectedSection, setSelectedSection] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -74,6 +75,7 @@ export function BedManagement() {
   };
 
   return (
+    <LoadingState loading={loading} error={error} onRetry={refetch}>
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -323,5 +325,6 @@ export function BedManagement() {
         </DialogContent>
       </Dialog>
     </div>
+    </LoadingState>
   );
 }

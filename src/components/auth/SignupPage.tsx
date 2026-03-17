@@ -76,6 +76,11 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       return;
     }
 
+    if (displayName.trim().length < 2 || displayName.trim().length > 50) {
+      toast.error('이름은 2~50자 사이여야 합니다.');
+      return;
+    }
+
     if (password.length < 6) {
       toast.error('비밀번호는 6자 이상이어야 합니다.');
       return;
