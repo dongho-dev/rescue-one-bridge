@@ -137,6 +137,18 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   };
 
   const handleGoogleSignup = async () => {
+    // Validate hospital selection before OAuth redirect
+    if (role === 'hospital_staff' && !hospitalId && hospitals.length > 0) {
+      toast.error('소속 병원을 선택해주세요.');
+      return;
+    }
+
+    // Persist role/hospital to localStorage so the post-OAuth callback can apply them
+    localStorage.setItem(
+      'oauth_signup_meta',
+      JSON.stringify({ role, hospitalId: hospitalId || null }),
+    );
+
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -146,10 +158,12 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
         },
       });
       if (error) {
+        localStorage.removeItem('oauth_signup_meta');
         toast.error(`Google 회원가입 실패: ${error.message}`);
         setLoading(false);
       }
     } catch {
+      localStorage.removeItem('oauth_signup_meta');
       toast.error('Google 회원가입 중 오류가 발생했습니다.');
       setLoading(false);
     }
