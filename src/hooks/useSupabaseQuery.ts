@@ -51,6 +51,12 @@ export function useSupabaseQuery<T extends { id: string }>({
     setLoading(true);
     setError(null);
 
+    if (!supabase) {
+      setData(fallback);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data: rows, error: fetchError } = await supabase
         .from(table)
@@ -79,7 +85,7 @@ export function useSupabaseQuery<T extends { id: string }>({
 
   // Realtime subscription
   useEffect(() => {
-    if (!realtime || !enabled || !hospitalId) return;
+    if (!realtime || !enabled || !hospitalId || !supabase) return;
 
     const channel = supabase
       .channel(`${table}:hospital:${hospitalId}`)

@@ -8,6 +8,12 @@ export function useHospitalAvailability() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAvailability = useCallback(async () => {
+    if (!supabase) {
+      setHospitals([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 

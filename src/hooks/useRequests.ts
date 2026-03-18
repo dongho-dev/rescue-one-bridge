@@ -79,7 +79,7 @@ export function useRequests(): UseRequestsResult {
   }, [fetchRequests]);
 
   useEffect(() => {
-    if (!user || !profile) return;
+    if (!user || !profile || !supabase) return;
 
     const filterColumn = profile.role === 'hospital_staff' ? 'hospital_id' : 'paramedic_id';
     const filterValue = profile.role === 'hospital_staff' ? profile.hospital_id : user.id;
