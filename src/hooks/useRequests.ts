@@ -25,6 +25,9 @@ export interface CreateRequestData {
   allergies?: string[];
   vitals?: Record<string, unknown>;
   notes?: string;
+  location_text?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export function useRequests(): UseRequestsResult {

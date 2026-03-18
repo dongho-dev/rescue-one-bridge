@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -10,6 +10,7 @@ import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityColor, getSeverityText } from "../../utils/statusHelpers";
 import { useRequests } from "@/hooks/useRequests";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import type { RequestPriority } from "@/types/database";
 import {
   Ambulance,
@@ -71,11 +72,27 @@ const quickPatients: QuickPatient[] = [
 
 export function PatientRequest() {
   const { createRequest } = useRequests();
+  const { position, refresh: refreshGeo } = useGeolocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
   const [isNewPatient, setIsNewPatient] = useState(false);
-  const [currentLocation] = useState('서울시 강남구 역삼동 123-45');
+  const [currentLocation, setCurrentLocation] = useState('위치 확인 중...');
   const [estimatedTime] = useState('15분');
+
+  // GPS 좌표 → 주소 텍스트 (reverse geocoding via Nominatim)
+  useEffect(() => {
+    if (!position) return;
+    const { latitude, longitude } = position;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ko`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.display_name) {
+          const parts = data.display_name.split(', ').slice(0, 3);
+          setCurrentLocation(parts.reverse().join(' '));
+        }
+      })
+      .catch(() => setCurrentLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`));
+  }, [position]);
 
   // 새 환자 폼 상태
   const [newPatientForm, setNewPatientForm] = useState({
@@ -107,6 +124,7 @@ export function PatientRequest() {
   };
 
   const handleLocationUpdate = () => {
+    refreshGeo();
     toast.success("현재 위치가 업데이트되었습니다.");
   };
 
@@ -162,6 +180,9 @@ export function PatientRequest() {
           temperature: Number(newPatientForm.vitals.temperature) || undefined,
         } : undefined,
         notes: isNewPatient ? newPatientForm.symptoms || undefined : undefined,
+        location_text: currentLocation,
+        latitude: position?.latitude ?? undefined,
+        longitude: position?.longitude ?? undefined,
       });
 
       // Reset form on success

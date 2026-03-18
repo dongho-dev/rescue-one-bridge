@@ -17,6 +17,8 @@ export interface MockHospital extends Omit<HospitalAvailability, 'hospital_id' |
   name: string;
   distance_km: number | null;
   avg_wait_time?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 // 목 데이터 생성
@@ -55,6 +57,16 @@ export const generateMockHospitals = (): MockHospital[] => {
   const fixedAccepting = [true, true, true, false, true, true];
   const fixedWaitTimes = [25, 40, 15, 55, 30, 45];
 
+  // 서울 주요 병원 실제 좌표
+  const fixedCoords: [number, number][] = [
+    [37.5796, 126.9990], // 서울대학교병원
+    [37.5622, 126.9410], // 연세세브란스병원
+    [37.4881, 127.0855], // 삼성서울병원
+    [37.5268, 127.1082], // 아산병원
+    [37.5862, 127.0258], // 고대안암병원
+    [37.5570, 127.0445], // 한양대병원
+  ];
+
   return hospitalNames.map((name, i) => ({
     id: `H-${String(i + 1).padStart(3, '0')}`,
     name,
@@ -65,5 +77,7 @@ export const generateMockHospitals = (): MockHospital[] => {
     distance_km: fixedDistances[i],
     contact: `02-${2000 + i * 111}-${3000 + i * 222}`,
     avg_wait_time: fixedWaitTimes[i],
+    latitude: fixedCoords[i][0],
+    longitude: fixedCoords[i][1],
   }));
 };

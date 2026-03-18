@@ -5,9 +5,10 @@ import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { InfoCard } from "../common/InfoCard";
-import { MiniMapPlaceholder } from "../common/MiniMapPlaceholder";
+import { AmbulanceMap } from "../common/AmbulanceMap";
 import { useRequests } from "@/hooks/useRequests";
 import { useHospitalAvailability } from "@/hooks/useHospitalAvailability";
+import { useGeolocation, calculateDistanceKm } from "@/hooks/useGeolocation";
 import { generateMockHospitals } from "../common/models";
 import type { HospitalAvailability } from "@/types/database";
 import { LoadingState } from "../common/LoadingState";
@@ -34,7 +35,28 @@ export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
   const { hospitals: dbHospitals, loading: hospitalsLoading, error: hospitalsError, refetch: refetchHospitals } = useHospitalAvailability();
   const { requests: dbRequests, loading: requestsLoading, error: requestsError } = useRequests();
-  const hospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
+  const { position } = useGeolocation();
+  const rawHospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
+
+  // GPS 위치 기반 거리 계산 + 가까운 순 정렬
+  const hospitals = useMemo(() => {
+    const mapped = rawHospitals.map(h => {
+      const lat = 'latitude' in h ? h.latitude : undefined;
+      const lng = 'longitude' in h ? h.longitude : undefined;
+      let computedDist: number | null = null;
+      if (position && typeof lat === 'number' && typeof lng === 'number') {
+        computedDist = calculateDistanceKm(position.latitude, position.longitude, lat, lng);
+      }
+      const existingDist = 'distance_km' in h ? h.distance_km : null;
+      return { ...h, distance_km: computedDist ?? existingDist };
+    });
+    return mapped.sort((a, b) => {
+      if (a.distance_km == null && b.distance_km == null) return 0;
+      if (a.distance_km == null) return 1;
+      if (b.distance_km == null) return -1;
+      return a.distance_km - b.distance_km;
+    });
+  }, [rawHospitals, position]);
   const loading = hospitalsLoading || requestsLoading;
   const error = hospitalsError || requestsError;
 
@@ -149,10 +171,26 @@ export function ParamedicDashboard() {
 
         {/* 지도 및 액션 */}
         <div className="space-y-4">
-          <MiniMapPlaceholder
+          <AmbulanceMap
             title="실시간 위치"
-            ambulanceLocation="강남구 테헤란로 123"
-            hospitalLocation="서초구 반포대로 456"
+            ambulancePosition={position}
+            hospitals={rawHospitals
+              .filter(h => {
+                const lat = 'latitude' in h ? h.latitude : undefined;
+                const lng = 'longitude' in h ? h.longitude : undefined;
+                return typeof lat === 'number' && typeof lng === 'number';
+              })
+              .map(h => {
+                const hospital = normalizeHospital(h);
+                return {
+                  id: hospital.id,
+                  name: hospital.name,
+                  latitude: ('latitude' in h ? h.latitude : 0) as number,
+                  longitude: ('longitude' in h ? h.longitude : 0) as number,
+                  accepting: hospital.accepting,
+                  available_beds: hospital.available_beds,
+                };
+              })}
           />
 
           <div className="grid grid-cols-2 gap-2">
