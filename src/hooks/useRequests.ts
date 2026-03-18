@@ -38,7 +38,7 @@ export function useRequests(): UseRequestsResult {
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchRequests = useCallback(async () => {
-    if (!user || !profile) {
+    if (!user || !profile || !supabase) {
       setRequests([]);
       setLoading(false);
       return;
@@ -121,6 +121,8 @@ export function useRequests(): UseRequestsResult {
       r.id === requestId ? { ...r, status, ...(status === 'matched' ? { matched_at: new Date().toISOString() } : {}) } : r
     ));
 
+    if (!supabase) return;
+
     const updateData: Partial<Request> = { status };
     if (status === 'matched') updateData.matched_at = new Date().toISOString();
     if (status === 'completed') updateData.completed_at = new Date().toISOString();
@@ -153,6 +155,11 @@ export function useRequests(): UseRequestsResult {
     }
     if (data.patient_name && data.patient_name.trim().length > 100) {
       toast.error('환자 이름은 100자 이내여야 합니다.');
+      return;
+    }
+
+    if (!supabase) {
+      toast.success('데모 모드: 요청이 전송되었습니다!');
       return;
     }
 
