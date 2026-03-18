@@ -156,17 +156,35 @@ export function useRequests(): UseRequestsResult {
       return;
     }
 
-    const { error } = await supabase.from('requests').insert({
+    const { data: inserted, error } = await supabase.from('requests').insert({
       paramedic_id: user.id,
       ...data,
-    });
+    }).select('id').single();
 
     if (error) {
       toast.error(getUserFriendlyError(error.message));
       throw error;
     }
 
-    toast.success('요청이 병원으로 전송되었습니다!');
+    // 자동 매칭 시도
+    if (inserted?.id) {
+      try {
+        const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
+          p_request_id: inserted.id,
+        });
+        if (matchResult?.matched) {
+          toast.success(`${matchResult.hospital_name}에 매칭되었습니다! (${matchResult.distance_km}km)`);
+        } else {
+          toast.info('요청이 전송되었습니다. 수용 가능한 병원을 찾고 있습니다.');
+        }
+      } catch {
+        // RPC 미구성(데모 등) 시 조용히 넘어감
+        toast.success('요청이 병원으로 전송되었습니다!');
+      }
+    } else {
+      toast.success('요청이 병원으로 전송되었습니다!');
+    }
+
     await fetchRequests();
   }, [user, fetchRequests]);
 
