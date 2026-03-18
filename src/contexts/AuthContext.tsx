@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
 import type { UserRole } from '../types/database';
+import { toast } from 'sonner';
 
 export type { UserRole };
 
@@ -82,37 +83,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Normal Supabase auth flow
-    supabase.auth.getSession()
-      .then(({ data: { session: currentSession }, error }) => {
-        if (error) {
-          console.error('Failed to get session:', error.message);
-          setLoading(false);
-          return;
-        }
-
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        if (currentSession?.user) {
-          fetchProfile(currentSession.user.id).finally(() => setLoading(false));
-        } else {
-          setLoading(false);
-        }
-      });
-
-    // Listen for auth changes
+    // Use only onAuthStateChange to avoid race condition between
+    // getSession() and onAuthStateChange (Supabase recommended pattern).
+    // The INITIAL_SESSION event fires once on setup with the current session,
+    // eliminating the need for a separate getSession() call.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        try {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
 
-        if (newSession?.user) {
-          await fetchProfile(newSession.user.id);
-        } else {
+          if (newSession?.user) {
+            await fetchProfile(newSession.user.id);
+          } else {
+            setProfile(null);
+          }
+        } catch (err) {
+          console.error('Error handling auth state change:', err);
           setProfile(null);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
@@ -122,17 +113,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
+    // Always force local cleanup regardless of server-side result
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out failed:', error.message);
+        toast.error('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
     } catch (err) {
       console.error('Unexpected error during sign out:', err);
-    } finally {
-      setUser(null);
-      setSession(null);
-      setProfile(null);
+      toast.error('로그아웃 중 예기치 않은 오류가 발생했습니다.');
     }
   }, []);
 
