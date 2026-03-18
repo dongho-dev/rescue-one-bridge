@@ -76,7 +76,7 @@ export function AmbulanceMap({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-lg overflow-hidden h-56">
+        <div className="rounded-lg overflow-hidden h-48 sm:h-56">
           <MapContainer
             center={[center.latitude, center.longitude]}
             zoom={13}

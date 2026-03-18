@@ -371,7 +371,7 @@ function AppContent() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-6 overflow-auto">
           <ErrorBoundary>
             <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">로딩 중...</p></div>}>
               {currentPage === 'dashboard' && <HospitalDashboard />}

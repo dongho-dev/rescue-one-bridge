@@ -327,7 +327,7 @@ export function PatientRequest() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-sm font-medium text-muted-foreground">이름</Label>
                     <p className="font-medium">{selectedPatient.name}</p>
@@ -373,7 +373,7 @@ export function PatientRequest() {
                 <p className="text-xs text-muted-foreground">필수 항목을 입력해주세요</p>
               </CardHeader>
               <CardContent className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="name" className="text-sm font-medium text-muted-foreground">환자명 *</Label>
                     <Input
@@ -450,7 +450,7 @@ export function PatientRequest() {
                     <Thermometer size={16} className="text-muted-foreground" />
                     <Label className="text-sm font-medium text-muted-foreground">바이탈 사인 (선택사항)</Label>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="consciousness" className="text-xs font-medium text-muted-foreground">의식 상태</Label>
                       <Input

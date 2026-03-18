@@ -86,7 +86,7 @@ export function BedManagement() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
@@ -166,9 +166,9 @@ export function BedManagement() {
       {/* 필터 */}
       <Card className="shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Select value={selectedSection} onValueChange={setSelectedSection}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="구역" />
               </SelectTrigger>
               <SelectContent>
@@ -179,7 +179,7 @@ export function BedManagement() {
               </SelectContent>
             </Select>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="상태" />
               </SelectTrigger>
               <SelectContent>

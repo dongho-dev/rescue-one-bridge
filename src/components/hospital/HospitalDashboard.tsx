@@ -240,7 +240,7 @@ export function HospitalDashboard() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">

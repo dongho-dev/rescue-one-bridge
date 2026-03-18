@@ -124,7 +124,7 @@ export function EquipmentStatus() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
             <div className="text-center">
