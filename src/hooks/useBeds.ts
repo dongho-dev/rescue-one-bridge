@@ -13,7 +13,11 @@ export function useBeds() {
   });
 
   const updateBedStatus = useCallback(async (bedId: string, status: BedStatus) => {
-    setData(prev => prev.map(b => b.id === bedId ? { ...b, status } : b));
+    let previousData: Bed[] = [];
+    setData(prev => {
+      previousData = prev;
+      return prev.map(b => b.id === bedId ? { ...b, status } : b);
+    });
 
     const { error } = await supabase
       .from('beds')
@@ -22,9 +26,9 @@ export function useBeds() {
 
     if (error) {
       toast.error(`병상 상태 변경 실패: ${error.message}`);
-      await refetch();
+      setData(previousData);
     }
-  }, [setData, refetch]);
+  }, [setData]);
 
   return { beds, loading, error, refetch, updateBedStatus };
 }
