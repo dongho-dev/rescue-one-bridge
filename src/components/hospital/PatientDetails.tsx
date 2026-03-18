@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -10,6 +10,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
 import { usePatients } from "@/hooks/usePatients";
 import { LoadingState } from "../common/LoadingState";
@@ -54,6 +55,9 @@ export function PatientDetails() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [dialogNotes, setDialogNotes] = useState('');
+  const [dialogStatus, setDialogStatus] = useState<PatientStatus | ''>('');
+  const [saving, setSaving] = useState(false);
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,12 +75,36 @@ export function PatientDetails() {
 
   const handleViewDetails = (patient: Patient) => {
     setSelectedPatient(patient);
+    setDialogNotes(patient.notes ?? '');
+    setDialogStatus(patient.status);
   };
 
-  const handleUpdateStatus = (patientId: string, newStatus: string) => {
-    updatePatientStatus(patientId, newStatus as PatientStatus);
-    toast.success(`환자 ${patientId}의 상태가 ${newStatus}로 업데이트되었습니다.`);
-  };
+  const handleSaveNotes = useCallback(async () => {
+    if (!selectedPatient) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ notes: dialogNotes })
+        .eq('id', selectedPatient.id);
+
+      if (error) {
+        toast.error(`환자 정보 저장 실패: ${error.message}`);
+      } else {
+        toast.success('환자 정보가 저장되었습니다.');
+        await refetch();
+      }
+    } catch {
+      toast.error('환자 정보 저장 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  }, [selectedPatient, dialogNotes, refetch]);
+
+  const handleUpdateStatus = useCallback(async (patientId: string, newStatus: PatientStatus) => {
+    await updatePatientStatus(patientId, newStatus);
+    toast.success(`환자 상태가 ${getPatientStatusText(newStatus)}(으)로 업데이트되었습니다.`);
+  }, [updatePatientStatus]);
 
   return (
     <LoadingState loading={loading} error={error} onRetry={refetch}>
@@ -314,15 +342,40 @@ export function PatientDetails() {
                     id="notes"
                     placeholder="환자 상태, 치료 계획 등을 기록하세요..."
                     className="mt-2"
+                    value={dialogNotes}
+                    onChange={(e) => setDialogNotes(e.target.value)}
                   />
                 </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => toast.success("환자 정보가 저장되었습니다.")}>
-                    저장
-                  </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedPatient.id, "updated")}>
-                    상태 업데이트
+                <div className="flex items-end justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm text-muted-foreground whitespace-nowrap">상태 변경</Label>
+                    <Select value={dialogStatus} onValueChange={(v) => setDialogStatus(v as PatientStatus)}>
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue placeholder="상태 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="waiting">대기중</SelectItem>
+                        <SelectItem value="treating">치료중</SelectItem>
+                        <SelectItem value="stable">안정</SelectItem>
+                        <SelectItem value="discharged">퇴원</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={() => {
+                        if (dialogStatus && dialogStatus !== selectedPatient.status) {
+                          handleUpdateStatus(selectedPatient.id, dialogStatus);
+                        } else {
+                          toast.info('변경할 상태를 선택해 주세요.');
+                        }
+                      }}
+                      disabled={!dialogStatus || dialogStatus === selectedPatient.status}
+                    >
+                      상태 업데이트
+                    </Button>
+                  </div>
+                  <Button variant="outline" onClick={handleSaveNotes} disabled={saving}>
+                    {saving ? '저장 중...' : '메모 저장'}
                   </Button>
                 </div>
               </div>

@@ -13,7 +13,11 @@ export function useStaff() {
   });
 
   const updateStaffStatus = useCallback(async (staffId: string, status: StaffStatus) => {
-    setData(prev => prev.map(s => s.id === staffId ? { ...s, status } : s));
+    let previousData: Staff[] = [];
+    setData(prev => {
+      previousData = prev;
+      return prev.map(s => s.id === staffId ? { ...s, status } : s);
+    });
 
     const { error } = await supabase
       .from('staff')
@@ -22,9 +26,9 @@ export function useStaff() {
 
     if (error) {
       toast.error(`직원 상태 변경 실패: ${error.message}`);
-      await refetch();
+      setData(previousData);
     }
-  }, [setData, refetch]);
+  }, [setData]);
 
   return { staff, loading, error, refetch, updateStaffStatus };
 }
