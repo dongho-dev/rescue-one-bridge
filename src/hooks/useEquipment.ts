@@ -4,6 +4,7 @@ import { useSupabaseQuery } from './useSupabaseQuery';
 import { mockEquipment } from '@/mocks/equipmentData';
 import type { Equipment, EquipmentStatus } from '@/types/database';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '@/utils/errorMessages';
 
 export function useEquipment() {
   const { data: equipment, loading, error, refetch, setData } = useSupabaseQuery<Equipment>({
@@ -25,7 +26,7 @@ export function useEquipment() {
       .eq('id', equipmentId);
 
     if (error) {
-      toast.error(`장비 상태 변경 실패: ${error.message}`);
+      toast.error(getUserFriendlyError(error.message));
       setData(previousData);
     }
   }, [setData]);

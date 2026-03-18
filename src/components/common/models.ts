@@ -22,7 +22,7 @@ export interface MockHospital extends Omit<HospitalAvailability, 'hospital_id' |
 // 목 데이터 생성
 export const generateMockRequests = (): MockRequest[] => {
   const symptoms = ['흉통', '호흡곤란', '외상', '복통', '두통', '발열', '의식잃음', '심정지'];
-  const statuses: RequestStatus[] = ['pending', 'matched', 'en_route', 'completed'];
+  const statuses: RequestStatus[] = ['pending', 'matched', 'en_route', 'completed', 'cancelled'];
 
   return Array.from({ length: 12 }, (_, i) => ({
     id: `RQ-${String(1001 + i).padStart(4, '0')}`,

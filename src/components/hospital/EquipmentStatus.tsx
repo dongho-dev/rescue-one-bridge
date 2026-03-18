@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -72,7 +72,7 @@ export function EquipmentStatus() {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filteredEquipment = equipment.filter(item => {
+  const filteredEquipment = useMemo(() => equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (item.model ?? '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -80,15 +80,15 @@ export function EquipmentStatus() {
     const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
 
     return matchesSearch && matchesType && matchesStatus;
-  });
+  }), [equipment, searchTerm, selectedType, selectedStatus]);
 
-  const equipmentStats = {
+  const equipmentStats = useMemo(() => ({
     total: equipment.length,
     operational: equipment.filter(e => e.status === 'operational').length,
     maintenance: equipment.filter(e => e.status === 'maintenance').length,
     error: equipment.filter(e => e.status === 'error').length,
     offline: equipment.filter(e => e.status === 'offline').length
-  };
+  }), [equipment]);
 
   const handleAddEquipment = () => {
     toast.success("새 장비 등록 폼이 열렸습니다.");
@@ -193,6 +193,7 @@ export function EquipmentStatus() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="장비 검색"
               />
             </div>
             <Select value={selectedType} onValueChange={setSelectedType}>
@@ -310,17 +311,17 @@ export function EquipmentStatus() {
                 )}
 
                 <div className="flex gap-1 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => { setSelectedEquipment(item); setDialogOpen(true); }}>
+                  <Button variant="outline" size="sm" onClick={() => { setSelectedEquipment(item); setDialogOpen(true); }} aria-label="장비 설정">
                     <Settings size={14} />
                   </Button>
 
                   {item.status === 'error' && (
-                    <Button size="sm" variant="destructive" onClick={() => handleEmergencyAlert(item.id)}>
+                    <Button size="sm" variant="destructive" onClick={() => handleEmergencyAlert(item.id)} aria-label="긴급 알림">
                       <AlertTriangle size={14} />
                     </Button>
                   )}
 
-                  <Button size="sm" variant="outline" onClick={() => handleMaintenanceRequest(item.id)}>
+                  <Button size="sm" variant="outline" onClick={() => handleMaintenanceRequest(item.id)} aria-label="유지보수 요청">
                     <Calendar size={14} />
                   </Button>
                 </div>

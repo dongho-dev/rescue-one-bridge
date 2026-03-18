@@ -15,6 +15,7 @@ import {
 } from '../ui/select';
 import { Building2, Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '../../utils/errorMessages';
 import type { UserRole } from '../../contexts/AuthContext';
 
 interface SignupPageProps {
@@ -115,7 +116,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
         if (error.message.includes('already registered')) {
           toast.error('이미 등록된 이메일입니다. 로그인해주세요.');
         } else {
-          toast.error(`회원가입 실패: ${error.message}`);
+          toast.error(getUserFriendlyError(error.message));
         }
       } else {
         // Link hospital via server-side RPC if hospital_staff
@@ -159,7 +160,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       });
       if (error) {
         localStorage.removeItem('oauth_signup_meta');
-        toast.error(`Google 회원가입 실패: ${error.message}`);
+        toast.error(getUserFriendlyError(error.message));
         setLoading(false);
       }
     } catch {

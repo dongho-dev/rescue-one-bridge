@@ -4,6 +4,7 @@ import { useSupabaseQuery } from './useSupabaseQuery';
 import { mockStaff } from '@/mocks/staffData';
 import type { Staff, StaffStatus } from '@/types/database';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '@/utils/errorMessages';
 
 export function useStaff() {
   const { data: staff, loading, error, refetch, setData } = useSupabaseQuery<Staff>({
@@ -25,7 +26,7 @@ export function useStaff() {
       .eq('id', staffId);
 
     if (error) {
-      toast.error(`직원 상태 변경 실패: ${error.message}`);
+      toast.error(getUserFriendlyError(error.message));
       setData(previousData);
     }
   }, [setData]);

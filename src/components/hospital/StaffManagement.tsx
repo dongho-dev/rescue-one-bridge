@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -91,7 +91,7 @@ export function StaffManagement() {
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filteredStaff = staff.filter(member => {
+  const filteredStaff = useMemo(() => staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (member.department ?? '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -99,15 +99,15 @@ export function StaffManagement() {
     const matchesStatus = selectedStatus === 'all' || member.status === selectedStatus;
 
     return matchesSearch && matchesRole && matchesStatus;
-  });
+  }), [staff, searchTerm, selectedRole, selectedStatus]);
 
-  const staffStats = {
+  const staffStats = useMemo(() => ({
     total: staff.length,
     onDuty: staff.filter(s => s.status === 'on_duty').length,
     offDuty: staff.filter(s => s.status === 'off_duty').length,
     onBreak: staff.filter(s => s.status === 'break').length,
     emergency: staff.filter(s => s.status === 'emergency').length
-  };
+  }), [staff]);
 
   const handleAddStaff = () => {
     toast.success("새 직원 등록 폼이 열렸습니다.");
@@ -469,9 +469,27 @@ export function StaffManagement() {
                       <SelectItem value="emergency">응급호출</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="destructive" onClick={() => handleEmergencyCall(selectedStaff.id)}>
-                    응급호출
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">
+                        응급호출
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>응급호출 확인</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {selectedStaff.name}에게 응급호출을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleEmergencyCall(selectedStaff.id)}>
+                          호출 발송
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </>
