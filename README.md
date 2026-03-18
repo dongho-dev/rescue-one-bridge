@@ -4,6 +4,18 @@
 
 **[Live Demo](https://rescue-one-bridge.vercel.app/)**
 
+### 병원 응급실 대시보드
+![Hospital Dashboard](docs/screenshots/dashboard.png)
+
+### 구급대원 모바일 화면
+<p float="left">
+  <img src="docs/screenshots/paramedic.png" width="280" alt="구급대원 대시보드" />
+  <img src="docs/screenshots/request.png" width="280" alt="환자 요청 폼" />
+</p>
+
+### 병상 관리
+![Bed Management](docs/screenshots/beds.png)
+
 ---
 
 ## 문제
