@@ -13,7 +13,11 @@ export function useEquipment() {
   });
 
   const updateEquipmentStatus = useCallback(async (equipmentId: string, status: EquipmentStatus) => {
-    setData(prev => prev.map(e => e.id === equipmentId ? { ...e, status } : e));
+    let previousData: Equipment[] = [];
+    setData(prev => {
+      previousData = prev;
+      return prev.map(e => e.id === equipmentId ? { ...e, status } : e);
+    });
 
     const { error } = await supabase
       .from('equipment')
@@ -22,9 +26,9 @@ export function useEquipment() {
 
     if (error) {
       toast.error(`장비 상태 변경 실패: ${error.message}`);
-      await refetch();
+      setData(previousData);
     }
-  }, [setData, refetch]);
+  }, [setData]);
 
   return { equipment, loading, error, refetch, updateEquipmentStatus };
 }
