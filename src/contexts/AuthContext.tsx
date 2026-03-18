@@ -1,9 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
 import type { UserRole } from '../types/database';
 
 export type { UserRole };
+
+const OAUTH_SIGNUP_META_KEY = 'oauth_signup_meta';
 
 export interface UserProfile {
   role: UserRole;
@@ -36,6 +38,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const oauthMetaApplied = useRef(false);
+
+  /**
+   * After a Google OAuth redirect the DB trigger will have created a profile
+   * with the default role ('paramedic') because signInWithOAuth does not
+   * support user_metadata.  If the user chose a role/hospital on the signup
+   * page we stashed it in localStorage before the redirect.  This helper
+   * reads that stash, patches the profile row, and cleans up.
+   */
+  const applyOAuthSignupMeta = useCallback(async (userId: string) => {
+    if (oauthMetaApplied.current) return;
+
+    const raw = localStorage.getItem(OAUTH_SIGNUP_META_KEY);
+    if (!raw) return;
+
+    oauthMetaApplied.current = true;
+    localStorage.removeItem(OAUTH_SIGNUP_META_KEY);
+
+    try {
+      const { role, hospitalId } = JSON.parse(raw) as {
+        role: UserRole;
+        hospitalId: string | null;
+      };
+
+      // Update the profile row with the chosen role
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ role })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.warn('OAuth profile role update failed:', updateError.message);
+      }
+
+      // Link hospital via RPC if applicable
+      if (role === 'hospital_staff' && hospitalId) {
+        try {
+          await supabase.rpc('link_hospital', { p_hospital_id: hospitalId });
+        } catch (rpcErr) {
+          console.warn('OAuth hospital link failed (will retry on login):', rpcErr);
+        }
+      }
+    } catch (parseErr) {
+      console.warn('Failed to parse OAuth signup metadata:', parseErr);
+    }
+  }, []);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -103,11 +151,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      async (event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
+          // On first sign-in via OAuth, apply any role/hospital the user
+          // selected on the signup page before the redirect.
+          if (event === 'SIGNED_IN') {
+            await applyOAuthSignupMeta(newSession.user.id);
+          }
           await fetchProfile(newSession.user.id);
         } else {
           setProfile(null);
@@ -119,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, applyOAuthSignupMeta]);
 
   const signOut = useCallback(async () => {
     try {
