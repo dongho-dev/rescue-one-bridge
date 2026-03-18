@@ -51,7 +51,7 @@ describe('useRequests mock data', () => {
       expect(req.severity).toBeLessThanOrEqual(5);
       expect(typeof req.distance_km).toBe('number');
       expect(req.symptom).toBeTruthy();
-      expect(['pending', 'matched', 'en_route', 'completed']).toContain(req.status);
+      expect(['pending', 'matched', 'en_route', 'completed', 'cancelled']).toContain(req.status);
     }
   });
 
