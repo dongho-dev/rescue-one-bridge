@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -44,19 +44,19 @@ export function BedManagement() {
 
   const sections = ['A', 'B', 'C'];
 
-  const filteredBeds = beds.filter(bed => {
+  const filteredBeds = useMemo(() => beds.filter(bed => {
     const matchesSection = selectedSection === 'all' || bed.section === selectedSection;
     const matchesStatus = selectedStatus === 'all' || bed.status === selectedStatus;
     return matchesSection && matchesStatus;
-  });
+  }), [beds, selectedSection, selectedStatus]);
 
-  const bedStats = {
+  const bedStats = useMemo(() => ({
     total: beds.length,
     occupied: beds.filter(b => b.status === 'occupied').length,
     available: beds.filter(b => b.status === 'available').length,
     maintenance: beds.filter(b => b.status === 'maintenance').length,
     cleaning: beds.filter(b => b.status === 'cleaning').length
-  };
+  }), [beds]);
 
   const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
 
@@ -257,12 +257,12 @@ export function BedManagement() {
               )}
 
               <div className="flex gap-1 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { setSelectedBed(bed); setDialogOpen(true); }}>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedBed(bed); setDialogOpen(true); }} aria-label="병상 설정">
                   <Settings size={14} />
                 </Button>
 
                 {bed.status === 'available' && (
-                  <Button size="sm" onClick={() => handleAssignPatient(bed.id)}>
+                  <Button size="sm" onClick={() => handleAssignPatient(bed.id)} aria-label="환자 배정">
                     <Plus size={14} />
                   </Button>
                 )}

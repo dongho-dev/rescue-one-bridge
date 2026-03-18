@@ -4,6 +4,7 @@ import { useSupabaseQuery } from './useSupabaseQuery';
 import { mockPatients } from '@/mocks/patientData';
 import type { Patient, PatientStatus } from '@/types/database';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '@/utils/errorMessages';
 
 export function usePatients() {
   const { data: patients, loading, error, refetch, setData } = useSupabaseQuery<Patient>({
@@ -21,7 +22,7 @@ export function usePatients() {
       .eq('id', patientId);
 
     if (error) {
-      toast.error(`환자 상태 변경 실패: ${error.message}`);
+      toast.error(getUserFriendlyError(error.message));
       await refetch();
     }
   }, [setData, refetch]);

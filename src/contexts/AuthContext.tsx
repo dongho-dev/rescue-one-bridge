@@ -100,8 +100,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      const validRoles: UserRole[] = ['hospital_staff', 'paramedic'];
+      const role: UserRole = validRoles.includes(data.role as UserRole)
+        ? (data.role as UserRole)
+        : 'paramedic';
+
       setProfile({
-        role: data.role as UserRole,
+        role,
         hospital_id: data.hospital_id,
         display_name: data.display_name,
       });

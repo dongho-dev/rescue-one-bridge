@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -10,6 +10,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
+import { getUserFriendlyError } from "../../utils/errorMessages";
 import { supabase } from "@/lib/supabase";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
 import { usePatients } from "@/hooks/usePatients";
@@ -59,7 +60,7 @@ export function PatientDetails() {
   const [dialogStatus, setDialogStatus] = useState<PatientStatus | ''>('');
   const [saving, setSaving] = useState(false);
 
-  const filteredPatients = patients.filter(patient => {
+  const filteredPatients = useMemo(() => patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          patient.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (patient.diagnosis ?? '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -67,7 +68,7 @@ export function PatientDetails() {
     const matchesStatus = filterStatus === 'all' || patient.status === filterStatus;
 
     return matchesSearch && matchesSeverity && matchesStatus;
-  });
+  }), [patients, searchTerm, filterSeverity, filterStatus]);
 
   const handleAddPatient = () => {
     toast.success("새 환자 등록 폼이 열렸습니다.");
@@ -89,7 +90,7 @@ export function PatientDetails() {
         .eq('id', selectedPatient.id);
 
       if (error) {
-        toast.error(`환자 정보 저장 실패: ${error.message}`);
+        toast.error(getUserFriendlyError(error.message));
       } else {
         toast.success('환자 정보가 저장되었습니다.');
         await refetch();
@@ -132,6 +133,7 @@ export function PatientDetails() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                aria-label="환자 검색"
               />
             </div>
             <Select value={filterSeverity} onValueChange={setFilterSeverity}>

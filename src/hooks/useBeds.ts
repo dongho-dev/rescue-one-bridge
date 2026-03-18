@@ -4,6 +4,7 @@ import { useSupabaseQuery } from './useSupabaseQuery';
 import { mockBeds } from '@/mocks/bedData';
 import type { Bed, BedStatus } from '@/types/database';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '@/utils/errorMessages';
 
 export function useBeds() {
   const { data: beds, loading, error, refetch, setData } = useSupabaseQuery<Bed>({
@@ -25,7 +26,7 @@ export function useBeds() {
       .eq('id', bedId);
 
     if (error) {
-      toast.error(`병상 상태 변경 실패: ${error.message}`);
+      toast.error(getUserFriendlyError(error.message));
       setData(previousData);
     }
   }, [setData]);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -43,7 +43,7 @@ export function ParamedicDashboard() {
     toast(online ? "온라인 상태로 전환되었습니다" : "오프라인 상태로 전환되었습니다");
   };
 
-  const getStatusCounts = () => {
+  const statusCounts = useMemo(() => {
     const counts = dbRequests.reduce((acc, req) => {
       acc[req.status] = (acc[req.status] || 0) + 1;
       return acc;
@@ -55,9 +55,7 @@ export function ParamedicDashboard() {
       enRoute: counts.en_route || 0,
       completed: counts.completed || 0
     };
-  };
-
-  const statusCounts = getStatusCounts();
+  }, [dbRequests]);
 
   const getEventColorBar = (type: string) => {
     switch (type) {
@@ -94,6 +92,7 @@ export function ParamedicDashboard() {
             <Switch
               checked={isOnline}
               onCheckedChange={handleStatusToggle}
+              aria-label="온라인/오프라인 상태 전환"
             />
           </div>
         </div>

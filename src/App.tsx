@@ -26,6 +26,7 @@ import {
   User
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
 
 const HospitalDashboard = lazy(() => import('./components/hospital/HospitalDashboard').then(m => ({ default: m.HospitalDashboard })));
 const PatientDetails = lazy(() => import('./components/hospital/PatientDetails').then(m => ({ default: m.PatientDetails })));
@@ -216,6 +217,7 @@ function AppContent() {
 
         {/* User Info & Logout (Desktop) */}
         <div className="border-t border-sidebar-border p-3">
+          <AlertDialog>
           {sidebarOpen ? (
             <div className="flex items-center gap-3">
               <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
@@ -225,27 +227,42 @@ function AppContent() {
                 <p className="text-sm font-medium truncate">{displayName}</p>
                 <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
               </div>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 text-sidebar-foreground/70 hover:text-red-500"
+                  aria-label="로그아웃"
+                >
+                  <LogOut size={16} />
+                </Button>
+              </AlertDialogTrigger>
+            </div>
+          ) : (
+            <AlertDialogTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleSignOut}
-                className="shrink-0 text-sidebar-foreground/70 hover:text-red-500"
+                className="w-full text-sidebar-foreground/70 hover:text-red-500"
                 aria-label="로그아웃"
               >
                 <LogOut size={16} />
               </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="w-full text-sidebar-foreground/70 hover:text-red-500"
-              aria-label="로그아웃"
-            >
-              <LogOut size={16} />
-            </Button>
+            </AlertDialogTrigger>
           )}
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>로그아웃 확인</AlertDialogTitle>
+              <AlertDialogDescription>
+                정말 로그아웃하시겠습니까?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogAction onClick={handleSignOut}>로그아웃</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
 
@@ -264,7 +281,7 @@ function AppContent() {
                   <p className="text-xs text-sidebar-accent-foreground/70">응급실 관리 시스템</p>
                 </div>
               </div>
-              <button onClick={() => setMobileMenuOpen(false)} className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+              <button onClick={() => setMobileMenuOpen(false)} className="text-sidebar-foreground/70 hover:text-sidebar-foreground" aria-label="메뉴 닫기">
                 <X size={20} />
               </button>
             </div>
@@ -302,15 +319,30 @@ function AppContent() {
                   <p className="text-sm font-medium truncate">{displayName}</p>
                   <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className="shrink-0 text-sidebar-foreground/70 hover:text-red-500"
-                  aria-label="로그아웃"
-                >
-                  <LogOut size={16} />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 text-sidebar-foreground/70 hover:text-red-500"
+                      aria-label="로그아웃"
+                    >
+                      <LogOut size={16} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>로그아웃 확인</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        정말 로그아웃하시겠습니까?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>취소</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleSignOut}>로그아웃</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </aside>

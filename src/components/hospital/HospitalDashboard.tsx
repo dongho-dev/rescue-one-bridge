@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { InfoCard } from "../common/InfoCard";
 import { useRequests } from "@/hooks/useRequests";
 import { useBeds } from "@/hooks/useBeds";
@@ -36,23 +37,32 @@ const recentAlerts = [
 
 export function HospitalDashboard() {
   const [accepting, setAccepting] = useState(true);
+  const [acceptingConfirmOpen, setAcceptingConfirmOpen] = useState(false);
+  const [pendingAccepting, setPendingAccepting] = useState(true);
   const { requests: dbRequests, loading, error, refetch, updateRequestStatus } = useRequests();
   const { beds } = useBeds();
   const [selectedSeverity, setSelectedSeverity] = useState('all');
 
-  const handleAcceptingToggle = (isAccepting: boolean) => {
-    setAccepting(isAccepting);
-    toast(isAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
-  };
+  const handleAcceptingToggleRequest = useCallback((isAccepting: boolean) => {
+    setPendingAccepting(isAccepting);
+    setAcceptingConfirmOpen(true);
+  }, []);
+
+  const handleAcceptingConfirm = useCallback(() => {
+    setAccepting(pendingAccepting);
+    toast(pendingAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
+    setAcceptingConfirmOpen(false);
+  }, [pendingAccepting]);
 
   const handleRequestAction = (requestId: string, action: 'accept' | 'hold') => {
     updateRequestStatus(requestId, action === 'accept' ? 'matched' : 'pending');
     toast(action === 'accept' ? "요청을 수락했습니다" : "요청을 보류했습니다");
   };
 
-  const filteredRequests = selectedSeverity === 'all'
+  const filteredRequests = useMemo(() => selectedSeverity === 'all'
     ? dbRequests.filter(req => req.status === 'pending')
-    : dbRequests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity);
+    : dbRequests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity),
+  [dbRequests, selectedSeverity]);
 
   const kpiData = useMemo(() => {
     const availableBeds = beds.filter(b => b.status === 'available').length;
@@ -135,9 +145,25 @@ export function HospitalDashboard() {
             </Badge>
             <Switch
               checked={accepting}
-              onCheckedChange={handleAcceptingToggle}
+              onCheckedChange={handleAcceptingToggleRequest}
               aria-label="환자 수용 상태 전환"
             />
+            <AlertDialog open={acceptingConfirmOpen} onOpenChange={setAcceptingConfirmOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>수용 상태 변경 확인</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {pendingAccepting
+                      ? '환자 수용을 시작하시겠습니까?'
+                      : '환자 수용을 중단하시겠습니까? 새로운 환자 요청을 받을 수 없게 됩니다.'}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleAcceptingConfirm}>확인</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>

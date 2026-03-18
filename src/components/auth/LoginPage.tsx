@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Separator } from '../ui/separator';
 import { Building2, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '../../utils/errorMessages';
 
 interface LoginPageProps {
   onSwitchToSignup: () => void;
@@ -34,7 +35,7 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
         } else if (error.message.includes('Email not confirmed')) {
           toast.error('이메일 인증이 완료되지 않았습니다. 이메일을 확인해주세요.');
         } else {
-          toast.error(`로그인 실패: ${error.message}`);
+          toast.error(getUserFriendlyError(error.message));
         }
       } else {
         toast.success('로그인 성공!');
@@ -56,7 +57,7 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
         },
       });
       if (error) {
-        toast.error(`Google 로그인 실패: ${error.message}`);
+        toast.error(getUserFriendlyError(error.message));
         setLoading(false);
       }
       // No setLoading(false) on success - page will redirect

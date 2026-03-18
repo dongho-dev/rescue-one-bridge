@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Request, RequestStatus, RequestPriority } from '@/types/database';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { getUserFriendlyError } from '@/utils/errorMessages';
 
 interface UseRequestsResult {
   requests: Request[];
@@ -127,7 +128,7 @@ export function useRequests(): UseRequestsResult {
       .eq('id', requestId);
 
     if (error) {
-      toast.error(`요청 상태 변경 실패: ${error.message}`);
+      toast.error(getUserFriendlyError(error.message));
       await fetchRequests();
     }
   }, [fetchRequests]);
@@ -138,13 +139,27 @@ export function useRequests(): UseRequestsResult {
       return;
     }
 
+    // Client-side validation
+    if (data.patient_age != null && (data.patient_age < 0 || data.patient_age > 150)) {
+      toast.error('나이는 0~150 사이의 숫자여야 합니다.');
+      return;
+    }
+    if (data.severity < 1 || data.severity > 5) {
+      toast.error('중증도는 1~5 사이의 값이어야 합니다.');
+      return;
+    }
+    if (data.patient_name && data.patient_name.trim().length > 100) {
+      toast.error('환자 이름은 100자 이내여야 합니다.');
+      return;
+    }
+
     const { error } = await supabase.from('requests').insert({
       paramedic_id: user.id,
       ...data,
     });
 
     if (error) {
-      toast.error(`요청 전송 실패: ${error.message}`);
+      toast.error(getUserFriendlyError(error.message));
       throw error;
     }
 
