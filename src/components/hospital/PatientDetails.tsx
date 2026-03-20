@@ -14,6 +14,7 @@ import { getUserFriendlyError } from "../../utils/errorMessages";
 import { supabase } from "@/lib/supabase";
 import { getSeverityText, getPatientStatusText } from "../../utils/statusHelpers";
 import { usePatients } from "@/hooks/usePatients";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { LoadingState } from "../common/LoadingState";
 import type { Patient, PatientStatus } from "@/types/database";
 import {
@@ -51,6 +52,7 @@ const getPatientStatusBadgeClass = (status: string): string => {
 
 export function PatientDetails() {
   const { patients, loading, error, refetch, updatePatientStatus } = usePatients();
+  const { log } = useAuditLog();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,6 +80,7 @@ export function PatientDetails() {
     setSelectedPatient(patient);
     setDialogNotes(patient.notes ?? '');
     setDialogStatus(patient.status);
+    log('view', 'patient', patient.id);
   };
 
   const handleSaveNotes = useCallback(async () => {

@@ -29,3 +29,13 @@ tsconfig.tsbuildinfo
 
 # Vite-specific
 *.vite.js.map
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Runtime logs
+logs/
+
+# Design assets (not tracked)
+design/

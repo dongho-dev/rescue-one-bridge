@@ -15,6 +15,7 @@ import { useLocationSharing } from "@/hooks/useLocationSharing";
 import { generateMockHospitals } from "../common/models";
 import type { HospitalAvailability, Request, RequestStatus } from "@/types/database";
 import { LoadingState } from "../common/LoadingState";
+import { RequestChat } from "../common/RequestChat";
 import {
   Ambulance,
   Phone,
@@ -264,6 +265,10 @@ export function ParamedicDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {enRouteRequest && (
+        <RequestChat requestId={enRouteRequest.id} />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 병원 현황 */}

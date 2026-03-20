@@ -7,11 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { InfoCard } from "../common/InfoCard";
+import { AmbulanceMap } from "../common/AmbulanceMap";
 import { useRequests } from "@/hooks/useRequests";
 import { useBeds } from "@/hooks/useBeds";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/lib/supabase";
 import { LoadingState } from "../common/LoadingState";
+import { RequestChat } from "../common/RequestChat";
 import type { Request } from "@/types/database";
 import {
   Building2,
@@ -159,6 +162,20 @@ export function HospitalDashboard() {
     { name: '보통', value: dbRequests.filter(r => r.severity === 3).length, color: 'var(--chart-4)' },
     { name: '심각', value: dbRequests.filter(r => r.severity >= 4).length, color: 'var(--chart-5)' },
   ];
+
+  const enRouteRequests = useMemo(() =>
+    dbRequests.filter(r => r.status === 'en_route' && r.latitude && r.longitude),
+  [dbRequests]);
+
+  const ambulancePosition = useMemo(() => {
+    const first = enRouteRequests[0];
+    if (!first) return null;
+    return { latitude: first.latitude!, longitude: first.longitude! };
+  }, [enRouteRequests]);
+
+  const activeRequest = useMemo(() =>
+    dbRequests.find(r => r.status === 'matched' || r.status === 'en_route'),
+  [dbRequests]);
 
   return (
     <LoadingState loading={loading} error={error} onRetry={refetch}>
@@ -376,6 +393,17 @@ export function HospitalDashboard() {
             </CardContent>
           </Card>
 
+          {activeRequest && <RequestChat requestId={activeRequest.id} compact />}
+
+          {/* 접근 중인 구급차 지도 */}
+          {enRouteRequests.length > 0 && (
+            <AmbulanceMap
+              title="접근 중인 구급차"
+              ambulancePosition={ambulancePosition}
+              className="shadow-sm"
+            />
+          )}
+
           {/* 중증도 분포 차트 */}
           <Card className="shadow-sm">
             <CardHeader>
@@ -467,6 +495,13 @@ export function HospitalDashboard() {
 }
 
 function RequestDetailDialog({ request, onAccept }: { request: Request; onAccept: (requestId: string) => void }) {
+  const { log } = useAuditLog();
+
+  const handleAccept = (requestId: string) => {
+    log('view', 'request', requestId);
+    onAccept(requestId);
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -501,7 +536,7 @@ function RequestDetailDialog({ request, onAccept }: { request: Request; onAccept
             </p>
           </div>
           <div className="flex gap-2">
-            <Button className="flex-1" onClick={() => onAccept(request.id)}>
+            <Button className="flex-1" onClick={() => handleAccept(request.id)}>
               <Check size={16} className="mr-2" />
               수락
             </Button>
