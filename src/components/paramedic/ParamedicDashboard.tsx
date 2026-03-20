@@ -28,6 +28,7 @@ import {
   XCircle,
   ChevronDown,
   ChevronUp,
+  Navigation,
 } from 'lucide-react';
 import { toast } from "sonner";
 
@@ -380,6 +381,20 @@ function RequestRow({
               onClick={() => onStatusUpdate(request.id, 'cancelled')}
             >
               <XCircle size={13} />
+            </Button>
+          )}
+          {(request.status === 'matched' || request.status === 'en_route') && request.hospital_id && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => {
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${request.latitude},${request.longitude}&travelmode=driving`;
+                window.open(url, '_blank');
+              }}
+            >
+              <Navigation size={13} className="mr-1" />
+              길 안내
             </Button>
           )}
         </div>

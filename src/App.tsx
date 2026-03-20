@@ -25,7 +25,8 @@ import {
   Loader2,
   User,
   Bell,
-  BellOff
+  BellOff,
+  Settings
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
@@ -40,8 +41,9 @@ const StaffManagement = lazy(() => import('./components/hospital/StaffManagement
 const EquipmentStatus = lazy(() => import('./components/hospital/EquipmentStatus').then(m => ({ default: m.EquipmentStatus })));
 const PatientRequest = lazy(() => import('./components/paramedic/PatientRequest').then(m => ({ default: m.PatientRequest })));
 const ParamedicDashboard = lazy(() => import('./components/paramedic/ParamedicDashboard').then(m => ({ default: m.ParamedicDashboard })));
+const HospitalAdmin = lazy(() => import('./components/admin/HospitalAdmin').then(m => ({ default: m.HospitalAdmin })));
 
-type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request' | 'paramedic-dashboard';
+type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request' | 'paramedic-dashboard' | 'admin';
 
 type AuthPage = 'login' | 'signup';
 
@@ -60,6 +62,7 @@ const allNavigationItems: NavigationItem[] = [
   { id: 'equipment', label: '장비 현황', icon: Stethoscope, roles: ['hospital_staff'] },
   { id: 'request', label: '구급대원 요청', icon: Ambulance, roles: ['hospital_staff', 'paramedic'] },
   { id: 'paramedic-dashboard', label: '대시보드', icon: Home, roles: ['paramedic'] },
+  { id: 'admin', label: '병원 관리', icon: Settings, roles: ['hospital_staff'] },
 ];
 
 function ThemeToggle() {
@@ -432,6 +435,7 @@ function AppContent() {
               {currentPage === 'equipment' && <EquipmentStatus />}
               {currentPage === 'request' && <PatientRequest />}
               {currentPage === 'paramedic-dashboard' && <ParamedicDashboard />}
+              {currentPage === 'admin' && <HospitalAdmin />}
             </Suspense>
           </ErrorBoundary>
         </main>
