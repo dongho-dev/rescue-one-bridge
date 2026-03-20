@@ -6,11 +6,14 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '@/utils/errorMessages';
 import { useNotification } from './useNotification';
+import { enqueue, getQueue, dequeue } from '@/utils/offlineQueue';
 
 interface UseRequestsResult {
   requests: Request[];
   loading: boolean;
   error: string | null;
+  isOnline: boolean;
+  pendingQueueCount: number;
   refetch: () => Promise<void>;
   updateRequestStatus: (requestId: string, status: RequestStatus) => Promise<void>;
   createRequest: (data: CreateRequestData) => Promise<void>;
@@ -37,7 +40,10 @@ export function useRequests(): UseRequestsResult {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [pendingQueueCount, setPendingQueueCount] = useState(() => getQueue().length);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const flushingRef = useRef(false);
   const { notify } = useNotification();
 
   const fetchRequests = useCallback(async () => {
@@ -80,6 +86,64 @@ export function useRequests(): UseRequestsResult {
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
+
+  // 오프라인 큐 플러시 (네트워크 복구 시 자동 재전송)
+  const flushQueue = useCallback(async () => {
+    if (!user || !supabase || flushingRef.current) return;
+    const queue = getQueue();
+    if (queue.length === 0) return;
+
+    flushingRef.current = true;
+    let sent = 0;
+
+    for (const item of queue) {
+      if (item.userId !== user.id) continue;
+      try {
+        const { error: insertError } = await supabase.from('requests').insert({
+          paramedic_id: user.id,
+          ...item.data,
+        });
+        if (!insertError) {
+          dequeue(item.id);
+          sent++;
+        }
+      } catch {
+        break; // 네트워크 다시 끊긴 경우
+      }
+    }
+
+    setPendingQueueCount(getQueue().length);
+    flushingRef.current = false;
+
+    if (sent > 0) {
+      toast.success(`오프라인 대기 요청 ${sent}건이 전송되었습니다`);
+      await fetchRequests();
+    }
+  }, [user, fetchRequests]);
+
+  // 온라인/오프라인 감지
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success('네트워크 연결이 복구되었습니다');
+      flushQueue();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.error('네트워크 연결이 끊겼습니다. 요청은 로컬에 저장됩니다.');
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [flushQueue]);
+
+  // 마운트 시 큐 플러시 시도
+  useEffect(() => {
+    if (isOnline) flushQueue();
+  }, [isOnline, flushQueue]);
 
   useEffect(() => {
     if (!user || !profile || !supabase) return;
@@ -176,12 +240,27 @@ export function useRequests(): UseRequestsResult {
       return;
     }
 
+    // 오프라인이면 로컬 큐에 저장
+    if (!navigator.onLine) {
+      enqueue(data, user.id);
+      setPendingQueueCount(getQueue().length);
+      toast.info('오프라인 상태입니다. 요청이 로컬에 저장되었습니다. 네트워크 복구 시 자동 전송됩니다.');
+      return;
+    }
+
     const { data: inserted, error } = await supabase.from('requests').insert({
       paramedic_id: user.id,
       ...data,
     }).select('id').single();
 
     if (error) {
+      // 네트워크 오류면 큐에 저장
+      if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed')) {
+        enqueue(data, user.id);
+        setPendingQueueCount(getQueue().length);
+        toast.info('네트워크 오류로 요청이 로컬에 저장되었습니다. 복구 시 자동 전송됩니다.');
+        return;
+      }
       toast.error(getUserFriendlyError(error.message));
       throw error;
     }
@@ -225,5 +304,5 @@ export function useRequests(): UseRequestsResult {
     }
   }, [fetchRequests]);
 
-  return { requests, loading, error, refetch: fetchRequests, updateRequestStatus, createRequest, rejectRequest };
+  return { requests, loading, error, isOnline, pendingQueueCount, refetch: fetchRequests, updateRequestStatus, createRequest, rejectRequest };
 }

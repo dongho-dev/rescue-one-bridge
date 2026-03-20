@@ -30,6 +30,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
 import { useNotification } from "./hooks/useNotification";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
 const HospitalDashboard = lazy(() => import('./components/hospital/HospitalDashboard').then(m => ({ default: m.HospitalDashboard })));
 const PatientDetails = lazy(() => import('./components/hospital/PatientDetails').then(m => ({ default: m.PatientDetails })));
@@ -168,6 +169,7 @@ function AppContent() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const online = useOnlineStatus();
   const showNotificationBanner = permission === 'default' && !notificationDismissed;
 
   const navigationItems = useMemo(() => {
@@ -376,7 +378,12 @@ function AppContent() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-800 dark:bg-green-950 hidden sm:flex">● 시스템 정상</Badge>
+            <Badge variant="outline" className={`hidden sm:flex ${online
+              ? 'text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-800 dark:bg-green-950'
+              : 'text-red-600 border-red-200 bg-red-50 dark:text-red-400 dark:border-red-800 dark:bg-red-950'
+            }`}>
+              {online ? '● 연결됨' : '● 오프라인'}
+            </Badge>
             <ThemeToggle />
           </div>
         </header>
