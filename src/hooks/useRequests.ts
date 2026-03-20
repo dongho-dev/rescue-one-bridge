@@ -293,6 +293,7 @@ export function useRequests(): UseRequestsResult {
 
     if (!supabase) return;
 
+    // 1. Clear current hospital assignment
     const { error } = await supabase
       .from('requests')
       .update({ status: 'pending' as RequestStatus, hospital_id: null, matched_at: null, distance_km: null, eta_minutes: null })
@@ -301,7 +302,25 @@ export function useRequests(): UseRequestsResult {
     if (error) {
       toast.error(getUserFriendlyError(error.message));
       await fetchRequests();
+      return;
     }
+
+    // 2. Auto re-match to the next best hospital
+    try {
+      const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
+        p_request_id: requestId,
+      });
+      if (matchResult?.matched) {
+        toast.success(`${matchResult.hospital_name}에 재배정되었습니다! (${matchResult.distance_km}km)`);
+      } else {
+        toast.warning('수용 가능한 병원이 없습니다');
+      }
+    } catch {
+      // RPC not configured (demo mode etc.) — silently skip
+      toast.info('요청이 거절되었습니다. 다른 병원을 찾고 있습니다.');
+    }
+
+    await fetchRequests();
   }, [fetchRequests]);
 
   return { requests, loading, error, isOnline, pendingQueueCount, refetch: fetchRequests, updateRequestStatus, createRequest, rejectRequest };

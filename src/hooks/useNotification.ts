@@ -36,6 +36,11 @@ export function useNotification(): UseNotificationReturn {
     // 페이지가 포커스 상태면 브라우저 알림 불필요 (토스트로 충분)
     if (document.hasFocus()) return;
 
+    // 진동으로 알림 강조
+    if ('vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200]);
+    }
+
     const notification = new Notification(title, {
       icon: '/icon.svg',
       badge: '/icon.svg',

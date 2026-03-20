@@ -131,12 +131,15 @@ export function PatientRequest() {
   const handleRequest = async (type: 'emergency' | 'urgent' | 'normal') => {
     if (isSubmitting) return;
 
-    if (!selectedPatient && !isNewPatient) {
+    // 긴급 요청은 환자 정보 없이도 전송 가능
+    const isQuickEmergency = type === 'emergency' && !selectedPatient && !isNewPatient;
+
+    if (!isQuickEmergency && !selectedPatient && !isNewPatient) {
       toast.error("환자를 선택하거나 새 환자 정보를 입력해주세요.");
       return;
     }
 
-    if (isNewPatient) {
+    if (isNewPatient && !isQuickEmergency) {
       if (!newPatientForm.name.trim()) {
         toast.error("환자 이름을 입력해주세요.");
         return;
@@ -161,25 +164,27 @@ export function PatientRequest() {
     }
 
     const severityMap: Record<string, number> = { critical: 5, urgent: 3, stable: 1 };
-    const patientSeverity = selectedPatient
-      ? severityMap[selectedPatient.severity] ?? 3
-      : severityMap[newPatientForm.severity] ?? 3;
+    const patientSeverity = isQuickEmergency
+      ? 5
+      : selectedPatient
+        ? severityMap[selectedPatient.severity] ?? 3
+        : severityMap[newPatientForm.severity] ?? 3;
 
     setIsSubmitting(true);
     try {
       await createRequest({
         priority: type as RequestPriority,
         severity: patientSeverity,
-        symptom: selectedPatient ? selectedPatient.condition : newPatientForm.condition,
-        patient_name: selectedPatient ? selectedPatient.name : newPatientForm.name || undefined,
-        patient_age: selectedPatient ? selectedPatient.age : (Number(newPatientForm.age) || undefined),
-        patient_gender: selectedPatient ? selectedPatient.gender : (newPatientForm.gender || undefined),
-        vitals: isNewPatient ? {
+        symptom: isQuickEmergency ? '긴급 요청' : (selectedPatient ? selectedPatient.condition : newPatientForm.condition),
+        patient_name: isQuickEmergency ? undefined : (selectedPatient ? selectedPatient.name : newPatientForm.name || undefined),
+        patient_age: isQuickEmergency ? undefined : (selectedPatient ? selectedPatient.age : (Number(newPatientForm.age) || undefined)),
+        patient_gender: isQuickEmergency ? undefined : (selectedPatient ? selectedPatient.gender : (newPatientForm.gender || undefined)),
+        vitals: isNewPatient && !isQuickEmergency ? {
           blood_pressure: newPatientForm.vitals.bloodPressure || undefined,
           heart_rate: Number(newPatientForm.vitals.pulse) || undefined,
           temperature: Number(newPatientForm.vitals.temperature) || undefined,
         } : undefined,
-        notes: isNewPatient ? newPatientForm.symptoms || undefined : (additionalNotes || undefined),
+        notes: isQuickEmergency ? undefined : (isNewPatient ? newPatientForm.symptoms || undefined : (additionalNotes || undefined)),
         location_text: currentLocation,
         latitude: position?.latitude ?? undefined,
         longitude: position?.longitude ?? undefined,
@@ -202,6 +207,23 @@ export function PatientRequest() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* 원탭 긴급 요청 */}
+      <Card className="border-red-300 bg-red-50/80 dark:bg-red-950/30 dark:border-red-800 shadow-md">
+        <CardContent className="pt-5 pb-5">
+          <Button
+            className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-lg font-bold min-h-[64px] shadow-lg shadow-red-600/30 touch-manipulation"
+            onClick={() => handleRequest('emergency')}
+            disabled={isSubmitting}
+          >
+            <AlertTriangle size={24} className="mr-3" />
+            {isSubmitting ? '전송 중...' : '긴급 요청 (환자 정보 없이)'}
+          </Button>
+          <p className="text-xs text-red-600/70 dark:text-red-400/70 text-center mt-2">
+            환자 정보 입력 없이 현재 위치로 즉시 요청합니다
+          </p>
+        </CardContent>
+      </Card>
+
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -210,7 +232,7 @@ export function PatientRequest() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">구급대원 환자 요청</h1>
-            <p className="text-sm text-muted-foreground">환자 정보를 선택하고 병원에 요청하세요</p>
+            <p className="text-sm text-muted-foreground">환자 정보를 입력하고 병원에 요청하세요</p>
           </div>
         </div>
         <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm">
@@ -524,37 +546,37 @@ export function PatientRequest() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button
-                className="w-full bg-red-600 hover:bg-red-700 text-white text-base font-semibold h-14 shadow-lg shadow-red-600/20"
+                className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-lg font-bold min-h-[56px] shadow-lg shadow-red-600/20 touch-manipulation"
                 onClick={() => handleRequest('emergency')}
                 disabled={isSubmitting}
               >
-                <AlertTriangle size={20} className="mr-2" />
+                <AlertTriangle size={22} className="mr-2" />
                 {isSubmitting ? '전송 중...' : '응급 요청 (위급)'}
               </Button>
 
               <Button
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold h-12"
+                className="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold min-h-[52px] touch-manipulation"
                 onClick={() => handleRequest('urgent')}
                 disabled={isSubmitting}
               >
-                <Heart size={18} className="mr-2" />
+                <Heart size={20} className="mr-2" />
                 {isSubmitting ? '전송 중...' : '응급 요청 (긴급)'}
               </Button>
 
               <Button
                 variant="outline"
-                className="w-full border-2 border-primary text-primary hover:bg-primary/10 font-medium h-11"
+                className="w-full border-2 border-primary text-primary hover:bg-primary/10 font-medium min-h-[48px] touch-manipulation"
                 onClick={() => handleRequest('normal')}
                 disabled={isSubmitting}
               >
-                <Activity size={16} className="mr-2" />
+                <Activity size={18} className="mr-2" />
                 {isSubmitting ? '전송 중...' : '일반 이송 요청'}
               </Button>
 
               <Separator className="my-1" />
 
-              <Button variant="ghost" className="w-full text-muted-foreground" size="sm">
-                <Phone size={14} className="mr-2" />
+              <Button variant="ghost" className="w-full text-muted-foreground min-h-[44px] touch-manipulation">
+                <Phone size={16} className="mr-2" />
                 병원과 직접 통화
               </Button>
             </CardContent>

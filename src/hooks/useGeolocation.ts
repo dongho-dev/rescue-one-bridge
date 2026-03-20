@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface GeoPosition {
   latitude: number;
@@ -10,17 +10,46 @@ interface UseGeolocationReturn {
   error: string | null;
   loading: boolean;
   refresh: () => void;
+  tracking: boolean;
+  startTracking: () => void;
+  stopTracking: () => void;
 }
 
 // 서울 강남구 기본 좌표 (GPS 실패 시 폴백)
 const FALLBACK_POSITION: GeoPosition = { latitude: 37.4979, longitude: 127.0276 };
 
+const GEO_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10000,
+  maximumAge: 30000,
+};
+
 export function useGeolocation(): UseGeolocationReturn {
   const [position, setPosition] = useState<GeoPosition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tracking, setTracking] = useState(false);
+  const watchIdRef = useRef<number | null>(null);
 
-  const requestPosition = useCallback(() => {
+  // ---------- shared handlers ----------
+  const handleSuccess = useCallback((pos: GeolocationPosition) => {
+    setPosition({
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+    });
+    setError(null);
+    setLoading(false);
+  }, []);
+
+  const handleError = useCallback((err: GeolocationPositionError) => {
+    console.warn('Geolocation error:', err.message);
+    setError(err.message);
+    setPosition(FALLBACK_POSITION);
+    setLoading(false);
+  }, []);
+
+  // ---------- one-time refresh ----------
+  const refresh = useCallback(() => {
     if (!navigator.geolocation) {
       setError('Geolocation을 지원하지 않는 브라우저입니다.');
       setPosition(FALLBACK_POSITION);
@@ -29,30 +58,51 @@ export function useGeolocation(): UseGeolocationReturn {
     }
 
     setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setPosition({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
-        setError(null);
-        setLoading(false);
-      },
-      (err) => {
-        console.warn('Geolocation error:', err.message);
-        setError(err.message);
-        setPosition(FALLBACK_POSITION);
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-    );
+    navigator.geolocation.getCurrentPosition(handleSuccess, handleError, GEO_OPTIONS);
+  }, [handleSuccess, handleError]);
+
+  // ---------- continuous tracking ----------
+  const startTracking = useCallback(() => {
+    if (!navigator.geolocation) {
+      setError('Geolocation을 지원하지 않는 브라우저입니다.');
+      setPosition(FALLBACK_POSITION);
+      setLoading(false);
+      return;
+    }
+
+    // avoid duplicate watchers
+    if (watchIdRef.current !== null) return;
+
+    setLoading(true);
+    const id = navigator.geolocation.watchPosition(handleSuccess, handleError, GEO_OPTIONS);
+    watchIdRef.current = id;
+    setTracking(true);
+  }, [handleSuccess, handleError]);
+
+  const stopTracking = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setTracking(false);
   }, []);
 
+  // ---------- initial one-time fetch ----------
   useEffect(() => {
-    requestPosition();
-  }, [requestPosition]);
+    refresh();
+  }, [refresh]);
 
-  return { position, error, loading, refresh: requestPosition };
+  // ---------- cleanup watcher on unmount ----------
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, []);
+
+  return { position, error, loading, refresh, tracking, startTracking, stopTracking };
 }
 
 /**

@@ -10,6 +10,7 @@ import { AmbulanceMap } from "../common/AmbulanceMap";
 import { useRequests } from "@/hooks/useRequests";
 import { useHospitalAvailability } from "@/hooks/useHospitalAvailability";
 import { useGeolocation, calculateDistanceKm } from "@/hooks/useGeolocation";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { generateMockHospitals } from "../common/models";
 import type { HospitalAvailability, Request, RequestStatus } from "@/types/database";
 import { LoadingState } from "../common/LoadingState";
@@ -34,7 +35,8 @@ export function ParamedicDashboard() {
   const [showAllRequests, setShowAllRequests] = useState(false);
   const { hospitals: dbHospitals, loading: hospitalsLoading, error: hospitalsError, refetch: refetchHospitals } = useHospitalAvailability();
   const { requests: dbRequests, loading: requestsLoading, error: requestsError, updateRequestStatus } = useRequests();
-  const { position } = useGeolocation();
+  const { position, tracking, startTracking, stopTracking } = useGeolocation();
+  const wakeLock = useWakeLock();
   const rawHospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
 
   // GPS 위치 기반 거리 계산 + 가까운 순 정렬
@@ -90,12 +92,18 @@ export function ParamedicDashboard() {
 
   const handleStatusUpdate = async (requestId: string, newStatus: RequestStatus) => {
     await updateRequestStatus(requestId, newStatus);
-    const labels: Record<string, string> = {
-      en_route: '이송을 시작합니다',
-      completed: '이송이 완료되었습니다',
-      cancelled: '요청이 취소되었습니다',
-    };
-    toast.success(labels[newStatus] || '상태가 변경되었습니다');
+
+    if (newStatus === 'en_route') {
+      startTracking();
+      wakeLock.request();
+      toast.success('이송을 시작합니다. GPS 추적 및 화면 유지가 활성화됩니다.');
+    } else if (newStatus === 'completed' || newStatus === 'cancelled') {
+      stopTracking();
+      wakeLock.release();
+      toast.success(newStatus === 'completed' ? '이송이 완료되었습니다' : '요청이 취소되었습니다');
+    } else {
+      toast.success('상태가 변경되었습니다');
+    }
   };
 
   const getStatusBadge = (status: RequestStatus) => {
@@ -146,6 +154,14 @@ export function ParamedicDashboard() {
           </div>
         </div>
       </div>
+
+      {/* GPS 추적 상태 */}
+      {tracking && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-sm text-green-700 dark:text-green-400">
+          <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          GPS 실시간 추적 중 · 화면 꺼짐 방지 활성
+        </div>
+      )}
 
       {/* KPI 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -491,7 +507,13 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
           </div>
           <Button
             className="w-full"
-            onClick={() => toast(`${hospital.name}에 연락하였습니다`)}
+            onClick={() => {
+              if (hospital.contact) {
+                window.open(`tel:${hospital.contact}`);
+              } else {
+                toast("연락처 정보가 없습니다");
+              }
+            }}
           >
             <Phone size={16} className="mr-2" />
             병원 연락하기
