@@ -5,6 +5,7 @@ import type { Request, RequestStatus, RequestPriority } from '@/types/database';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '@/utils/errorMessages';
+import { withRetry } from '@/utils/retry';
 import { useNotification } from './useNotification';
 import { enqueue, getQueue, dequeue } from '@/utils/offlineQueue';
 
@@ -204,10 +205,12 @@ export function useRequests(): UseRequestsResult {
     if (status === 'matched') updateData.matched_at = new Date().toISOString();
     if (status === 'completed') updateData.completed_at = new Date().toISOString();
 
-    const { error } = await supabase
-      .from('requests')
-      .update(updateData)
-      .eq('id', requestId);
+    const { error } = await withRetry(async () =>
+      await supabase
+        .from('requests')
+        .update(updateData)
+        .eq('id', requestId)
+    );
 
     if (error) {
       toast.error(getUserFriendlyError(error.message));
@@ -248,10 +251,12 @@ export function useRequests(): UseRequestsResult {
       return;
     }
 
-    const { data: inserted, error } = await supabase.from('requests').insert({
-      paramedic_id: user.id,
-      ...data,
-    }).select('id').single();
+    const { data: inserted, error } = await withRetry(async () =>
+      await supabase.from('requests').insert({
+        paramedic_id: user.id,
+        ...data,
+      }).select('id').single()
+    );
 
     if (error) {
       // 네트워크 오류면 큐에 저장

@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
 import { useNotification } from "./hooks/useNotification";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useSessionTimeout } from "./hooks/useSessionTimeout";
 
 const HospitalDashboard = lazy(() => import('./components/hospital/HospitalDashboard').then(m => ({ default: m.HospitalDashboard })));
 const PatientDetails = lazy(() => import('./components/hospital/PatientDetails').then(m => ({ default: m.PatientDetails })));
@@ -161,6 +162,7 @@ function AuthGate() {
 function AppContent() {
   const { user, profile, signOut } = useAuth();
   const { permission, requestPermission } = useNotification();
+  useSessionTimeout();
   const [notificationDismissed, setNotificationDismissed] = useState(false);
   const [currentPage, setCurrentPage] = useState<CurrentPage>(() => {
     // Default page based on role

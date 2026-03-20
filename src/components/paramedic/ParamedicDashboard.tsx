@@ -11,6 +11,7 @@ import { useRequests } from "@/hooks/useRequests";
 import { useHospitalAvailability } from "@/hooks/useHospitalAvailability";
 import { useGeolocation, calculateDistanceKm } from "@/hooks/useGeolocation";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { useLocationSharing } from "@/hooks/useLocationSharing";
 import { generateMockHospitals } from "../common/models";
 import type { HospitalAvailability, Request, RequestStatus } from "@/types/database";
 import { LoadingState } from "../common/LoadingState";
@@ -38,6 +39,10 @@ export function ParamedicDashboard() {
   const { position, tracking, startTracking, stopTracking } = useGeolocation();
   const wakeLock = useWakeLock();
   const rawHospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
+
+  // 이송 중인 요청의 위치를 병원에 실시간 공유
+  const enRouteRequest = useMemo(() => dbRequests.find(r => r.status === 'en_route'), [dbRequests]);
+  useLocationSharing(enRouteRequest?.id ?? null, position, !!enRouteRequest);
 
   // GPS 위치 기반 거리 계산 + 가까운 순 정렬
   const hospitals = useMemo(() => {

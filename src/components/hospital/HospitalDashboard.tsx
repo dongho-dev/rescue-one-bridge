@@ -31,12 +31,6 @@ import {
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const recentAlerts = [
-  { time: '5분 전', message: '중증 환자 3명 동시 접수', type: 'warning' },
-  { time: '12분 전', message: '병상 가용률 80% 달성', type: 'info' },
-  { time: '20분 전', message: '응급실 대기시간 단축', type: 'success' },
-];
-
 export function HospitalDashboard() {
   const { profile } = useAuth();
   const [accepting, setAccepting] = useState(true);
@@ -95,6 +89,22 @@ export function HospitalDashboard() {
     return { availableBeds, erQueue, avgWaitTime, todayProcessed };
   }, [dbRequests, beds]);
 
+  const recentAlerts = useMemo(() => {
+    return dbRequests
+      .slice(0, 5)
+      .map(req => {
+        const time = new Date(req.requested_at);
+        const diff = Math.round((Date.now() - time.getTime()) / 60000);
+        const timeStr = diff < 60 ? `${diff}분 전` : `${Math.round(diff / 60)}시간 전`;
+        const type = req.severity >= 4 ? 'warning' : req.severity >= 3 ? 'info' : 'success';
+        return {
+          time: timeStr,
+          message: `${req.patient_name || '환자'} - ${req.symptom} (중증도 ${req.severity})`,
+          type,
+        };
+      });
+  }, [dbRequests]);
+
   const getSeverityBadgeClasses = (severity: number) => {
     if (severity >= 4) return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800';
     if (severity >= 3) return 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800';
@@ -131,12 +141,18 @@ export function HospitalDashboard() {
   };
 
   // 차트 데이터
-  const [hourlyLoadData] = useState(() =>
-    Array.from({ length: 24 }, (_, i) => ({
+  const hourlyLoadData = useMemo(() => {
+    const counts: Record<number, number> = {};
+    for (let i = 0; i < 24; i++) counts[i] = 0;
+    dbRequests.forEach(req => {
+      const hour = new Date(req.requested_at).getHours();
+      counts[hour]++;
+    });
+    return Array.from({ length: 24 }, (_, i) => ({
       hour: `${i}:00`,
-      patients: Math.floor(Math.random() * 15 + 5)
-    }))
-  );
+      patients: counts[i],
+    }));
+  }, [dbRequests]);
 
   const severityDistributionData = [
     { name: '경미', value: dbRequests.filter(r => r.severity <= 2).length, color: 'var(--chart-3)' },
