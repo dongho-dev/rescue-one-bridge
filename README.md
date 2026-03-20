@@ -23,11 +23,12 @@
 | 영역 | 기술 |
 |------|------|
 | Frontend | React 18, TypeScript, Tailwind CSS v4, shadcn/ui |
-| Backend | Supabase (PostgreSQL, Auth, Realtime, Edge Functions) |
+| Backend | Supabase (PostgreSQL, Auth, Realtime) |
 | Map | Leaflet + OpenStreetMap (GPS 위치, Haversine 거리 계산) |
 | Charts | Recharts |
+| Monitoring | Sentry |
 | Deploy | Vercel |
-| CI/CD | GitHub Actions (TypeScript, ESLint, Vitest, Build) |
+| CI/CD | GitHub Actions (TypeScript, ESLint, Vitest, Playwright, Build) |
 
 ---
 
@@ -35,26 +36,36 @@
 
 ### 구급대원 (Mobile)
 
-- **GPS 실시간 위치** — 현재 위치를 지도에 표시, 가까운 병원을 거리순 정렬
-- **원터치 요청** — 환자 정보 + GPS 좌표를 병원에 즉시 전송
+- **원탭 긴급 요청** — 환자 정보 없이도 1탭으로 즉시 요청 전송
+- **GPS 실시간 추적** — `watchPosition`으로 이송 중 위치 연속 추적 + 병원에 실시간 공유
 - **자동 매칭** — 거리(40%) + 병상(30%) + 대기(20%) + 수용상태(10%) 점수 기반 최적 병원 배정
-- **역지오코딩** — GPS 좌표를 한국어 주소로 자동 변환
+- **대시보드** — 내 요청 목록, 상태 추적(대기→배정→이송중→완료), 근처 병원 현황
+- **이송 시작/완료** — 상태 전환 버튼 + GPS 추적 + 화면 꺼짐 방지 자동 활성화
+- **길 안내** — 매칭된 병원까지 Google Maps 네비게이션
+- **전화 바로 걸기** — `tel:` 링크로 병원 직접 통화
+- **오프라인 큐잉** — 네트워크 끊겨도 요청 로컬 저장 → 복구 시 자동 전송
 
 ### 병원 Dashboard (Web)
 
-- **통합 대시보드** — KPI 카드, 중증도 분포 차트, 시간대별 부하 그래프
-- **실시간 요청 관리** — 구급대원 요청 수락/보류, 환자 상세 정보 확인
-- **병상 관리** — 구역별 병상 상태(가용/사용중/청소중/정비) 실시간 관리
-- **직원 관리** — 근무 스케줄, 상태 관리, 응급 호출
-- **장비 현황** — 의료 장비 상태 모니터링, 배터리/정비 알림
-- **환자 관리** — 환자 정보 CRUD, 상태 업데이트, 메모 저장
+- **통합 대시보드** — KPI 카드, 중증도 분포 차트, 시간대별 부하 그래프 (실데이터)
+- **실시간 요청 관리** — 수락/거절, 거절 시 다음 병원 자동 재매칭
+- **수용 상태 토글** — DB 연동, 매칭 알고리즘에 즉시 반영
+- **병상/직원/장비/환자 관리** — 실시간 CRUD
+- **병원 관리 (Admin)** — 병원 등록/수정/삭제
 
 ### 공통
 
+- **푸시 알림** — 새 요청/매칭 완료 시 브라우저 알림 + 진동
 - **Supabase Realtime** — 데이터 변경 시 모든 클라이언트에 즉시 반영
+- **병원↔구급대원 메시지** — 요청 단위 양방향 실시간 메시지
 - **역할 기반 접근** — hospital_staff / paramedic 역할 분리
-- **데모 모드** — Supabase 없이도 목 데이터로 전체 기능 체험 가능
+- **네트워크 재시도** — Exponential backoff 자동 재시도
+- **세션 타임아웃** — 30분 미활동 시 자동 로그아웃 (환자 정보 보호)
+- **감사 로그** — 환자 데이터 열람/수정 기록
+- **에러 모니터링** — Sentry 연동 (환자 데이터 자동 스크러빙)
+- **데모 모드** — Supabase 없이 전체 E2E 플로우 체험 가능 (역할 전환 포함)
 - **다크 모드** — 시스템/밝게/어둡게 테마 지원
+- **PWA** — 홈 화면 설치, Service Worker 캐싱
 
 ---
 
@@ -78,16 +89,18 @@ VITE_DEMO_MODE=true npm run dev
 ```bash
 cp .env.example .env
 # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY 설정
+# VITE_SENTRY_DSN 설정 (선택)
 npm run dev
 ```
 
 ### 기타 명령어
 
 ```bash
-npm run build      # 프로덕션 빌드
-npm run lint       # ESLint 검사
-npm run test:run   # 테스트 실행
-npm run preview    # 빌드 결과 미리보기
+npm run build        # 프로덕션 빌드
+npm run lint         # ESLint 검사
+npm run test:run     # 유닛 테스트 실행
+npx playwright test  # E2E 테스트 실행
+npm run preview      # 빌드 결과 미리보기
 ```
 
 ---
@@ -95,17 +108,19 @@ npm run preview    # 빌드 결과 미리보기
 ## 시스템 구조
 
 ```
-구급대원 App (Mobile)
+구급대원 App (Mobile/PWA)
   ↕ Supabase Realtime + REST API
-Supabase (PostgreSQL + Auth + Edge Functions)
+Supabase (PostgreSQL + Auth + Realtime)
   ↕ Supabase Realtime + REST API
 병원 Dashboard (Web)
 ```
 
 ---
 
-## 확장 계획
+## E2E 플로우
 
-- 웨어러블 연동 — 심정지 자동 감지 → 자동 긴급 호출
-- AI 최적 경로 — 교통상황 + 중증도 기반 이송 경로 추천
-- 빅데이터 분석 — 응급 데이터 기반 공중 보건 위기 대응
+```
+구급대원: 원탭 요청 →  자동 매칭 → 병원 배정 → 이송 시작 → 이송 완료
+              ↓           ↓          ↓           ↓
+병원:     요청 수신 → 수락/거절 → 구급차 위치 추적 → 환자 인수
+```
