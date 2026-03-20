@@ -95,6 +95,20 @@ function ThemeToggle() {
   );
 }
 
+function DemoRoleSwitcher() {
+  const { profile, switchDemoRole } = useAuth();
+  if (!switchDemoRole) return null;
+  const label = profile?.role === 'paramedic' ? '구급대원' : '병원 직원';
+  return (
+    <button
+      onClick={switchDemoRole}
+      className="px-2 py-0.5 bg-white/20 hover:bg-white/30 rounded text-xs font-medium transition-colors"
+    >
+      현재: {label} (전환)
+    </button>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="rescue-one-theme">
@@ -142,8 +156,9 @@ function AuthGate() {
   if (isDemoMode) {
     return (
       <>
-        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white text-center py-1.5 text-sm font-medium shadow-md">
-          데모 모드로 실행 중입니다. 실제 데이터는 저장되지 않습니다.
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white py-1.5 text-sm font-medium shadow-md flex items-center justify-center gap-3">
+          <span>데모 모드 · 실제 데이터는 저장되지 않습니다</span>
+          <DemoRoleSwitcher />
         </div>
         <div className="pt-9">
           <AppContent />

@@ -8,6 +8,7 @@ import { getUserFriendlyError } from '@/utils/errorMessages';
 import { withRetry } from '@/utils/retry';
 import { useNotification } from './useNotification';
 import { enqueue, getQueue, dequeue } from '@/utils/offlineQueue';
+import { generateDemoRequests } from '@/utils/demoData';
 
 interface UseRequestsResult {
   requests: Request[];
@@ -48,8 +49,17 @@ export function useRequests(): UseRequestsResult {
   const { notify } = useNotification();
 
   const fetchRequests = useCallback(async () => {
-    if (!user || !profile || !supabase) {
+    if (!user || !profile) {
       setRequests([]);
+      setLoading(false);
+      return;
+    }
+
+    // 데모 모드: Supabase 없이 초기 mock 데이터 로드
+    if (!supabase) {
+      if (requests.length === 0) {
+        setRequests(generateDemoRequests());
+      }
       setLoading(false);
       return;
     }
@@ -239,7 +249,40 @@ export function useRequests(): UseRequestsResult {
     }
 
     if (!supabase) {
-      toast.success('데모 모드: 요청이 전송되었습니다!');
+      // 데모 모드: 로컬 state에 요청 추가 + 가짜 매칭
+      const demoId = crypto.randomUUID();
+      const hospitals = ['서울대학교병원', '연세세브란스병원', '삼성서울병원', '아산병원'];
+      const hospitalName = hospitals[Math.floor(Math.random() * hospitals.length)];
+      const distanceKm = Math.round((Math.random() * 8 + 1) * 10) / 10;
+
+      const demoRequest: Request = {
+        id: demoId,
+        hospital_id: 'demo-hospital',
+        paramedic_id: user.id,
+        status: 'matched',
+        priority: data.priority,
+        severity: data.severity,
+        symptom: data.symptom,
+        patient_name: data.patient_name ?? null,
+        patient_age: data.patient_age ?? null,
+        patient_gender: data.patient_gender ?? null,
+        allergies: data.allergies ?? [],
+        vitals: (data.vitals ?? {}) as Request['vitals'],
+        distance_km: distanceKm,
+        eta_minutes: Math.max(5, Math.round(distanceKm * 3)),
+        location_text: data.location_text ?? null,
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+        notes: data.notes ?? null,
+        requested_at: new Date().toISOString(),
+        matched_at: new Date().toISOString(),
+        completed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setRequests(prev => [demoRequest, ...prev]);
+      toast.success(`${hospitalName}에 매칭되었습니다! (${distanceKm}km)`);
       return;
     }
 

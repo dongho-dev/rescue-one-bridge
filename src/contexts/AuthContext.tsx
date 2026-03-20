@@ -22,6 +22,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isDemoMode: boolean;
   isEnvMissing: boolean;
+  switchDemoRole?: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isDemoMode: false,
   isEnvMissing: false,
+  switchDemoRole: undefined,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -133,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         display_name: 'Demo User',
       });
       setLoading(false);
-      return;
+      return () => {};
     }
 
     // Use only onAuthStateChange to avoid race condition between
@@ -189,7 +191,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut, isDemoMode: explicitDemoMode, isEnvMissing }}>
+    <AuthContext.Provider value={{
+      user, session, profile, loading, signOut,
+      isDemoMode: explicitDemoMode,
+      isEnvMissing,
+      switchDemoRole: explicitDemoMode ? () => {
+        setProfile(prev => prev ? {
+          ...prev,
+          role: prev.role === 'hospital_staff' ? 'paramedic' : 'hospital_staff',
+          hospital_id: prev.role === 'hospital_staff' ? null : 'demo-hospital',
+        } : prev);
+      } : undefined,
+    }}>
       {children}
     </AuthContext.Provider>
   );
