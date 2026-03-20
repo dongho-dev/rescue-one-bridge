@@ -5,6 +5,7 @@ import type { Request, RequestStatus, RequestPriority } from '@/types/database';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '@/utils/errorMessages';
+import { useNotification } from './useNotification';
 
 interface UseRequestsResult {
   requests: Request[];
@@ -37,6 +38,7 @@ export function useRequests(): UseRequestsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const { notify } = useNotification();
 
   const fetchRequests = useCallback(async () => {
     if (!user || !profile || !supabase) {
@@ -96,6 +98,10 @@ export function useRequests(): UseRequestsResult {
         setRequests(prev => [newReq, ...prev]);
         if (profile.role === 'hospital_staff') {
           toast.info('새로운 환자 이송 요청이 도착했습니다!');
+          notify('새 환자 이송 요청', {
+            body: `${newReq.patient_name || '환자'} · ${newReq.symptom} · 중증도 ${newReq.severity}/5`,
+            tag: `request-${newReq.id}`,
+          });
         }
       })
       .on('postgres_changes', {
@@ -104,6 +110,12 @@ export function useRequests(): UseRequestsResult {
       }, (payload) => {
         const updated = payload.new as Request;
         setRequests(prev => prev.map(r => r.id === updated.id ? updated : r));
+        if (profile.role === 'paramedic' && updated.status === 'matched') {
+          notify('병원 배정 완료', {
+            body: `${updated.distance_km ?? '?'}km · 예상 ${updated.eta_minutes ?? '?'}분`,
+            tag: `matched-${updated.id}`,
+          });
+        }
       })
       .subscribe();
 

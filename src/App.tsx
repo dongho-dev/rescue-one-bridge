@@ -23,10 +23,13 @@ import {
   X,
   LogOut,
   Loader2,
-  User
+  User,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
+import { useNotification } from "./hooks/useNotification";
 
 const HospitalDashboard = lazy(() => import('./components/hospital/HospitalDashboard').then(m => ({ default: m.HospitalDashboard })));
 const PatientDetails = lazy(() => import('./components/hospital/PatientDetails').then(m => ({ default: m.PatientDetails })));
@@ -156,6 +159,8 @@ function AuthGate() {
 
 function AppContent() {
   const { user, profile, signOut } = useAuth();
+  const { permission, requestPermission } = useNotification();
+  const [notificationDismissed, setNotificationDismissed] = useState(false);
   const [currentPage, setCurrentPage] = useState<CurrentPage>(() => {
     // Default page based on role
     if (profile?.role === 'paramedic') return 'paramedic-dashboard';
@@ -163,6 +168,7 @@ function AppContent() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const showNotificationBanner = permission === 'default' && !notificationDismissed;
 
   const navigationItems = useMemo(() => {
     if (!profile?.role) {
@@ -374,6 +380,37 @@ function AppContent() {
             <ThemeToggle />
           </div>
         </header>
+
+        {/* 알림 권한 배너 */}
+        {showNotificationBanner && (
+          <div className="bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <BellOff size={16} />
+              <span>알림을 켜면 새 요청이 도착할 때 즉시 알려드립니다</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7 text-xs"
+                onClick={async () => {
+                  await requestPermission();
+                  setNotificationDismissed(true);
+                }}
+              >
+                <Bell size={13} className="mr-1" />
+                알림 켜기
+              </Button>
+              <button
+                onClick={() => setNotificationDismissed(true)}
+                className="text-white/70 hover:text-white"
+                aria-label="닫기"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 p-3 sm:p-6 overflow-auto">
