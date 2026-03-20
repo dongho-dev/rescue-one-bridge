@@ -46,6 +46,7 @@ export function useRequests(): UseRequestsResult {
   const [pendingQueueCount, setPendingQueueCount] = useState(() => getQueue().length);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const flushingRef = useRef(false);
+  const demoInitRef = useRef(false);
   const { notify } = useNotification();
 
   const fetchRequests = useCallback(async () => {
@@ -57,7 +58,8 @@ export function useRequests(): UseRequestsResult {
 
     // 데모 모드: Supabase 없이 초기 mock 데이터 로드
     if (!supabase) {
-      if (requests.length === 0) {
+      if (!demoInitRef.current) {
+        demoInitRef.current = true;
         setRequests(generateDemoRequests());
       }
       setLoading(false);
@@ -202,7 +204,7 @@ export function useRequests(): UseRequestsResult {
         channelRef.current = null;
       }
     };
-  }, [user, profile]);
+  }, [user, profile, notify]);
 
   const updateRequestStatus = useCallback(async (requestId: string, status: RequestStatus) => {
     setRequests(prev => prev.map(r =>
