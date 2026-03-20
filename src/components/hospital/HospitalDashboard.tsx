@@ -9,6 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { InfoCard } from "../common/InfoCard";
 import { useRequests } from "@/hooks/useRequests";
 import { useBeds } from "@/hooks/useBeds";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { LoadingState } from "../common/LoadingState";
 import type { Request } from "@/types/database";
 import {
@@ -19,12 +21,12 @@ import {
   AlertTriangle,
   Eye,
   Check,
-  Pause,
   Phone,
   Heart,
   Activity,
   Brain,
-  TrendingUp
+  TrendingUp,
+  XCircle
 } from 'lucide-react';
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -36,10 +38,11 @@ const recentAlerts = [
 ];
 
 export function HospitalDashboard() {
+  const { profile } = useAuth();
   const [accepting, setAccepting] = useState(true);
   const [acceptingConfirmOpen, setAcceptingConfirmOpen] = useState(false);
   const [pendingAccepting, setPendingAccepting] = useState(true);
-  const { requests: dbRequests, loading, error, refetch, updateRequestStatus } = useRequests();
+  const { requests: dbRequests, loading, error, refetch, rejectRequest } = useRequests();
   const { beds } = useBeds();
   const [selectedSeverity, setSelectedSeverity] = useState('all');
 
@@ -48,25 +51,45 @@ export function HospitalDashboard() {
     setAcceptingConfirmOpen(true);
   }, []);
 
-  const handleAcceptingConfirm = useCallback(() => {
+  const handleAcceptingConfirm = useCallback(async () => {
     setAccepting(pendingAccepting);
-    toast(pendingAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
     setAcceptingConfirmOpen(false);
-  }, [pendingAccepting]);
 
-  const handleRequestAction = (requestId: string, action: 'accept' | 'hold') => {
-    updateRequestStatus(requestId, action === 'accept' ? 'matched' : 'pending');
-    toast(action === 'accept' ? "요청을 수락했습니다" : "요청을 보류했습니다");
+    // DB에 accepting 상태 반영
+    if (supabase && profile?.hospital_id) {
+      const { error: updateError } = await supabase
+        .from('hospitals')
+        .update({ accepting: pendingAccepting })
+        .eq('id', profile.hospital_id);
+      if (updateError) {
+        toast.error('수용 상태 업데이트에 실패했습니다');
+        setAccepting(!pendingAccepting); // rollback
+        return;
+      }
+    }
+    toast(pendingAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
+  }, [pendingAccepting, profile?.hospital_id]);
+
+  const handleRequestAction = (requestId: string, action: 'accept' | 'reject') => {
+    if (action === 'accept') {
+      // 이미 matched 상태이므로 수락 확인 토스트만
+      toast.success("요청을 수락했습니다. 구급대원이 이송을 시작할 수 있습니다.");
+    } else {
+      rejectRequest(requestId);
+      toast("요청을 거절했습니다. 다른 병원으로 재매칭됩니다.");
+    }
   };
 
-  const filteredRequests = useMemo(() => selectedSeverity === 'all'
-    ? dbRequests.filter(req => req.status === 'pending')
-    : dbRequests.filter(req => req.status === 'pending' && req.severity.toString() === selectedSeverity),
-  [dbRequests, selectedSeverity]);
+  // 자동 매칭된 요청(matched)도 들어오는 요청으로 표시
+  const filteredRequests = useMemo(() => {
+    const incoming = dbRequests.filter(req => req.status === 'pending' || req.status === 'matched');
+    if (selectedSeverity === 'all') return incoming;
+    return incoming.filter(req => req.severity.toString() === selectedSeverity);
+  }, [dbRequests, selectedSeverity]);
 
   const kpiData = useMemo(() => {
     const availableBeds = beds.filter(b => b.status === 'available').length;
-    const erQueue = dbRequests.filter(req => req.status === 'matched').length;
+    const erQueue = dbRequests.filter(req => req.status === 'matched' || req.status === 'en_route').length;
     const avgWaitTime = 25;
     const todayProcessed = dbRequests.filter(req => req.status === 'completed').length;
     return { availableBeds, erQueue, avgWaitTime, todayProcessed };
@@ -300,11 +323,11 @@ export function HospitalDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 px-2"
-                              onClick={() => handleRequestAction(request.id, 'hold')}
-                              aria-label="보류"
+                              className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                              onClick={() => handleRequestAction(request.id, 'reject')}
+                              aria-label="거절"
                             >
-                              <Pause size={14} />
+                              <XCircle size={14} />
                             </Button>
                           </div>
                         </TableCell>
@@ -444,17 +467,21 @@ function RequestDetailDialog({ request, onAccept }: { request: Request; onAccept
           <div>
             <h4 className="font-medium">환자 정보</h4>
             <p className="text-sm text-muted-foreground">
-              연령: {request.patient_age}세<br/>
+              {request.patient_name && <>이름: {request.patient_name}<br/></>}
+              {request.patient_age != null && <>연령: {request.patient_age}세<br/></>}
+              {request.patient_gender && <>성별: {request.patient_gender}<br/></>}
               증상: {request.symptom}<br/>
               중증도: {request.severity}/5<br/>
-              {request.allergies && `알레르기: ${request.allergies.join(', ')}`}
+              {request.notes && <>메모: {request.notes}<br/></>}
+              {request.allergies?.length > 0 && `알레르기: ${request.allergies.join(', ')}`}
             </p>
           </div>
           <div>
             <h4 className="font-medium">위치 정보</h4>
             <p className="text-sm text-muted-foreground">
-              거리: {request.distance_km}km<br/>
-              예상 도착시간: {request.eta_minutes}분
+              {request.location_text && <>{request.location_text}<br/></>}
+              거리: {request.distance_km != null ? `${request.distance_km}km` : '미확인'}<br/>
+              예상 도착시간: {request.eta_minutes != null ? `${request.eta_minutes}분` : '미확인'}
             </p>
           </div>
           <div className="flex gap-2">

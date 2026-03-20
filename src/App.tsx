@@ -34,8 +34,9 @@ const BedManagement = lazy(() => import('./components/hospital/BedManagement').t
 const StaffManagement = lazy(() => import('./components/hospital/StaffManagement').then(m => ({ default: m.StaffManagement })));
 const EquipmentStatus = lazy(() => import('./components/hospital/EquipmentStatus').then(m => ({ default: m.EquipmentStatus })));
 const PatientRequest = lazy(() => import('./components/paramedic/PatientRequest').then(m => ({ default: m.PatientRequest })));
+const ParamedicDashboard = lazy(() => import('./components/paramedic/ParamedicDashboard').then(m => ({ default: m.ParamedicDashboard })));
 
-type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request';
+type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request' | 'paramedic-dashboard';
 
 type AuthPage = 'login' | 'signup';
 
@@ -53,6 +54,7 @@ const allNavigationItems: NavigationItem[] = [
   { id: 'staff', label: '직원 관리', icon: UserCheck, roles: ['hospital_staff'] },
   { id: 'equipment', label: '장비 현황', icon: Stethoscope, roles: ['hospital_staff'] },
   { id: 'request', label: '구급대원 요청', icon: Ambulance, roles: ['hospital_staff', 'paramedic'] },
+  { id: 'paramedic-dashboard', label: '대시보드', icon: Home, roles: ['paramedic'] },
 ];
 
 function ThemeToggle() {
@@ -156,14 +158,17 @@ function AppContent() {
   const { user, profile, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState<CurrentPage>(() => {
     // Default page based on role
-    if (profile?.role === 'paramedic') return 'request';
+    if (profile?.role === 'paramedic') return 'paramedic-dashboard';
     return 'dashboard';
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = useMemo(() => {
-    if (!profile?.role) return allNavigationItems;
+    if (!profile?.role) {
+      // 데모 모드: paramedic 전용 대시보드는 제외 (hospital 대시보드와 중복 방지)
+      return allNavigationItems.filter(item => item.id !== 'paramedic-dashboard');
+    }
     return allNavigationItems.filter(item =>
       item.roles.includes(profile.role)
     );
@@ -380,6 +385,7 @@ function AppContent() {
               {currentPage === 'staff' && <StaffManagement />}
               {currentPage === 'equipment' && <EquipmentStatus />}
               {currentPage === 'request' && <PatientRequest />}
+              {currentPage === 'paramedic-dashboard' && <ParamedicDashboard />}
             </Suspense>
           </ErrorBoundary>
         </main>

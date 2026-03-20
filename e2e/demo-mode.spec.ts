@@ -29,18 +29,19 @@ test.describe('Demo Mode - Hospital Dashboard', () => {
 });
 
 test.describe('Demo Mode - Patient Request', () => {
-  test('should show quick patient list', async ({ page }) => {
+  test('should show quick patient section with empty state', async ({ page }) => {
     await page.goto('/');
     await page.getByText('구급대원 요청').click();
     await expect(page.getByText('빠른 환자 선택')).toBeVisible();
-    await expect(page.getByText('김철수')).toBeVisible();
+    // 데모 모드에서는 이전 요청이 없으므로 빈 상태 메시지 표시
+    await expect(page.getByText('이전 요청 기록이 없습니다')).toBeVisible();
   });
 
-  test('should select a patient and show info', async ({ page }) => {
+  test('should open new patient form', async ({ page }) => {
     await page.goto('/');
     await page.getByText('구급대원 요청').click();
-    await page.getByText('김철수').click();
-    await expect(page.getByText('선택된 환자 정보')).toBeVisible();
+    await page.getByText('새 환자 등록').click();
+    await expect(page.getByText('새 환자 정보 입력')).toBeVisible();
   });
 });
 

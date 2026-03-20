@@ -13,6 +13,7 @@ interface UseRequestsResult {
   refetch: () => Promise<void>;
   updateRequestStatus: (requestId: string, status: RequestStatus) => Promise<void>;
   createRequest: (data: CreateRequestData) => Promise<void>;
+  rejectRequest: (requestId: string) => Promise<void>;
 }
 
 export interface CreateRequestData {
@@ -195,5 +196,22 @@ export function useRequests(): UseRequestsResult {
     await fetchRequests();
   }, [user, fetchRequests]);
 
-  return { requests, loading, error, refetch: fetchRequests, updateRequestStatus, createRequest };
+  const rejectRequest = useCallback(async (requestId: string) => {
+    // Optimistic update: remove from current hospital's list
+    setRequests(prev => prev.filter(r => r.id !== requestId));
+
+    if (!supabase) return;
+
+    const { error } = await supabase
+      .from('requests')
+      .update({ status: 'pending' as RequestStatus, hospital_id: null, matched_at: null, distance_km: null, eta_minutes: null })
+      .eq('id', requestId);
+
+    if (error) {
+      toast.error(getUserFriendlyError(error.message));
+      await fetchRequests();
+    }
+  }, [fetchRequests]);
+
+  return { requests, loading, error, refetch: fetchRequests, updateRequestStatus, createRequest, rejectRequest };
 }

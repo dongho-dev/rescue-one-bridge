@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -39,45 +39,45 @@ interface QuickPatient {
   lastUsed: string;
 }
 
-const quickPatients: QuickPatient[] = [
-  {
-    id: 'QP001',
-    name: '김철수',
-    age: 45,
-    gender: '남성',
-    condition: '심장 관련',
-    severity: 'critical',
-    lastUsed: '2024-02-20'
-  },
-  {
-    id: 'QP002',
-    name: '이영희',
-    age: 32,
-    gender: '여성',
-    condition: '외상',
-    severity: 'urgent',
-    lastUsed: '2024-02-19'
-  },
-  {
-    id: 'QP003',
-    name: '박민수',
-    age: 67,
-    gender: '남성',
-    condition: '호흡곤란',
-    severity: 'urgent',
-    lastUsed: '2024-02-18'
-  }
-];
 
+function mapSeverityToLabel(severity: number): 'critical' | 'urgent' | 'stable' {
+  if (severity >= 4) return 'critical';
+  if (severity >= 3) return 'urgent';
+  return 'stable';
+}
 
 export function PatientRequest() {
-  const { createRequest } = useRequests();
+  const { createRequest, requests } = useRequests();
   const { position, refresh: refreshGeo } = useGeolocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
   const [isNewPatient, setIsNewPatient] = useState(false);
+  const [additionalNotes, setAdditionalNotes] = useState('');
   const [currentLocation, setCurrentLocation] = useState('위치 확인 중...');
   const [estimatedTime] = useState('15분');
+
+  // 이전 요청에서 최근 환자 3명 추출 (하드코딩 제거)
+  const quickPatients: QuickPatient[] = useMemo(() => {
+    const seen = new Set<string>();
+    return requests
+      .filter(r => r.patient_name && r.patient_name.trim())
+      .filter(r => {
+        const key = `${r.patient_name}-${r.patient_age}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 3)
+      .map(r => ({
+        id: r.id,
+        name: r.patient_name!,
+        age: r.patient_age ?? 0,
+        gender: r.patient_gender ?? '미상',
+        condition: r.symptom,
+        severity: mapSeverityToLabel(r.severity),
+        lastUsed: new Date(r.requested_at).toLocaleDateString('ko-KR'),
+      }));
+  }, [requests]);
 
   // GPS 좌표 → 주소 텍스트 (reverse geocoding via Nominatim)
   useEffect(() => {
@@ -179,7 +179,7 @@ export function PatientRequest() {
           heart_rate: Number(newPatientForm.vitals.pulse) || undefined,
           temperature: Number(newPatientForm.vitals.temperature) || undefined,
         } : undefined,
-        notes: isNewPatient ? newPatientForm.symptoms || undefined : undefined,
+        notes: isNewPatient ? newPatientForm.symptoms || undefined : (additionalNotes || undefined),
         location_text: currentLocation,
         latitude: position?.latitude ?? undefined,
         longitude: position?.longitude ?? undefined,
@@ -188,6 +188,7 @@ export function PatientRequest() {
       // Reset form on success
       setSelectedPatient(null);
       setIsNewPatient(false);
+      setAdditionalNotes('');
       setNewPatientForm({
         name: '', age: '', gender: '', condition: '', severity: '', symptoms: '',
         vitals: { consciousness: '', bloodPressure: '', pulse: '', respiration: '', temperature: '' }
@@ -264,6 +265,11 @@ export function PatientRequest() {
               <p className="text-xs text-muted-foreground">최근 환자 중 선택하거나 새로 등록하세요</p>
             </CardHeader>
             <CardContent className="space-y-3">
+              {quickPatients.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-3">
+                  이전 요청 기록이 없습니다. 새 환자를 등록해주세요.
+                </p>
+              )}
               {quickPatients.map((patient) => (
                 <Card
                   key={patient.id}
@@ -357,6 +363,8 @@ export function PatientRequest() {
                   <Textarea
                     id="additional-notes"
                     placeholder="환자 상태, 현장 상황 등 추가 정보를 입력하세요..."
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
                   />
                 </div>
               </CardContent>

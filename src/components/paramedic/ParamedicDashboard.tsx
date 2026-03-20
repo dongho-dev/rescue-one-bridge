@@ -4,37 +4,36 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { InfoCard } from "../common/InfoCard";
 import { AmbulanceMap } from "../common/AmbulanceMap";
 import { useRequests } from "@/hooks/useRequests";
 import { useHospitalAvailability } from "@/hooks/useHospitalAvailability";
 import { useGeolocation, calculateDistanceKm } from "@/hooks/useGeolocation";
 import { generateMockHospitals } from "../common/models";
-import type { HospitalAvailability } from "@/types/database";
+import type { HospitalAvailability, Request, RequestStatus } from "@/types/database";
 import { LoadingState } from "../common/LoadingState";
 import {
   Ambulance,
   Phone,
-  Share2,
   Clock,
   MapPin,
   AlertTriangle,
   CheckCircle2,
   Bed,
-  Route
+  Route,
+  Truck,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { toast } from "sonner";
 
-const recentEvents = [
-  { time: '10분 전', message: '서울대병원 수용 가능 상태 전환', type: 'info' },
-  { time: '15분 전', message: 'Case #RQ-1023 배정 완료', type: 'success' },
-  { time: '23분 전', message: '응급호출 3건 신규 접수', type: 'warning' },
-];
-
 export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
+  const [showAllRequests, setShowAllRequests] = useState(false);
   const { hospitals: dbHospitals, loading: hospitalsLoading, error: hospitalsError, refetch: refetchHospitals } = useHospitalAvailability();
-  const { requests: dbRequests, loading: requestsLoading, error: requestsError } = useRequests();
+  const { requests: dbRequests, loading: requestsLoading, error: requestsError, updateRequestStatus } = useRequests();
   const { position } = useGeolocation();
   const rawHospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
 
@@ -57,6 +56,7 @@ export function ParamedicDashboard() {
       return a.distance_km - b.distance_km;
     });
   }, [rawHospitals, position]);
+
   const loading = hospitalsLoading || requestsLoading;
   const error = hospitalsError || requestsError;
 
@@ -79,13 +79,40 @@ export function ParamedicDashboard() {
     };
   }, [dbRequests]);
 
-  const getEventColorBar = (type: string) => {
-    switch (type) {
-      case 'info': return 'border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20';
-      case 'success': return 'border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/20';
-      case 'warning': return 'border-l-4 border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20';
-      default: return 'border-l-4 border-l-gray-500 bg-muted/50';
-    }
+  // 활성 요청 (pending, matched, en_route) 우선, 최신순
+  const activeRequests = useMemo(() => {
+    const active = dbRequests.filter(r => r.status !== 'completed' && r.status !== 'cancelled');
+    const inactive = dbRequests.filter(r => r.status === 'completed' || r.status === 'cancelled');
+    return [...active, ...inactive];
+  }, [dbRequests]);
+
+  const displayedRequests = showAllRequests ? activeRequests : activeRequests.slice(0, 5);
+
+  const handleStatusUpdate = async (requestId: string, newStatus: RequestStatus) => {
+    await updateRequestStatus(requestId, newStatus);
+    const labels: Record<string, string> = {
+      en_route: '이송을 시작합니다',
+      completed: '이송이 완료되었습니다',
+      cancelled: '요청이 취소되었습니다',
+    };
+    toast.success(labels[newStatus] || '상태가 변경되었습니다');
+  };
+
+  const getStatusBadge = (status: RequestStatus) => {
+    const config: Record<RequestStatus, { label: string; className: string }> = {
+      pending: { label: '대기중', className: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
+      matched: { label: '배정됨', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400' },
+      en_route: { label: '이송중', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400' },
+      completed: { label: '완료', className: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' },
+      cancelled: { label: '취소됨', className: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400' },
+    };
+    const c = config[status];
+    return <Badge variant="outline" className={`${c.className} border-0 text-xs font-medium`}>{c.label}</Badge>;
+  };
+
+  const getSeverityLabel = (severity: number) => {
+    const labels = ['', '경미', '보통', '주의', '위험', '응급'];
+    return labels[severity] || '';
   };
 
   return (
@@ -121,18 +148,18 @@ export function ParamedicDashboard() {
       </div>
 
       {/* KPI 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <InfoCard
           title="대기"
           value={statusCounts.pending}
-          subtitle="새로운 요청"
+          subtitle="매칭 대기"
           variant="default"
           icon={<Clock size={16} />}
         />
         <InfoCard
           title="배정됨"
           value={statusCounts.matched}
-          subtitle="배정 완료"
+          subtitle="병원 배정 완료"
           variant="warning"
           icon={<CheckCircle2 size={16} />}
         />
@@ -152,6 +179,70 @@ export function ParamedicDashboard() {
         />
       </div>
 
+      {/* 내 요청 목록 */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <AlertTriangle size={18} className="text-amber-500" />
+            내 요청 현황
+            <Badge variant="secondary" className="ml-2 text-xs">
+              {activeRequests.filter(r => r.status !== 'completed' && r.status !== 'cancelled').length}건 활성
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activeRequests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Ambulance size={32} className="mb-3 opacity-40" />
+              <p className="text-sm font-medium">아직 요청이 없습니다</p>
+              <p className="text-xs mt-1">구급대원 요청 페이지에서 새 요청을 생성하세요</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead className="font-semibold">접수시각</TableHead>
+                      <TableHead className="font-semibold">환자</TableHead>
+                      <TableHead className="font-semibold">증상</TableHead>
+                      <TableHead className="font-semibold">상태</TableHead>
+                      <TableHead className="font-semibold">병원/거리</TableHead>
+                      <TableHead className="font-semibold">액션</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {displayedRequests.map((request) => (
+                      <RequestRow
+                        key={request.id}
+                        request={request}
+                        onStatusUpdate={handleStatusUpdate}
+                        getSeverityLabel={getSeverityLabel}
+                        getStatusBadge={getStatusBadge}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {activeRequests.length > 5 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={() => setShowAllRequests(!showAllRequests)}
+                >
+                  {showAllRequests ? (
+                    <>접기 <ChevronUp size={14} className="ml-1" /></>
+                  ) : (
+                    <>전체 {activeRequests.length}건 보기 <ChevronDown size={14} className="ml-1" /></>
+                  )}
+                </Button>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 병원 현황 */}
         <Card>
@@ -169,74 +260,110 @@ export function ParamedicDashboard() {
           </CardContent>
         </Card>
 
-        {/* 지도 및 액션 */}
-        <div className="space-y-4">
-          <AmbulanceMap
-            title="실시간 위치"
-            ambulancePosition={position}
-            hospitals={rawHospitals
-              .filter(h => {
-                const lat = 'latitude' in h ? h.latitude : undefined;
-                const lng = 'longitude' in h ? h.longitude : undefined;
-                return typeof lat === 'number' && typeof lng === 'number';
-              })
-              .map(h => {
-                const hospital = normalizeHospital(h);
-                return {
-                  id: hospital.id,
-                  name: hospital.name,
-                  latitude: ('latitude' in h ? h.latitude : 0) as number,
-                  longitude: ('longitude' in h ? h.longitude : 0) as number,
-                  accepting: hospital.accepting,
-                  available_beds: hospital.available_beds,
-                };
-              })}
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              className="w-full"
-              onClick={() => toast("ETA 정보가 공유되었습니다")}
-            >
-              <Share2 size={16} className="mr-2" />
-              상태 공유
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => toast("병원에 연락 중...")}
-            >
-              <Phone size={16} className="mr-2" />
-              병원 연락
-            </Button>
-          </div>
-        </div>
+        {/* 지도 */}
+        <AmbulanceMap
+          title="실시간 위치"
+          ambulancePosition={position}
+          hospitals={rawHospitals
+            .filter(h => {
+              const lat = 'latitude' in h ? h.latitude : undefined;
+              const lng = 'longitude' in h ? h.longitude : undefined;
+              return typeof lat === 'number' && typeof lng === 'number';
+            })
+            .map(h => {
+              const hospital = normalizeHospital(h);
+              return {
+                id: hospital.id,
+                name: hospital.name,
+                latitude: ('latitude' in h ? h.latitude : 0) as number,
+                longitude: ('longitude' in h ? h.longitude : 0) as number,
+                accepting: hospital.accepting,
+                available_beds: hospital.available_beds,
+              };
+            })}
+        />
       </div>
-
-      {/* 실시간 알림 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle size={16} />
-            실시간 알림
-          </CardTitle>
-        </CardHeader>
-        <CardContent aria-live="polite">
-          <div className="space-y-2">
-            {recentEvents.map((event, index) => (
-              <div
-                key={index}
-                className={`flex items-center justify-between p-3 rounded-lg transition-colors ${getEventColorBar(event.type)}`}
-              >
-                <span className="text-sm font-medium">{event.message}</span>
-                <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">{event.time}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
     </LoadingState>
+  );
+}
+
+function RequestRow({
+  request,
+  onStatusUpdate,
+  getSeverityLabel,
+  getStatusBadge,
+}: {
+  request: Request;
+  onStatusUpdate: (id: string, status: RequestStatus) => void;
+  getSeverityLabel: (s: number) => string;
+  getStatusBadge: (s: RequestStatus) => React.ReactNode;
+}) {
+  const isTerminal = request.status === 'completed' || request.status === 'cancelled';
+
+  return (
+    <TableRow className={`hover:bg-muted/50 transition-colors ${isTerminal ? 'opacity-50' : ''}`}>
+      <TableCell className="font-mono text-sm whitespace-nowrap">
+        {new Date(request.requested_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+        <span className="block text-xs text-muted-foreground">
+          {new Date(request.requested_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm font-medium">{request.patient_name || '미상'}</span>
+        <span className="block text-xs text-muted-foreground">
+          {request.patient_age ? `${request.patient_age}세` : ''} {getSeverityLabel(request.severity)}
+        </span>
+      </TableCell>
+      <TableCell className="text-sm">{request.symptom}</TableCell>
+      <TableCell>{getStatusBadge(request.status)}</TableCell>
+      <TableCell className="text-sm">
+        {request.hospital_id ? (
+          <span>
+            {request.distance_km != null && `${request.distance_km}km`}
+            {request.eta_minutes != null && (
+              <span className="text-muted-foreground"> / {request.eta_minutes}분</span>
+            )}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-xs">미배정</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1.5">
+          {request.status === 'matched' && (
+            <Button
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => onStatusUpdate(request.id, 'en_route')}
+            >
+              <Truck size={13} className="mr-1" />
+              이송 시작
+            </Button>
+          )}
+          {request.status === 'en_route' && (
+            <Button
+              size="sm"
+              className="h-7 px-2.5 text-xs bg-green-600 hover:bg-green-700"
+              onClick={() => onStatusUpdate(request.id, 'completed')}
+            >
+              <CheckCircle2 size={13} className="mr-1" />
+              이송 완료
+            </Button>
+          )}
+          {(request.status === 'pending' || request.status === 'matched') && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => onStatusUpdate(request.id, 'cancelled')}
+            >
+              <XCircle size={13} />
+            </Button>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -280,9 +407,8 @@ function normalizeHospital(h: HospitalAvailability | ReturnType<typeof generateM
 }
 
 function getBedCountColor(available_beds: number): string {
-  const beds = available_beds;
-  if (beds === 0) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
-  if (beds <= 3) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
+  if (available_beds === 0) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
+  if (available_beds <= 3) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
   return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
 }
 
