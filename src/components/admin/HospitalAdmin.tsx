@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/lib/supabase";
 import type { Hospital } from "@/types/database";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Building2,
   Plus,
@@ -16,9 +17,11 @@ import {
   Trash2,
   Save,
   Phone,
+  ShieldAlert,
 } from 'lucide-react';
 
 export function HospitalAdmin() {
+  const { profile } = useAuth();
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,6 +60,19 @@ export function HospitalAdmin() {
     await supabase.from('hospitals').update({ accepting }).eq('id', id);
     setHospitals(prev => prev.map(h => h.id === id ? { ...h, accepting } : h));
   };
+
+  // Authorization guard — only hospital_staff can access admin
+  if (profile?.role !== 'hospital_staff') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
+        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+          <ShieldAlert size={32} className="text-red-600 dark:text-red-400" />
+        </div>
+        <h2 className="text-lg font-semibold">접근 권한 없음</h2>
+        <p className="text-sm text-muted-foreground">병원 관리는 병원 직원만 사용할 수 있습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

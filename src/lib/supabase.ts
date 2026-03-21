@@ -8,8 +8,9 @@ const isProduction = import.meta.env.PROD === true;
 /** True when env vars are missing and demo mode is NOT explicitly enabled */
 export const isEnvMissing = (!supabaseUrl || !supabaseAnonKey) && !isDemoModeEnv;
 
-/** True only when VITE_DEMO_MODE=true is explicitly set and Supabase is not configured */
-export const explicitDemoMode = isDemoModeEnv && (!supabaseUrl || !supabaseAnonKey);
+/** True only when VITE_DEMO_MODE=true is explicitly set and Supabase is not configured.
+ *  Blocked in production builds for safety. */
+export const explicitDemoMode = isDemoModeEnv && (!supabaseUrl || !supabaseAnonKey) && !isProduction;
 
 let _supabase: SupabaseClient | null = null;
 

@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="text-center">
               <h3 className="font-semibold text-lg">오류가 발생했습니다</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {this.state.error?.message || '알 수 없는 오류'}
+                예기치 않은 오류가 발생했습니다. 다시 시도해주세요.
               </p>
             </div>
             <Button onClick={this.handleRetry} variant="outline" size="sm">

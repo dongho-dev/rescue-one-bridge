@@ -3,6 +3,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
 import type { UserRole } from '../types/database';
 import { toast } from 'sonner';
+import { clearQueue } from '../utils/offlineQueue';
 
 export type { UserRole };
 
@@ -48,9 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * with the default role ('paramedic') because signInWithOAuth does not
    * support user_metadata.  If the user chose a role/hospital on the signup
    * page we stashed it in localStorage before the redirect.  This helper
-   * reads that stash, patches the profile row, and cleans up.
+   * reads that stash and links the hospital via server-side RPC.
+   *
+   * NOTE: Role update is handled server-side only (via apply_oauth_role RPC)
+   * to prevent client-side privilege escalation.
    */
-  const applyOAuthSignupMeta = useCallback(async (userId: string) => {
+  const applyOAuthSignupMeta = useCallback(async (_userId: string) => {
     if (oauthMetaApplied.current) return;
 
     const raw = localStorage.getItem(OAUTH_SIGNUP_META_KEY);
@@ -65,26 +69,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hospitalId: string | null;
       };
 
-      // Update the profile row with the chosen role
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ role })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.warn('OAuth profile role update failed:', updateError.message);
+      // Apply role via server-side RPC (validates role server-side)
+      const { error: roleError } = await supabase.rpc('apply_oauth_role', {
+        p_role: role,
+      });
+      if (roleError && import.meta.env.DEV) {
+        console.warn('OAuth role apply failed:', roleError.message);
       }
 
       // Link hospital via RPC if applicable
       if (role === 'hospital_staff' && hospitalId) {
-        try {
-          await supabase.rpc('link_hospital', { p_hospital_id: hospitalId });
-        } catch (rpcErr) {
-          console.warn('OAuth hospital link failed (will retry on login):', rpcErr);
+        const { error: linkError } = await supabase.rpc('link_hospital', {
+          p_hospital_id: hospitalId,
+        });
+        if (linkError && import.meta.env.DEV) {
+          console.warn('OAuth hospital link failed:', linkError.message);
         }
       }
-    } catch (parseErr) {
-      console.warn('Failed to parse OAuth signup metadata:', parseErr);
+    } catch {
+      // Silently fail — user can retry role setup from profile
     }
   }, []);
 
@@ -97,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        console.warn('Profile fetch failed:', error.message);
+        if (import.meta.env.DEV) console.warn('Profile fetch failed:', error.message);
         setProfile(null);
         return;
       }
@@ -113,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         display_name: data.display_name,
       });
     } catch (err) {
-      console.error('Unexpected error fetching profile:', err);
+      if (import.meta.env.DEV) console.error('Unexpected error fetching profile:', err);
       setProfile(null);
     }
   }, []);
@@ -159,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile(null);
           }
         } catch (err) {
-          console.error('Error handling auth state change:', err);
+          if (import.meta.env.DEV) console.error('Error handling auth state change:', err);
           setProfile(null);
         } finally {
           setLoading(false);
@@ -178,14 +181,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setProfile(null);
 
+    // Clear sensitive client-side data
+    clearQueue();
+    localStorage.removeItem(OAUTH_SIGNUP_META_KEY);
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Sign out failed:', error.message);
+        if (import.meta.env.DEV) console.error('Sign out failed:', error.message);
         toast.error('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
     } catch (err) {
-      console.error('Unexpected error during sign out:', err);
+      if (import.meta.env.DEV) console.error('Unexpected error during sign out:', err);
       toast.error('로그아웃 중 예기치 않은 오류가 발생했습니다.');
     }
   }, []);

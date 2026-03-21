@@ -20,6 +20,20 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  const url = event.request.url;
+
+  // Never cache API responses — may contain patient data (PHI)
+  if (
+    url.includes('supabase.co') ||
+    url.includes('/rest/') ||
+    url.includes('/auth/') ||
+    url.includes('/realtime/') ||
+    url.includes('nominatim.openstreetmap.org')
+  ) {
+    return;
+  }
+
+  // Cache static assets only (network-first)
   event.respondWith(
     fetch(event.request)
       .then((response) => {
