@@ -7,6 +7,20 @@ import { toast } from 'sonner';
 import { getUserFriendlyError } from '@/utils/errorMessages';
 import { withRetry } from '@/utils/retry';
 import { useNotification } from './useNotification';
+
+// Supabase { data, error } 패턴에서 재시도할 에러 코드 목록
+const RETRYABLE_ERROR_CODES = ['NETWORK_TIMEOUT', 'CONNECTION_RESET', 'ETIMEDOUT', 'ECONNRESET'];
+
+function supabaseShouldRetry<T extends { error: unknown }>(result: T): boolean {
+  if (!result.error) return false;
+  const err = result.error as { code?: string; message?: string };
+  if (err.code && RETRYABLE_ERROR_CODES.includes(err.code)) return true;
+  if (err.message) {
+    const msg = err.message.toLowerCase();
+    return msg.includes('timeout') || msg.includes('connection reset') || msg.includes('network');
+  }
+  return false;
+}
 import { enqueue, getQueue, dequeue } from '@/utils/offlineQueue';
 import { generateDemoRequests } from '@/utils/demoData';
 
@@ -240,11 +254,13 @@ export function useRequests(): UseRequestsResult {
     if (status === 'matched') updateData.matched_at = new Date().toISOString();
     if (status === 'completed') updateData.completed_at = new Date().toISOString();
 
-    const { error } = await withRetry(async () =>
-      await supabase
-        .from('requests')
-        .update(updateData)
-        .eq('id', requestId)
+    const { error } = await withRetry(
+      async () =>
+        await supabase
+          .from('requests')
+          .update(updateData)
+          .eq('id', requestId),
+      { maxRetries: 3, baseDelay: 1000, shouldRetry: supabaseShouldRetry },
     );
 
     if (error) {
@@ -319,11 +335,13 @@ export function useRequests(): UseRequestsResult {
       return;
     }
 
-    const { data: inserted, error } = await withRetry(async () =>
-      await supabase.from('requests').insert({
-        paramedic_id: user.id,
-        ...data,
-      }).select('id').single()
+    const { data: inserted, error } = await withRetry(
+      async () =>
+        await supabase.from('requests').insert({
+          paramedic_id: user.id,
+          ...data,
+        }).select('id').single(),
+      { maxRetries: 3, baseDelay: 1000, shouldRetry: supabaseShouldRetry },
     );
 
     if (error) {

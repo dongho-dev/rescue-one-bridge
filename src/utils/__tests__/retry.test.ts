@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { withRetry } from '../retry';
+import { withRetry, type RetryOptions } from '../retry';
 
 describe('withRetry', () => {
   it('should return result on first success', async () => {
@@ -45,5 +45,57 @@ describe('withRetry', () => {
       expect(err).toBeInstanceOf(CustomError);
       expect((err as CustomError).code).toBe('CUSTOM');
     }
+  });
+
+  describe('shouldRetry option (Supabase { data, error } pattern)', () => {
+    type SupabaseResult = { data: string | null; error: { message: string } | null };
+
+    const shouldRetry = (result: SupabaseResult) => result.error !== null;
+
+    it('should retry when shouldRetry returns true for { error } result', async () => {
+      const errorResult: SupabaseResult = { data: null, error: { message: 'timeout' } };
+      const successResult: SupabaseResult = { data: 'ok', error: null };
+      const fn = vi
+        .fn()
+        .mockResolvedValueOnce(errorResult)
+        .mockResolvedValueOnce(errorResult)
+        .mockResolvedValue(successResult);
+
+      const options: RetryOptions<SupabaseResult> = { maxRetries: 3, baseDelay: 10, shouldRetry };
+      const result = await withRetry(fn, options);
+
+      expect(result).toEqual(successResult);
+      expect(fn).toHaveBeenCalledTimes(3);
+    });
+
+    it('should not retry when shouldRetry returns false for { data } result', async () => {
+      const successResult: SupabaseResult = { data: 'ok', error: null };
+      const fn = vi.fn().mockResolvedValue(successResult);
+
+      const options: RetryOptions<SupabaseResult> = { maxRetries: 3, baseDelay: 10, shouldRetry };
+      const result = await withRetry(fn, options);
+
+      expect(result).toEqual(successResult);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw the last error result after exhausting retries via shouldRetry', async () => {
+      const errorResult: SupabaseResult = { data: null, error: { message: 'always fails' } };
+      const fn = vi.fn().mockResolvedValue(errorResult);
+
+      const options: RetryOptions<SupabaseResult> = { maxRetries: 2, baseDelay: 10, shouldRetry };
+      await expect(withRetry(fn, options)).rejects.toEqual(errorResult);
+      // initial + 2 retries = 3 calls
+      expect(fn).toHaveBeenCalledTimes(3);
+    });
+
+    it('should use options object with defaults when only shouldRetry is provided', async () => {
+      const successResult: SupabaseResult = { data: 'fast', error: null };
+      const fn = vi.fn().mockResolvedValue(successResult);
+
+      const result = await withRetry(fn, { shouldRetry, baseDelay: 10 });
+      expect(result).toEqual(successResult);
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
   });
 });
