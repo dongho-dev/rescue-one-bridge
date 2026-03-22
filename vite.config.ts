@@ -28,7 +28,9 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           charts: ['recharts'],
-          icons: ['lucide-react']
+          icons: ['lucide-react'],
+          map: ['leaflet', 'react-leaflet'],
+          supabase: ['@supabase/supabase-js'],
         }
       }
     }
