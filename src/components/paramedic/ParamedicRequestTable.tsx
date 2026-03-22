@@ -1,15 +1,10 @@
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "../ui/table";
-import {
-  Ambulance,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import type { HospitalAvailability, Request, RequestStatus } from "@/types/database";
-import { RequestRow } from "./RequestRow";
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Ambulance, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import type { HospitalAvailability, Request, RequestStatus } from '@/types/database';
+import { RequestRow } from './RequestRow';
 
 interface ParamedicRequestTableProps {
   activeRequests: Request[];
@@ -36,10 +31,13 @@ export function ParamedicRequestTable({
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
-          <AlertTriangle size={18} className="text-amber-500" />
-          내 요청 현황
+          <AlertTriangle size={18} className="text-amber-500" />내 요청 현황
           <Badge variant="secondary" className="ml-2 text-xs">
-            {activeRequests.filter(r => r.status !== 'completed' && r.status !== 'cancelled').length}건 활성
+            {
+              activeRequests.filter((r) => r.status !== 'completed' && r.status !== 'cancelled')
+                .length
+            }
+            건 활성
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -79,16 +77,15 @@ export function ParamedicRequestTable({
               </Table>
             </div>
             {activeRequests.length > 5 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full mt-2"
-                onClick={onToggleShowAll}
-              >
+              <Button variant="ghost" size="sm" className="w-full mt-2" onClick={onToggleShowAll}>
                 {showAllRequests ? (
-                  <>접기 <ChevronUp size={14} className="ml-1" /></>
+                  <>
+                    접기 <ChevronUp size={14} className="ml-1" />
+                  </>
                 ) : (
-                  <>전체 {activeRequests.length}건 보기 <ChevronDown size={14} className="ml-1" /></>
+                  <>
+                    전체 {activeRequests.length}건 보기 <ChevronDown size={14} className="ml-1" />
+                  </>
                 )}
               </Button>
             )}

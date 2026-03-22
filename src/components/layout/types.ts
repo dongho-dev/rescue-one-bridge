@@ -1,7 +1,15 @@
 import type React from 'react';
-import type { UserRole } from "../../types/database";
+import type { UserRole } from '../../types/database';
 
-export type CurrentPage = 'dashboard' | 'patients' | 'beds' | 'staff' | 'equipment' | 'request' | 'paramedic-dashboard' | 'admin';
+export type CurrentPage =
+  | 'dashboard'
+  | 'patients'
+  | 'beds'
+  | 'staff'
+  | 'equipment'
+  | 'request'
+  | 'paramedic-dashboard'
+  | 'admin';
 
 export interface NavigationItem {
   id: CurrentPage;

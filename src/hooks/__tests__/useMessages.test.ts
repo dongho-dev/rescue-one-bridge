@@ -59,7 +59,14 @@ describe('useMessages', () => {
 
   it('fetches messages for a given requestId', async () => {
     const mockMessages = [
-      { id: 'm1', request_id: 'r1', sender_id: 'user-2', sender_role: 'hospital_staff', content: 'Hello', created_at: new Date().toISOString() },
+      {
+        id: 'm1',
+        request_id: 'r1',
+        sender_id: 'user-2',
+        sender_role: 'hospital_staff',
+        content: 'Hello',
+        created_at: new Date().toISOString(),
+      },
     ];
     const fromMock = (supabase.from as ReturnType<typeof vi.fn>)();
     fromMock.order.mockResolvedValue({ data: mockMessages, error: null });

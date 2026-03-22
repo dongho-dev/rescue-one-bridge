@@ -58,15 +58,19 @@ export function useHospitalAccepting(): UseHospitalAcceptingReturn {
 
     const channel = supabase
       .channel(`hospitals:accepting:${hospitalId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'hospitals',
-        filter: `id=eq.${hospitalId}`,
-      }, (payload) => {
-        const updated = payload.new as { accepting: boolean };
-        setAcceptingState(updated.accepting);
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'hospitals',
+          filter: `id=eq.${hospitalId}`,
+        },
+        (payload) => {
+          const updated = payload.new as { accepting: boolean };
+          setAcceptingState(updated.accepting);
+        },
+      )
       .subscribe();
 
     channelRef.current = channel;
@@ -80,28 +84,31 @@ export function useHospitalAccepting(): UseHospitalAcceptingReturn {
   }, [hospitalId]);
 
   // Update accepting in DB
-  const setAccepting = useCallback(async (value: boolean): Promise<boolean> => {
-    if (!hospitalId || !supabase) {
+  const setAccepting = useCallback(
+    async (value: boolean): Promise<boolean> => {
+      if (!hospitalId || !supabase) {
+        setAcceptingState(value);
+        return true;
+      }
+
+      const prev = accepting;
       setAcceptingState(value);
+
+      const { error } = await supabase
+        .from('hospitals')
+        .update({ accepting: value })
+        .eq('id', hospitalId);
+
+      if (error) {
+        toast.error('수용 상태 업데이트에 실패했습니다');
+        setAcceptingState(prev);
+        return false;
+      }
+
       return true;
-    }
-
-    const prev = accepting;
-    setAcceptingState(value);
-
-    const { error } = await supabase
-      .from('hospitals')
-      .update({ accepting: value })
-      .eq('id', hospitalId);
-
-    if (error) {
-      toast.error('수용 상태 업데이트에 실패했습니다');
-      setAcceptingState(prev);
-      return false;
-    }
-
-    return true;
-  }, [hospitalId, accepting]);
+    },
+    [hospitalId, accepting],
+  );
 
   return { accepting, loading, setAccepting };
 }

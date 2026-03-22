@@ -13,7 +13,7 @@ export interface QueuedRequest {
 /** Remove items older than 24h */
 function pruneStale(items: QueuedRequest[]): QueuedRequest[] {
   const cutoff = Date.now() - MAX_AGE_MS;
-  return items.filter(item => new Date(item.queuedAt).getTime() > cutoff);
+  return items.filter((item) => new Date(item.queuedAt).getTime() > cutoff);
 }
 
 export function getQueue(): QueuedRequest[] {
@@ -70,7 +70,7 @@ export function enqueue(data: CreateRequestData, userId: string): QueuedRequest 
 }
 
 export function dequeue(id: string): void {
-  const queue = getQueue().filter(item => item.id !== id);
+  const queue = getQueue().filter((item) => item.id !== id);
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 

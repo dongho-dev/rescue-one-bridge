@@ -133,5 +133,5 @@ export const mockEquipment: Equipment[] = [
     notes: '예비 장비로 보관 중',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }
+  },
 ];

@@ -7,30 +7,37 @@ import { toast } from 'sonner';
 import { getUserFriendlyError } from '@/utils/errorMessages';
 
 export function useStaff() {
-  const { data: staff, loading, error, refetch, setData } = useSupabaseQuery<Staff>({
+  const {
+    data: staff,
+    loading,
+    error,
+    refetch,
+    setData,
+  } = useSupabaseQuery<Staff>({
     table: 'staff',
     fallback: mockStaff,
     realtime: true,
-    columns: 'id, name, role, status, hospital_id, department, phone, email, specialization, years_of_experience, current_location, shift, shift_start, shift_end, certifications, emergency_contact',
+    columns:
+      'id, name, role, status, hospital_id, department, phone, email, specialization, years_of_experience, current_location, shift, shift_start, shift_end, certifications, emergency_contact',
   });
 
-  const updateStaffStatus = useCallback(async (staffId: string, status: StaffStatus) => {
-    let previousData: Staff[] = [];
-    setData(prev => {
-      previousData = prev;
-      return prev.map(s => s.id === staffId ? { ...s, status } : s);
-    });
+  const updateStaffStatus = useCallback(
+    async (staffId: string, status: StaffStatus) => {
+      let previousData: Staff[] = [];
+      setData((prev) => {
+        previousData = prev;
+        return prev.map((s) => (s.id === staffId ? { ...s, status } : s));
+      });
 
-    const { error } = await supabase
-      .from('staff')
-      .update({ status })
-      .eq('id', staffId);
+      const { error } = await supabase.from('staff').update({ status }).eq('id', staffId);
 
-    if (error) {
-      toast.error(getUserFriendlyError(error.message));
-      setData(previousData);
-    }
-  }, [setData]);
+      if (error) {
+        toast.error(getUserFriendlyError(error.message));
+        setData(previousData);
+      }
+    },
+    [setData],
+  );
 
   return { staff, loading, error, refetch, updateStaffStatus };
 }

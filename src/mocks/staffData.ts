@@ -128,5 +128,5 @@ export const mockStaff: StaffMember[] = [
     emergency_contact: '010-0000-1006',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }
+  },
 ];

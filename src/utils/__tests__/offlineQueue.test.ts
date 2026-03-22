@@ -2,9 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { enqueue, getQueue, dequeue, clearQueue, sanitizePHI } from '../offlineQueue';
 import type { CreateRequestData } from '@/hooks/useRequests';
 
-const makeRequest = (
-  overrides: Partial<CreateRequestData> = {},
-): CreateRequestData => ({
+const makeRequest = (overrides: Partial<CreateRequestData> = {}): CreateRequestData => ({
   priority: 'emergency',
   severity: 5,
   symptom: '심정지',
@@ -40,10 +38,7 @@ describe('offlineQueue', () => {
 
   it('should clear all items', () => {
     enqueue(makeRequest(), 'user-1');
-    enqueue(
-      makeRequest({ priority: 'urgent', severity: 3, symptom: '골절' }),
-      'user-2',
-    );
+    enqueue(makeRequest({ priority: 'urgent', severity: 3, symptom: '골절' }), 'user-2');
     clearQueue();
     expect(getQueue()).toHaveLength(0);
   });
@@ -94,7 +89,16 @@ describe('offlineQueue', () => {
     });
 
     it('preserves symptom but strips coordinates and patient demographics', () => {
-      enqueue(makeRequest({ symptom: '호흡곤란', latitude: 37.5, longitude: 127.0, patient_age: 45, patient_gender: 'male' }), 'user-1');
+      enqueue(
+        makeRequest({
+          symptom: '호흡곤란',
+          latitude: 37.5,
+          longitude: 127.0,
+          patient_age: 45,
+          patient_gender: 'male',
+        }),
+        'user-1',
+      );
       const queue = getQueue();
       expect(queue[0].data.symptom).toBe('호흡곤란');
       expect(queue[0].data.latitude).toBeUndefined();

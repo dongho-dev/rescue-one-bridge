@@ -8,30 +8,33 @@ type ResourceType = 'request' | 'patient' | 'bed' | 'staff' | 'equipment';
 export function useAuditLog() {
   const { user } = useAuth();
 
-  const log = useCallback(async (
-    action: AuditAction,
-    resourceType: ResourceType,
-    resourceId?: string,
-    metadata?: Record<string, unknown>,
-  ) => {
-    if (!user || !supabase) return;
+  const log = useCallback(
+    async (
+      action: AuditAction,
+      resourceType: ResourceType,
+      resourceId?: string,
+      metadata?: Record<string, unknown>,
+    ) => {
+      if (!user || !supabase) return;
 
-    try {
-      const { error } = await supabase.from('audit_logs').insert({
-        user_id: user.id,
-        action,
-        resource_type: resourceType,
-        resource_id: resourceId ?? null,
-        metadata: metadata ?? {},
-      });
-      if (error) {
-        if (import.meta.env.DEV) console.warn('[audit] insert failed:', error.message);
+      try {
+        const { error } = await supabase.from('audit_logs').insert({
+          user_id: user.id,
+          action,
+          resource_type: resourceType,
+          resource_id: resourceId ?? null,
+          metadata: metadata ?? {},
+        });
+        if (error) {
+          if (import.meta.env.DEV) console.warn('[audit] insert failed:', error.message);
+        }
+      } catch {
+        // 감사 로그 실패가 메인 플로우를 막아서는 안 됨
+        if (import.meta.env.DEV) console.warn('[audit] log failed');
       }
-    } catch {
-      // 감사 로그 실패가 메인 플로우를 막아서는 안 됨
-      if (import.meta.env.DEV) console.warn('[audit] log failed');
-    }
-  }, [user]);
+    },
+    [user],
+  );
 
   return { log };
 }

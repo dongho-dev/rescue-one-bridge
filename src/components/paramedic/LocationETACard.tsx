@@ -1,5 +1,5 @@
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
+import { Card, CardContent } from '../ui/card';
+import { Button } from '../ui/button';
 import { MapPin, Clock, Navigation } from 'lucide-react';
 
 interface LocationETACardProps {
@@ -8,7 +8,11 @@ interface LocationETACardProps {
   onLocationUpdate: () => void;
 }
 
-export function LocationETACard({ currentLocation, estimatedTime, onLocationUpdate }: LocationETACardProps) {
+export function LocationETACard({
+  currentLocation,
+  estimatedTime,
+  onLocationUpdate,
+}: LocationETACardProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
@@ -37,7 +41,9 @@ export function LocationETACard({ currentLocation, estimatedTime, onLocationUpda
             </div>
             <span className="text-sm font-medium text-muted-foreground">예상 도착 시간</span>
           </div>
-          <p className="mt-2.5 text-2xl font-bold pl-9 text-amber-700 dark:text-amber-400">{estimatedTime}</p>
+          <p className="mt-2.5 text-2xl font-bold pl-9 text-amber-700 dark:text-amber-400">
+            {estimatedTime}
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -16,7 +16,16 @@ describe('useHospitalAvailability', () => {
 
   it('fetches availability via RPC on mount', async () => {
     const mockData = [
-      { hospital_id: 'h1', hospital_name: 'Hospital A', accepting: true, available_beds: 5, queue: 2, specialties: [], contact: null, avg_wait_time: 20 },
+      {
+        hospital_id: 'h1',
+        hospital_name: 'Hospital A',
+        accepting: true,
+        available_beds: 5,
+        queue: 2,
+        specialties: [],
+        contact: null,
+        avg_wait_time: 20,
+      },
     ];
     (supabase.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockData, error: null });
 
@@ -69,7 +78,10 @@ describe('useHospitalAvailability', () => {
 
     // Clear and refetch
     vi.clearAllMocks();
-    (supabase.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [{ hospital_id: 'h2' }], error: null });
+    (supabase.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: [{ hospital_id: 'h2' }],
+      error: null,
+    });
 
     await act(async () => {
       await result.current.refetch();

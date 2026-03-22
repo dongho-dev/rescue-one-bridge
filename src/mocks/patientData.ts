@@ -92,5 +92,5 @@ export const mockPatients: Patient[] = [
     notes: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }
+  },
 ];

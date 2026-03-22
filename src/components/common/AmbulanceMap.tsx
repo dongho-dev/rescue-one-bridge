@@ -108,7 +108,7 @@ export function AmbulanceMap({
   const firstMulti = ambulancePositions?.[0];
   const center = firstMulti
     ? { latitude: firstMulti.latitude, longitude: firstMulti.longitude }
-    : ambulancePosition ?? { latitude: 37.4979, longitude: 127.0276 };
+    : (ambulancePosition ?? { latitude: 37.4979, longitude: 127.0276 });
 
   return (
     <Card className={className}>
@@ -134,7 +134,12 @@ export function AmbulanceMap({
             {/* 다중 구급차 마커 (HospitalDashboard용) */}
             {ambulancePositions && ambulancePositions.length > 0 && (
               <>
-                <MapUpdater position={{ latitude: ambulancePositions[0].latitude, longitude: ambulancePositions[0].longitude }} />
+                <MapUpdater
+                  position={{
+                    latitude: ambulancePositions[0].latitude,
+                    longitude: ambulancePositions[0].longitude,
+                  }}
+                />
                 {ambulancePositions.map((amb) => (
                   <Marker
                     key={amb.id}
@@ -181,11 +186,7 @@ export function AmbulanceMap({
             )}
 
             {hospitals.map((h) => (
-              <Marker
-                key={h.id}
-                position={[h.latitude, h.longitude]}
-                icon={hospitalIcon}
-              >
+              <Marker key={h.id} position={[h.latitude, h.longitude]} icon={hospitalIcon}>
                 <Popup>
                   <div className="text-sm">
                     <strong>{h.name}</strong>

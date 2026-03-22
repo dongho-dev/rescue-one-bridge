@@ -63,7 +63,7 @@ describe('useOnlineStatus', () => {
 
     unmount();
 
-    const removedEvents = removeSpy.mock.calls.map(c => c[0]);
+    const removedEvents = removeSpy.mock.calls.map((c) => c[0]);
     expect(removedEvents).toContain('online');
     expect(removedEvents).toContain('offline');
   });

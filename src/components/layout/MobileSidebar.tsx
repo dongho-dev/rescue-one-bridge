@@ -1,6 +1,16 @@
 import { Building2, X, User, LogOut } from 'lucide-react';
-import { Button } from "../ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import { Button } from '../ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
 import type { CurrentPage, NavigationItem } from './types';
 
 interface MobileSidebarProps {
@@ -42,7 +52,11 @@ export function MobileSidebar({
               <p className="text-xs text-sidebar-accent-foreground/70">응급실 관리 시스템</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-sidebar-foreground/70 hover:text-sidebar-foreground" aria-label="메뉴 닫기">
+          <button
+            onClick={onClose}
+            className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            aria-label="메뉴 닫기"
+          >
             <X size={20} />
           </button>
         </div>
@@ -100,9 +114,7 @@ export function MobileSidebar({
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>로그아웃 확인</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    정말 로그아웃하시겠습니까?
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>정말 로그아웃하시겠습니까?</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>취소</AlertDialogCancel>

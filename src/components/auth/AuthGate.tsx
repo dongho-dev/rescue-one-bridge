@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Building2, Loader2 } from 'lucide-react';
-import { useAuth } from "../../contexts/AuthContext";
-import { LoginPage } from "./LoginPage";
-import { SignupPage } from "./SignupPage";
-import { AppContent } from "../layout/AppContent";
-import { DemoRoleSwitcher } from "./DemoRoleSwitcher";
+import { useAuth } from '../../contexts/AuthContext';
+import { LoginPage } from './LoginPage';
+import { SignupPage } from './SignupPage';
+import { AppContent } from '../layout/AppContent';
+import { DemoRoleSwitcher } from './DemoRoleSwitcher';
 
 type AuthPage = 'login' | 'signup';
 
@@ -32,7 +32,8 @@ export function AuthGate() {
         </div>
         <h1 className="text-xl font-bold text-red-700 dark:text-red-400">환경변수 설정 오류</h1>
         <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-md">
-          환경변수가 설정되지 않았습니다. 관리자에게 문의하세요.<br />
+          환경변수가 설정되지 않았습니다. 관리자에게 문의하세요.
+          <br />
           <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded mt-1 inline-block">
             VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
           </code>

@@ -1,10 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
-import { RequestDetailDialog } from "./RequestDetailDialog";
-import type { Request } from "@/types/database";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
+import { RequestDetailDialog } from './RequestDetailDialog';
+import type { Request } from '@/types/database';
 import { AlertTriangle, Check, XCircle, Heart, Brain, Activity } from 'lucide-react';
 
 interface IncomingRequestsTableProps {
@@ -15,8 +25,10 @@ interface IncomingRequestsTableProps {
 }
 
 const getSeverityBadgeClasses = (severity: number) => {
-  if (severity >= 4) return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800';
-  if (severity >= 3) return 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800';
+  if (severity >= 4)
+    return 'bg-red-100 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-800';
+  if (severity >= 3)
+    return 'bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800';
   return 'bg-green-100 text-green-700 border border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800';
 };
 
@@ -49,11 +61,11 @@ export function IncomingRequestsTable({
             </Badge>
           </CardTitle>
           <div className="flex gap-1.5">
-            {[1, 2, 3, 4, 5].map(severity => (
+            {[1, 2, 3, 4, 5].map((severity) => (
               <Button
                 key={severity}
                 size="sm"
-                variant={selectedSeverity === severity.toString() ? "default" : "outline"}
+                variant={selectedSeverity === severity.toString() ? 'default' : 'outline'}
                 className="text-xs h-7 px-2.5"
                 onClick={() => onSeverityChange(severity.toString())}
               >
@@ -62,7 +74,7 @@ export function IncomingRequestsTable({
             ))}
             <Button
               size="sm"
-              variant={selectedSeverity === 'all' ? "default" : "outline"}
+              variant={selectedSeverity === 'all' ? 'default' : 'outline'}
               className="text-xs h-7 px-2.5"
               onClick={() => onSeverityChange('all')}
             >
@@ -96,30 +108,36 @@ export function IncomingRequestsTable({
               filteredRequests.slice(0, 6).map((request) => (
                 <TableRow key={request.id} className="hover:bg-muted/50 transition-colors">
                   <TableCell className="font-mono text-sm">
-                    {new Date(request.requested_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(request.requested_at).toLocaleTimeString('ko-KR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={getSeverityBadgeClasses(request.severity)}
-                    >
+                    <Badge variant="outline" className={getSeverityBadgeClasses(request.severity)}>
                       {getSeverityLabel(request.severity)} ({request.severity})
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">
-                      {request.distance_km}km / <span className="font-medium">{request.eta_minutes}분</span>
+                      {request.distance_km}km /{' '}
+                      <span className="font-medium">{request.eta_minutes}분</span>
                     </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{getSymptomIcon(request.symptom)}</span>
+                      <span className="text-muted-foreground">
+                        {getSymptomIcon(request.symptom)}
+                      </span>
                       <span className="text-sm">{request.symptom}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1.5">
-                      <RequestDetailDialog request={request} onAccept={(id) => onRequestAction(id, 'accept')} />
+                      <RequestDetailDialog
+                        request={request}
+                        onAccept={(id) => onRequestAction(id, 'accept')}
+                      />
                       <Button
                         size="sm"
                         className="h-7 px-2"
@@ -148,7 +166,9 @@ export function IncomingRequestsTable({
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>취소</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onRequestAction(request.id, 'reject')}>
+                            <AlertDialogAction
+                              onClick={() => onRequestAction(request.id, 'reject')}
+                            >
                               거절
                             </AlertDialogAction>
                           </AlertDialogFooter>

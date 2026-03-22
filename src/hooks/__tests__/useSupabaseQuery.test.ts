@@ -29,9 +29,7 @@ import { useSupabaseQuery } from '../useSupabaseQuery';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
-const fallbackData = [
-  { id: 'fallback-1', name: 'Fallback Item' },
-];
+const fallbackData = [{ id: 'fallback-1', name: 'Fallback Item' }];
 
 describe('useSupabaseQuery', () => {
   beforeEach(() => {
@@ -44,7 +42,7 @@ describe('useSupabaseQuery', () => {
     fromMock.eq.mockResolvedValue({ data: rows, error: null });
 
     const { result } = renderHook(() =>
-      useSupabaseQuery({ table: 'beds', fallback: fallbackData })
+      useSupabaseQuery({ table: 'beds', fallback: fallbackData }),
     );
 
     await waitFor(() => {
@@ -62,7 +60,7 @@ describe('useSupabaseQuery', () => {
     });
 
     const { result } = renderHook(() =>
-      useSupabaseQuery({ table: 'beds', fallback: fallbackData })
+      useSupabaseQuery({ table: 'beds', fallback: fallbackData }),
     );
 
     await waitFor(() => {
@@ -82,7 +80,7 @@ describe('useSupabaseQuery', () => {
     fromMock.eq.mockResolvedValue({ data: null, error: { message: 'Network error' } });
 
     const { result } = renderHook(() =>
-      useSupabaseQuery({ table: 'beds', fallback: fallbackData })
+      useSupabaseQuery({ table: 'beds', fallback: fallbackData }),
     );
 
     await waitFor(() => {
@@ -102,9 +100,7 @@ describe('useSupabaseQuery', () => {
     const fromMock = (supabase.from as ReturnType<typeof vi.fn>)();
     fromMock.eq.mockResolvedValue({ data: [], error: null });
 
-    renderHook(() =>
-      useSupabaseQuery({ table: 'beds', fallback: fallbackData, realtime: true })
-    );
+    renderHook(() => useSupabaseQuery({ table: 'beds', fallback: fallbackData, realtime: true }));
 
     await waitFor(() => {
       expect(supabase.channel).toHaveBeenCalledWith('beds:hospital:h-1');
@@ -120,9 +116,7 @@ describe('useSupabaseQuery', () => {
     const fromMock = (supabase.from as ReturnType<typeof vi.fn>)();
     fromMock.eq.mockResolvedValue({ data: [], error: null });
 
-    renderHook(() =>
-      useSupabaseQuery({ table: 'beds', fallback: fallbackData, realtime: false })
-    );
+    renderHook(() => useSupabaseQuery({ table: 'beds', fallback: fallbackData, realtime: false }));
 
     await waitFor(() => {
       expect(supabase.channel).not.toHaveBeenCalled();
@@ -136,7 +130,7 @@ describe('useSupabaseQuery', () => {
     });
 
     const { result } = renderHook(() =>
-      useSupabaseQuery({ table: 'beds', fallback: fallbackData, enabled: false })
+      useSupabaseQuery({ table: 'beds', fallback: fallbackData, enabled: false }),
     );
 
     await waitFor(() => {

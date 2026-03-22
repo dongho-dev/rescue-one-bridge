@@ -10,7 +10,8 @@ export const isEnvMissing = (!supabaseUrl || !supabaseAnonKey) && !isDemoModeEnv
 
 /** True only when VITE_DEMO_MODE=true is explicitly set and Supabase is not configured.
  *  Blocked in production builds for safety (test mode is exempt). */
-export const explicitDemoMode = isDemoModeEnv && (!supabaseUrl || !supabaseAnonKey) && !isProduction;
+export const explicitDemoMode =
+  isDemoModeEnv && (!supabaseUrl || !supabaseAnonKey) && !isProduction;
 
 let _supabase: SupabaseClient | null = null;
 
@@ -19,7 +20,7 @@ if (supabaseUrl && supabaseAnonKey) {
 } else if (isProduction && !isDemoModeEnv) {
   console.error(
     '[rescue-one-bridge] 프로덕션 환경에서 Supabase 환경변수가 누락되었습니다. ' +
-    'VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 설정해주세요.'
+      'VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 설정해주세요.',
   );
 }
 
