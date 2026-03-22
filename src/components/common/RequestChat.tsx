@@ -15,6 +15,7 @@ export function RequestChat({ requestId, compact = false }: RequestChatProps) {
   const { messages, loading, sendMessage } = useMessages(requestId);
   const { user } = useAuth();
   const [input, setInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,9 +25,13 @@ export function RequestChat({ requestId, compact = false }: RequestChatProps) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-    await sendMessage(input);
-    setInput('');
+    if (!input.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    const success = await sendMessage(input);
+    if (success) {
+      setInput('');
+    }
+    setIsSubmitting(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -83,7 +88,7 @@ export function RequestChat({ requestId, compact = false }: RequestChatProps) {
             placeholder="메시지 입력..."
             className="text-sm h-9"
           />
-          <Button size="sm" className="h-9 px-3 shrink-0" onClick={handleSend} disabled={!input.trim()}>
+          <Button size="sm" className="h-9 px-3 shrink-0" onClick={handleSend} disabled={!input.trim() || isSubmitting}>
             <Send size={14} />
           </Button>
         </div>
