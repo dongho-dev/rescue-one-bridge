@@ -32,12 +32,26 @@ export function getQueue(): QueuedRequest[] {
   }
 }
 
-export function enqueue(data: CreateRequestData, userId: string): QueuedRequest {
-  // Sanitize: strip patient_name from stored data (store only minimal info)
+/** Strip PHI fields from request data before localStorage storage */
+export function sanitizePHI(data: CreateRequestData): CreateRequestData {
   const sanitized = { ...data };
+
+  // Mask patient_name: keep first character + '**'
   if (sanitized.patient_name) {
     sanitized.patient_name = sanitized.patient_name.substring(0, 1) + '**';
   }
+
+  // Remove PHI fields that are not essential for offline queue re-submission
+  sanitized.vitals = undefined;
+  sanitized.allergies = undefined;
+  sanitized.notes = undefined;
+  sanitized.location_text = undefined;
+
+  return sanitized;
+}
+
+export function enqueue(data: CreateRequestData, userId: string): QueuedRequest {
+  const sanitized = sanitizePHI(data);
 
   const item: QueuedRequest = {
     id: crypto.randomUUID(),
