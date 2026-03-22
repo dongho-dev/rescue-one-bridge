@@ -207,7 +207,7 @@ export function AppContent() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>취소</AlertDialogCancel>
-              <AlertDialogAction onClick={handleSignOut}>로그아웃</AlertDialogAction>
+              <AlertDialogAction onClick={() => void handleSignOut()}>로그아웃</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
           </AlertDialog>
