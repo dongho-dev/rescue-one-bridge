@@ -46,6 +46,10 @@ export function sanitizePHI(data: CreateRequestData): CreateRequestData {
   sanitized.allergies = undefined;
   sanitized.notes = undefined;
   sanitized.location_text = undefined;
+  sanitized.latitude = undefined;
+  sanitized.longitude = undefined;
+  sanitized.patient_age = undefined;
+  sanitized.patient_gender = undefined;
 
   return sanitized;
 }

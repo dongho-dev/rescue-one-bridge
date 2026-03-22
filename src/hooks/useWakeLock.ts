@@ -4,11 +4,15 @@ export function useWakeLock() {
   const [isActive, setIsActive] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
+  const releaseHandlerRef = useRef<(() => void) | null>(null);
+
   const request = useCallback(async () => {
     if (!('wakeLock' in navigator)) return false;
     try {
       wakeLockRef.current = await navigator.wakeLock.request('screen');
-      wakeLockRef.current.addEventListener('release', () => setIsActive(false));
+      const handler = () => setIsActive(false);
+      releaseHandlerRef.current = handler;
+      wakeLockRef.current.addEventListener('release', handler);
       setIsActive(true);
       return true;
     } catch {
@@ -25,7 +29,16 @@ export function useWakeLock() {
   }, []);
 
   useEffect(() => {
-    return () => { wakeLockRef.current?.release(); };
+    return () => {
+      if (wakeLockRef.current) {
+        if (releaseHandlerRef.current) {
+          wakeLockRef.current.removeEventListener('release', releaseHandlerRef.current);
+          releaseHandlerRef.current = null;
+        }
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    };
   }, []);
 
   return { isActive, request, release };

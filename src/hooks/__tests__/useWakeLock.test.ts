@@ -6,12 +6,14 @@ describe('useWakeLock', () => {
   let mockSentinel: {
     release: ReturnType<typeof vi.fn>;
     addEventListener: ReturnType<typeof vi.fn>;
+    removeEventListener: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
     mockSentinel = {
       release: vi.fn().mockResolvedValue(undefined),
       addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     };
 
     Object.defineProperty(navigator, 'wakeLock', {
