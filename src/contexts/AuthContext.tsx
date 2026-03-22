@@ -4,6 +4,7 @@ import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
 import type { UserRole } from '../types/database';
 import { toast } from 'sonner';
 import { clearQueue } from '../utils/offlineQueue';
+import { verifyOAuthMeta } from '../utils/oauthMetaSigning';
 
 export type { UserRole };
 
@@ -64,7 +65,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(OAUTH_SIGNUP_META_KEY);
 
     try {
-      const { role, hospitalId } = JSON.parse(raw) as {
+      // Verify HMAC signature to detect tampering
+      const verified = verifyOAuthMeta(raw);
+      if (!verified) {
+        if (import.meta.env.DEV) console.warn('OAuth signup meta signature verification failed — data discarded');
+        return;
+      }
+      const { role, hospitalId } = verified as {
         role: UserRole;
         hospitalId: string | null;
       };
