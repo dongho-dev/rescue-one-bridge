@@ -73,8 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: roleError } = await supabase.rpc('apply_oauth_role', {
         p_role: role,
       });
-      if (roleError && import.meta.env.DEV) {
-        console.warn('OAuth role apply failed:', roleError.message);
+      if (roleError) {
+        if (import.meta.env.DEV) console.warn('OAuth role apply failed:', roleError.message);
+        toast.warning('역할 설정에 실패했습니다. 프로필에서 다시 설정해주세요.');
       }
 
       // Link hospital via RPC if applicable
@@ -82,12 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error: linkError } = await supabase.rpc('link_hospital', {
           p_hospital_id: hospitalId,
         });
-        if (linkError && import.meta.env.DEV) {
-          console.warn('OAuth hospital link failed:', linkError.message);
+        if (linkError) {
+          if (import.meta.env.DEV) console.warn('OAuth hospital link failed:', linkError.message);
+          toast.warning('병원 연결에 실패했습니다. 프로필에서 다시 설정해주세요.');
         }
       }
     } catch {
-      // Silently fail — user can retry role setup from profile
+      // Unexpected error — inform user
+      toast.warning('역할 설정 중 오류가 발생했습니다. 프로필에서 다시 설정해주세요.');
     }
   }, []);
 

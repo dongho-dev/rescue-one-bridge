@@ -4,37 +4,12 @@ import { generateMockRequests } from '../../components/common/models';
 /**
  * Tests for useRequests hook logic.
  * Since the hook depends on React context and Supabase, we test:
- * 1. The dbStatusToFrontend conversion logic (extracted)
- * 2. Mock data structure contracts
- * 3. createRequest return value behavior (documented)
+ * 1. Mock data structure contracts
+ * 2. createRequest return value behavior (documented)
+ *
+ * Note: dbStatusToFrontend was removed — that function does not exist
+ * in useRequests.ts (ghost test removed per #75).
  */
-
-// Re-implement dbStatusToFrontend for isolated testing
-// (matches the logic in useRequests.ts)
-function dbStatusToFrontend(status: string): string {
-  switch (status) {
-    case 'en_route': return 'enRoute';
-    default: return status;
-  }
-}
-
-describe('useRequests status conversion', () => {
-  it('converts en_route to enRoute', () => {
-    expect(dbStatusToFrontend('en_route')).toBe('enRoute');
-  });
-
-  it('passes through pending unchanged', () => {
-    expect(dbStatusToFrontend('pending')).toBe('pending');
-  });
-
-  it('passes through matched unchanged', () => {
-    expect(dbStatusToFrontend('matched')).toBe('matched');
-  });
-
-  it('passes through completed unchanged', () => {
-    expect(dbStatusToFrontend('completed')).toBe('completed');
-  });
-});
 
 describe('useRequests mock data', () => {
   it('generates 12 requests', () => {

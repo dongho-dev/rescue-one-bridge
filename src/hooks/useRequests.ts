@@ -343,10 +343,10 @@ export function useRequests(): UseRequestsResult {
 
     if (!supabase) return;
 
-    // 1. Clear current hospital assignment
+    // 1. Set status to pending so the RPC can process it
     const { error } = await supabase
       .from('requests')
-      .update({ status: 'pending' as RequestStatus, hospital_id: null, matched_at: null, distance_km: null, eta_minutes: null })
+      .update({ status: 'pending' as RequestStatus })
       .eq('id', requestId);
 
     if (error) {
@@ -355,7 +355,8 @@ export function useRequests(): UseRequestsResult {
       return;
     }
 
-    // 2. Auto re-match to the next best hospital
+    // 2. RPC handles hospital_id clearing + re-match atomically
+    // hospital_staff is now authorized to call this RPC
     try {
       const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
         p_request_id: requestId,
