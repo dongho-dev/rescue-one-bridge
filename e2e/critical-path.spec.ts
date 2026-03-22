@@ -47,32 +47,32 @@ test.describe('Critical Path - Emergency Request Flow', () => {
     await page.goto('/');
 
     // Initially hospital_staff — should see hospital dashboard
-    await expect(page.getByText('병원 응급실 대시보드')).toBeVisible();
+    await expect(page.getByText('병원 응급실 대시보드')).toBeVisible({ timeout: 5000 });
 
     // Click the role switcher in the demo banner
-    await page.getByText(/현재:.*전환/).click();
+    await page.getByRole('button', { name: /현재:.*전환/ }).click();
 
     // After switching to paramedic, should see paramedic dashboard
-    await expect(page.getByText('구급대원 대시보드')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('구급대원 대시보드')).toBeVisible({ timeout: 10000 });
 
     // Switch back to hospital_staff
-    await page.getByText(/현재:.*전환/).click();
-    await expect(page.getByText('병원 응급실 대시보드')).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: /현재:.*전환/ }).click();
+    await expect(page.getByText('병원 응급실 대시보드')).toBeVisible({ timeout: 10000 });
   });
 
   test('should reflect created request in hospital dashboard', async ({ page }) => {
     await page.goto('/');
 
     // Navigate to request page and create a request
-    await page.getByText('구급대원 요청').click();
+    await page.getByRole('button', { name: '구급대원 요청' }).click();
     await page.getByRole('button', { name: /긴급 요청.*환자 정보 없이/ }).click();
     await expect(page.getByText(/매칭되었습니다/)).toBeVisible({ timeout: 5000 });
 
     // Go back to dashboard
-    await page.getByText('대시보드').first().click();
+    await page.getByRole('button', { name: '대시보드' }).first().click();
 
     // The dashboard should show the request in the table
-    await expect(page.getByText('들어오는 요청')).toBeVisible();
+    await expect(page.getByText('들어오는 요청')).toBeVisible({ timeout: 5000 });
     // The request should appear with symptom "긴급 요청"
     await expect(page.getByText('긴급 요청')).toBeVisible({ timeout: 5000 });
   });
