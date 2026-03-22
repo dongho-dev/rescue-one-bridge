@@ -24,6 +24,7 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
   const { user, profile } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { notify } = useNotification();
@@ -65,24 +66,28 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
 
     const channel = supabase
       .channel(`messages:${requestId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `request_id=eq.${requestId}`,
-      }, (payload) => {
-        const msg = payload.new as Message;
-        setMessages(prev => [...prev, msg]);
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `request_id=eq.${requestId}`,
+        },
+        (payload) => {
+          const msg = payload.new as Message;
+          setMessages((prev) => [...prev, msg]);
 
-        // 상대방 메시지면 알림
-        if (msg.sender_id !== user?.id) {
-          const sender = msg.sender_role === 'hospital_staff' ? '병원' : '구급대원';
-          notify(`${sender} 메시지`, {
-            body: msg.content,
-            tag: `msg-${msg.id}`,
-          });
-        }
-      })
+          // 상대방 메시지면 알림
+          if (msg.sender_id !== user?.id) {
+            const sender = msg.sender_role === 'hospital_staff' ? '병원' : '구급대원';
+            notify(`${sender} 메시지`, {
+              body: msg.content,
+              tag: `msg-${msg.id}`,
+            });
+          }
+        },
+      )
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
           // 연결 성공 — 에러 상태 클리어
@@ -95,6 +100,7 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
               supabase.removeChannel(channelRef.current);
               channelRef.current = null;
             }
+            setRetryCount((c) => c + 1);
           }, 30_000);
         }
       });
@@ -111,29 +117,32 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
         channelRef.current = null;
       }
     };
-  }, [requestId, user?.id, notify]);
+  }, [requestId, user?.id, notify, retryCount]);
 
-  const sendMessage = useCallback(async (content: string): Promise<boolean> => {
-    if (!requestId || !user || !profile || !supabase) return false;
-    if (!content.trim()) return false;
+  const sendMessage = useCallback(
+    async (content: string): Promise<boolean> => {
+      if (!requestId || !user || !profile || !supabase) return false;
+      if (!content.trim()) return false;
 
-    try {
-      const { error } = await supabase.from('messages').insert({
-        request_id: requestId,
-        sender_id: user.id,
-        sender_role: profile.role,
-        content: content.trim(),
-      });
-      if (error) {
-        toast.error('메시지 전송에 실패했습니다.');
+      try {
+        const { error } = await supabase.from('messages').insert({
+          request_id: requestId,
+          sender_id: user.id,
+          sender_role: profile.role,
+          content: content.trim(),
+        });
+        if (error) {
+          toast.error('메시지 전송에 실패했습니다.');
+          return false;
+        }
+        return true;
+      } catch {
+        toast.error('네트워크 오류로 메시지를 전송할 수 없습니다.');
         return false;
       }
-      return true;
-    } catch {
-      toast.error('네트워크 오류로 메시지를 전송할 수 없습니다.');
-      return false;
-    }
-  }, [requestId, user, profile]);
+    },
+    [requestId, user, profile],
+  );
 
   return { messages, loading, sendMessage };
 }

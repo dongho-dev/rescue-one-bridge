@@ -39,7 +39,10 @@ vi.mock('@/hooks/useNotification', () => ({
 
 vi.mock('sonner', () => ({
   toast: Object.assign(vi.fn(), {
-    success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
   }),
 }));
 
@@ -52,7 +55,9 @@ vi.mock('@/utils/retry', () => ({
 }));
 
 vi.mock('@/utils/offlineQueue', () => ({
-  enqueue: vi.fn(), getQueue: vi.fn(() => []), dequeue: vi.fn(),
+  enqueue: vi.fn(),
+  getQueue: vi.fn(() => []),
+  dequeue: vi.fn(),
 }));
 
 vi.mock('@/utils/demoData', () => ({

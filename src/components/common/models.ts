@@ -13,7 +13,10 @@ export interface MockRequest {
   eta_minutes?: number;
 }
 
-export interface MockHospital extends Omit<HospitalAvailability, 'hospital_id' | 'hospital_name' | 'avg_wait_time'> {
+export interface MockHospital extends Omit<
+  HospitalAvailability,
+  'hospital_id' | 'hospital_name' | 'avg_wait_time'
+> {
   id: string;
   name: string;
   distance_km: number | null;
@@ -36,7 +39,7 @@ export const generateMockRequests = (): MockRequest[] => {
     status: statuses[Math.floor(Math.random() * statuses.length)],
     patient_age: Math.floor(Math.random() * 60 + 20),
     allergies: Math.random() > 0.7 ? ['페니실린'] : undefined,
-    eta_minutes: Math.floor(Math.random() * 30 + 5)
+    eta_minutes: Math.floor(Math.random() * 30 + 5),
   }));
 };
 
@@ -47,7 +50,7 @@ export const generateMockHospitals = (): MockHospital[] => {
     '삼성서울병원 응급센터',
     '아산병원 응급의료센터',
     '고대안암병원 응급실',
-    '한양대병원 응급센터'
+    '한양대병원 응급센터',
   ];
 
   const specialties = [...SPECIALTY_LIST];
@@ -60,12 +63,12 @@ export const generateMockHospitals = (): MockHospital[] => {
 
   // 서울 주요 병원 실제 좌표
   const fixedCoords: [number, number][] = [
-    [37.5796, 126.9990], // 서울대학교병원
-    [37.5622, 126.9410], // 연세세브란스병원
+    [37.5796, 126.999], // 서울대학교병원
+    [37.5622, 126.941], // 연세세브란스병원
     [37.4881, 127.0855], // 삼성서울병원
     [37.5268, 127.1082], // 아산병원
     [37.5862, 127.0258], // 고대안암병원
-    [37.5570, 127.0445], // 한양대병원
+    [37.557, 127.0445], // 한양대병원
   ];
 
   return hospitalNames.map((name, i) => ({

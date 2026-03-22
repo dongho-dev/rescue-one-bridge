@@ -1,8 +1,8 @@
-import { ThemeProvider } from "./components/theme/ThemeProvider";
-import { Toaster } from "./components/ui/sonner";
-import { AuthProvider } from "./contexts/AuthContext";
-import { RequestsProvider } from "./contexts/RequestsContext";
-import { AuthGate } from "./components/auth/AuthGate";
+import { ThemeProvider } from './components/theme/ThemeProvider';
+import { Toaster } from './components/ui/sonner';
+import { AuthProvider } from './contexts/AuthContext';
+import { RequestsProvider } from './contexts/RequestsContext';
+import { AuthGate } from './components/auth/AuthGate';
 
 function App() {
   return (

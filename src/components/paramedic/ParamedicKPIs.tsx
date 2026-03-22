@@ -1,4 +1,4 @@
-import { InfoCard } from "../common/InfoCard";
+import { InfoCard } from '../common/InfoCard';
 import { Clock, CheckCircle2, Ambulance } from 'lucide-react';
 
 interface StatusCounts {

@@ -1,21 +1,14 @@
 import { useState, useMemo } from 'react';
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
-import { toast } from "sonner";
-import { useStaff } from "@/hooks/useStaff";
-import { LoadingState } from "../common/LoadingState";
-import { StaffFilters } from "./StaffFilters";
-import { StaffTable } from "./StaffTable";
-import { StaffDetailDialog } from "./StaffDetailDialog";
-import type { Staff, StaffStatus } from "@/types/database";
-import {
-  Plus,
-  Clock,
-  Calendar,
-  Users,
-  Activity,
-  Shield
-} from 'lucide-react';
+import { Card, CardContent } from '../ui/card';
+import { Button } from '../ui/button';
+import { toast } from 'sonner';
+import { useStaff } from '@/hooks/useStaff';
+import { LoadingState } from '../common/LoadingState';
+import { StaffFilters } from './StaffFilters';
+import { StaffTable } from './StaffTable';
+import { StaffDetailDialog } from './StaffDetailDialog';
+import type { Staff, StaffStatus } from '@/types/database';
+import { Plus, Clock, Calendar, Users, Activity, Shield } from 'lucide-react';
 
 export function StaffManagement() {
   const { staff, loading, error, refetch, updateStaffStatus } = useStaff();
@@ -25,26 +18,34 @@ export function StaffManagement() {
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filteredStaff = useMemo(() => staff.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (member.department ?? '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === 'all' || member.role === selectedRole;
-    const matchesStatus = selectedStatus === 'all' || member.status === selectedStatus;
+  const filteredStaff = useMemo(
+    () =>
+      staff.filter((member) => {
+        const matchesSearch =
+          member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          member.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (member.department ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = selectedRole === 'all' || member.role === selectedRole;
+        const matchesStatus = selectedStatus === 'all' || member.status === selectedStatus;
 
-    return matchesSearch && matchesRole && matchesStatus;
-  }), [staff, searchTerm, selectedRole, selectedStatus]);
+        return matchesSearch && matchesRole && matchesStatus;
+      }),
+    [staff, searchTerm, selectedRole, selectedStatus],
+  );
 
-  const staffStats = useMemo(() => ({
-    total: staff.length,
-    onDuty: staff.filter(s => s.status === 'on_duty').length,
-    offDuty: staff.filter(s => s.status === 'off_duty').length,
-    onBreak: staff.filter(s => s.status === 'break').length,
-    emergency: staff.filter(s => s.status === 'emergency').length
-  }), [staff]);
+  const staffStats = useMemo(
+    () => ({
+      total: staff.length,
+      onDuty: staff.filter((s) => s.status === 'on_duty').length,
+      offDuty: staff.filter((s) => s.status === 'off_duty').length,
+      onBreak: staff.filter((s) => s.status === 'break').length,
+      emergency: staff.filter((s) => s.status === 'emergency').length,
+    }),
+    [staff],
+  );
 
   const handleAddStaff = () => {
-    toast.info("추후 지원 예정입니다");
+    toast.info('추후 지원 예정입니다');
   };
 
   const handleViewDetails = (member: Staff) => {
@@ -71,8 +72,7 @@ export function StaffManagement() {
             <p className="text-muted-foreground mt-1">응급실 직원 현황 및 근무 상태를 관리합니다</p>
           </div>
           <Button onClick={handleAddStaff} className="flex items-center gap-2">
-            <Plus size={16} />
-            새 직원 등록
+            <Plus size={16} />새 직원 등록
           </Button>
         </div>
 

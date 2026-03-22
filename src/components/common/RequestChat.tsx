@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { useMessages } from "@/hooks/useMessages";
-import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { useMessages } from '@/hooks/useMessages';
+import { useAuth } from '@/contexts/AuthContext';
 import { MessageSquare, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -63,15 +63,15 @@ export function RequestChat({ requestId, compact = false }: RequestChatProps) {
           {!loading && messages.length === 0 && (
             <p className="text-xs text-muted-foreground text-center py-4">메시지가 없습니다</p>
           )}
-          {messages.map(msg => {
+          {messages.map((msg) => {
             const isMine = msg.sender_id === user?.id;
             return (
               <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] px-3 py-1.5 rounded-lg text-sm ${
-                  isMine
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                }`}>
+                <div
+                  className={`max-w-[80%] px-3 py-1.5 rounded-lg text-sm ${
+                    isMine ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  }`}
+                >
                   {!isMine && (
                     <span className="text-xs font-medium opacity-70 block">
                       {msg.sender_role === 'hospital_staff' ? '병원' : '구급대원'}
@@ -86,12 +86,17 @@ export function RequestChat({ requestId, compact = false }: RequestChatProps) {
         <div className="flex gap-2">
           <Input
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="메시지 입력..."
             className="text-sm h-9"
           />
-          <Button size="sm" className="h-9 px-3 shrink-0" onClick={handleSend} disabled={!input.trim() || isSubmitting}>
+          <Button
+            size="sm"
+            className="h-9 px-3 shrink-0"
+            onClick={handleSend}
+            disabled={!input.trim() || isSubmitting}
+          >
             <Send size={14} />
           </Button>
         </div>

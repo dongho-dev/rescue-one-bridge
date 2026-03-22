@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
-import { getSeverityColor, getSeverityText } from "../../utils/statusHelpers";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
+import { getSeverityColor, getSeverityText } from '../../utils/statusHelpers';
 import { User, Clock, Plus, Users } from 'lucide-react';
 
 export interface QuickPatient {
@@ -58,11 +58,13 @@ export function QuickPatientSelector({
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className={`p-1 rounded-full ${
-                    selectedPatient?.id === patient.id
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
+                  <div
+                    className={`p-1 rounded-full ${
+                      selectedPatient?.id === patient.id
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
                     <User size={14} />
                   </div>
                   <span className="font-medium">{patient.name}</span>
@@ -72,7 +74,9 @@ export function QuickPatientSelector({
                 </Badge>
               </div>
               <div className="text-sm text-muted-foreground space-y-1 pl-7">
-                <p>{patient.age}세 / {patient.gender}</p>
+                <p>
+                  {patient.age}세 / {patient.gender}
+                </p>
                 <p>증상: {patient.condition}</p>
                 <p className="flex items-center gap-1 text-xs">
                   <Clock size={11} />
@@ -86,12 +90,11 @@ export function QuickPatientSelector({
         <Separator className="my-2" />
 
         <Button
-          variant={isNewPatient ? "default" : "outline"}
+          variant={isNewPatient ? 'default' : 'outline'}
           className="w-full"
           onClick={onNewPatient}
         >
-          <Plus size={16} className="mr-2" />
-          새 환자 등록
+          <Plus size={16} className="mr-2" />새 환자 등록
         </Button>
       </CardContent>
     </Card>

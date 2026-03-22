@@ -4,18 +4,29 @@ const DSN = import.meta.env.VITE_SENTRY_DSN;
 
 // PHI fields that must never be sent to Sentry
 export const PHI_KEYS = new Set([
-  'patient_name', 'patient_age', 'patient_gender',
-  'vitals', 'allergies', 'symptom', 'notes',
-  'diagnosis', 'location_text', 'latitude', 'longitude',
-  'phone', 'email', 'emergency_contact', 'contact',
+  'patient_name',
+  'patient_age',
+  'patient_gender',
+  'vitals',
+  'allergies',
+  'symptom',
+  'notes',
+  'diagnosis',
+  'location_text',
+  'latitude',
+  'longitude',
+  'phone',
+  'email',
+  'emergency_contact',
+  'contact',
 ]);
 
 // Regex patterns for PHI that may appear in breadcrumb messages or free text
 const PHI_PATTERNS: RegExp[] = [
-  /\b\d{2,3}-\d{3,4}-\d{4}\b/g,           // Korean phone numbers
+  /\b\d{2,3}-\d{3,4}-\d{4}\b/g, // Korean phone numbers
   /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email addresses
-  /\b\d{6}-[1-4]\d{6}\b/g,                  // Korean resident registration number
-  /patient[_\s]?name\s*[:=]\s*\S+/gi,       // patient_name in text
+  /\b\d{6}-[1-4]\d{6}\b/g, // Korean resident registration number
+  /patient[_\s]?name\s*[:=]\s*\S+/gi, // patient_name in text
 ];
 
 const MAX_SCRUB_DEPTH = 5;

@@ -1,6 +1,6 @@
-import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Card, CardContent } from "../ui/card";
+import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Card, CardContent } from '../ui/card';
 import { Search } from 'lucide-react';
 
 interface StaffFiltersProps {
@@ -25,7 +25,10 @@ export function StaffFilters({
       <CardContent className="pt-6">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+              size={16}
+            />
             <Input
               placeholder="이름, ID, 부서로 검색..."
               value={searchTerm}

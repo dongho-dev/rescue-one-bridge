@@ -41,11 +41,14 @@ export function useSupabaseQuery<T extends { id: string }>({
   const hospitalId = overrideHospitalId ?? profile?.hospital_id;
 
   const fallbackRef = useRef<T[]>(fallback);
-  useEffect(() => { fallbackRef.current = fallback; });
+  useEffect(() => {
+    fallbackRef.current = fallback;
+  });
 
   const [data, setData] = useState<T[]>(() => fallback);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -107,8 +110,8 @@ export function useSupabaseQuery<T extends { id: string }>({
         },
         (payload) => {
           const newRow = payload.new as T;
-          setData(prev => [...prev, newRow]);
-        }
+          setData((prev) => [...prev, newRow]);
+        },
       )
       .on(
         'postgres_changes',
@@ -120,8 +123,8 @@ export function useSupabaseQuery<T extends { id: string }>({
         },
         (payload) => {
           const updated = payload.new as T;
-          setData(prev => prev.map(item => item.id === updated.id ? updated : item));
-        }
+          setData((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+        },
       )
       .on(
         'postgres_changes',
@@ -133,8 +136,8 @@ export function useSupabaseQuery<T extends { id: string }>({
         },
         (payload) => {
           const deleted = payload.old as { id: string };
-          setData(prev => prev.filter(item => item.id !== deleted.id));
-        }
+          setData((prev) => prev.filter((item) => item.id !== deleted.id));
+        },
       )
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
@@ -149,7 +152,7 @@ export function useSupabaseQuery<T extends { id: string }>({
               supabase.removeChannel(channelRef.current);
               channelRef.current = null;
             }
-            fetchData();
+            setRetryCount((c) => c + 1);
           }, 30_000);
         }
       });
@@ -166,7 +169,7 @@ export function useSupabaseQuery<T extends { id: string }>({
         channelRef.current = null;
       }
     };
-  }, [table, hospitalId, realtime, enabled, fetchData]);
+  }, [table, hospitalId, realtime, enabled, fetchData, retryCount]);
 
   return { data, loading, error, refetch: fetchData, setData };
 }

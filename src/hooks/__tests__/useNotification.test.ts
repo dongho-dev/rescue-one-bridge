@@ -106,9 +106,12 @@ describe('useNotification', () => {
       result.current.notify('Test Title', { body: 'test body' });
     });
 
-    expect(Notification).toHaveBeenCalledWith('Test Title', expect.objectContaining({
-      body: 'test body',
-    }));
+    expect(Notification).toHaveBeenCalledWith(
+      'Test Title',
+      expect.objectContaining({
+        body: 'test body',
+      }),
+    );
   });
 
   it('notify skips when page is focused', () => {

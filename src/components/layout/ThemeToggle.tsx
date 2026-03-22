@@ -1,7 +1,12 @@
 import { Sun, Moon, Monitor } from 'lucide-react';
-import { Button } from "../ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { useTheme } from "../theme/ThemeProvider";
+import { Button } from '../ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { useTheme } from '../theme/ThemeProvider';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -16,15 +21,15 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+        <DropdownMenuItem onClick={() => setTheme('light')}>
           <Sun size={16} className="mr-2" />
           밝게
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem onClick={() => setTheme('dark')}>
           <Moon size={16} className="mr-2" />
           어둡게
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem onClick={() => setTheme('system')}>
           <Monitor size={16} className="mr-2" />
           시스템
         </DropdownMenuItem>

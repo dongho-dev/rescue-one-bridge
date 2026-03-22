@@ -47,10 +47,9 @@ describe('useSessionTimeout', () => {
     // Advance past the 30-minute timeout (need to reach the check interval)
     vi.advanceTimersByTime(31 * 60 * 1000);
 
-    expect(toast.warning).toHaveBeenCalledWith(
-      '5분 후 자동 로그아웃됩니다. 화면을 터치하세요.',
-      { duration: 10000 }
-    );
+    expect(toast.warning).toHaveBeenCalledWith('5분 후 자동 로그아웃됩니다. 화면을 터치하세요.', {
+      duration: 10000,
+    });
   });
 
   it('signs out after 35 minutes of inactivity (30 min + 5 min grace)', () => {

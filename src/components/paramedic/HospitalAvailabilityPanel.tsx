@@ -1,19 +1,21 @@
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
-import { AmbulanceMap } from "../common/AmbulanceMap";
-import { generateMockHospitals } from "../common/models";
-import type { HospitalAvailability } from "@/types/database";
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import {
-  MapPin,
-  Phone,
-  Clock,
-  Bed,
-  Route,
-} from 'lucide-react';
-import { toast } from "sonner";
-import type { GeoPosition } from "@/hooks/useGeolocation";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '../ui/sheet';
+import { AmbulanceMap } from '../common/AmbulanceMap';
+import { generateMockHospitals } from '../common/models';
+import type { HospitalAvailability } from '@/types/database';
+import { MapPin, Phone, Clock, Bed, Route } from 'lucide-react';
+import { toast } from 'sonner';
+import { sanitizePhone } from '@/utils/sanitize';
+import type { GeoPosition } from '@/hooks/useGeolocation';
 
 type HospitalDisplay = {
   id: string;
@@ -27,7 +29,9 @@ type HospitalDisplay = {
   avg_wait_time: number | null;
 };
 
-function normalizeHospital(h: HospitalAvailability | ReturnType<typeof generateMockHospitals>[number]): HospitalDisplay {
+function normalizeHospital(
+  h: HospitalAvailability | ReturnType<typeof generateMockHospitals>[number],
+): HospitalDisplay {
   if ('hospital_id' in h) {
     return {
       id: h.hospital_id,
@@ -56,7 +60,8 @@ function normalizeHospital(h: HospitalAvailability | ReturnType<typeof generateM
 
 function getBedCountColor(available_beds: number): string {
   if (available_beds === 0) return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
-  if (available_beds <= 3) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
+  if (available_beds <= 3)
+    return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400';
   return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
 }
 
@@ -67,8 +72,8 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
         <button className="w-full text-left p-4 border rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-200 hover:scale-[1.01]">
           <div className="flex items-center justify-between mb-2.5">
             <h4 className="font-medium text-sm">{hospital.name}</h4>
-            <Badge variant={hospital.accepting ? "default" : "destructive"}>
-              {hospital.accepting ? "수용가능" : "수용불가"}
+            <Badge variant={hospital.accepting ? 'default' : 'destructive'}>
+              {hospital.accepting ? '수용가능' : '수용불가'}
             </Badge>
           </div>
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
@@ -80,14 +85,18 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
               <Clock size={11} />
               대기 {hospital.queue}명
             </Badge>
-            <Badge className={`flex items-center gap-1 text-xs font-medium border-0 ${getBedCountColor(hospital.available_beds)}`}>
+            <Badge
+              className={`flex items-center gap-1 text-xs font-medium border-0 ${getBedCountColor(hospital.available_beds)}`}
+            >
               <Bed size={11} />
               병상 {hospital.available_beds}개
             </Badge>
           </div>
           <div className="flex gap-1.5">
             {hospital.specialties.slice(0, 3).map((specialty, i) => (
-              <Badge key={i} variant="secondary" className="text-xs">{specialty}</Badge>
+              <Badge key={i} variant="secondary" className="text-xs">
+                {specialty}
+              </Badge>
             ))}
           </div>
         </button>
@@ -100,8 +109,8 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
         <div className="space-y-4 mt-4">
           <div>
             <p className="text-sm font-medium text-muted-foreground">수용 상태</p>
-            <Badge variant={hospital.accepting ? "default" : "destructive"} className="mt-1">
-              {hospital.accepting ? "수용 가능" : "수용 불가"}
+            <Badge variant={hospital.accepting ? 'default' : 'destructive'} className="mt-1">
+              {hospital.accepting ? '수용 가능' : '수용 불가'}
             </Badge>
           </div>
           <div>
@@ -109,19 +118,25 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
             <div className="grid grid-cols-2 gap-2 mt-2">
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">거리</p>
-                <p className="text-sm font-semibold">{hospital.distance_km != null ? `${hospital.distance_km}km` : '거리 미확인'}</p>
+                <p className="text-sm font-semibold">
+                  {hospital.distance_km != null ? `${hospital.distance_km}km` : '거리 미확인'}
+                </p>
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">ER 대기</p>
                 <p className="text-sm font-semibold">{hospital.queue}명</p>
               </div>
-              <div className={`p-2 rounded-lg text-center ${getBedCountColor(hospital.available_beds)}`}>
+              <div
+                className={`p-2 rounded-lg text-center ${getBedCountColor(hospital.available_beds)}`}
+              >
                 <p className="text-xs opacity-80">가용 병상</p>
                 <p className="text-sm font-semibold">{hospital.available_beds}개</p>
               </div>
               <div className="p-2 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">평균 대기</p>
-                <p className="text-sm font-semibold">{hospital.avg_wait_time != null ? `${hospital.avg_wait_time}분` : '-'}</p>
+                <p className="text-sm font-semibold">
+                  {hospital.avg_wait_time != null ? `${hospital.avg_wait_time}분` : '-'}
+                </p>
               </div>
             </div>
           </div>
@@ -129,7 +144,9 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
             <p className="text-sm font-medium text-muted-foreground">전문 진료과</p>
             <div className="flex flex-wrap gap-1 mt-1">
               {hospital.specialties.map((specialty, i) => (
-                <Badge key={i} variant="outline">{specialty}</Badge>
+                <Badge key={i} variant="outline">
+                  {specialty}
+                </Badge>
               ))}
             </div>
           </div>
@@ -141,9 +158,9 @@ function HospitalCard({ hospital }: { hospital: HospitalDisplay }) {
             className="w-full"
             onClick={() => {
               if (hospital.contact) {
-                window.open(`tel:${hospital.contact}`);
+                window.open(`tel:${sanitizePhone(hospital.contact)}`);
               } else {
-                toast("연락처 정보가 없습니다");
+                toast('연락처 정보가 없습니다');
               }
             }}
           >
@@ -162,7 +179,11 @@ interface HospitalAvailabilityPanelProps {
   position: GeoPosition | null;
 }
 
-export function HospitalAvailabilityPanel({ hospitals, rawHospitals, position }: HospitalAvailabilityPanelProps) {
+export function HospitalAvailabilityPanel({
+  hospitals,
+  rawHospitals,
+  position,
+}: HospitalAvailabilityPanelProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 병원 현황 */}
@@ -186,12 +207,12 @@ export function HospitalAvailabilityPanel({ hospitals, rawHospitals, position }:
         title="실시간 위치"
         ambulancePosition={position}
         hospitals={rawHospitals
-          .filter(h => {
+          .filter((h) => {
             const lat = 'latitude' in h ? h.latitude : undefined;
             const lng = 'longitude' in h ? h.longitude : undefined;
             return typeof lat === 'number' && typeof lng === 'number';
           })
-          .map(h => {
+          .map((h) => {
             const hospital = normalizeHospital(h);
             return {
               id: hospital.id,

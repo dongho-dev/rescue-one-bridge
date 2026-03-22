@@ -66,7 +66,7 @@ describe('useWakeLock', () => {
 
   it('request returns false when wakeLock.request throws', async () => {
     (navigator.wakeLock.request as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('NotAllowedError')
+      new Error('NotAllowedError'),
     );
 
     const { result } = renderHook(() => useWakeLock());

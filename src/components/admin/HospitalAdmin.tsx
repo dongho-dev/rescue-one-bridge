@@ -1,26 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
-import { supabase } from "@/lib/supabase";
-import type { Hospital } from "@/types/database";
-import { toast } from "sonner";
-import { getUserFriendlyError } from "@/utils/errorMessages";
-import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import {
-  Building2,
-  Plus,
-  Pencil,
-  Trash2,
-  Save,
-  Phone,
-  ShieldAlert,
-} from 'lucide-react';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
+import { supabase } from '@/lib/supabase';
+import type { Hospital } from '@/types/database';
+import { toast } from 'sonner';
+import { getUserFriendlyError } from '@/utils/errorMessages';
+import { useAuth } from '@/contexts/AuthContext';
+import { sanitizePhone } from '@/utils/sanitize';
+import { Building2, Plus, Pencil, Trash2, Save, Phone, ShieldAlert } from 'lucide-react';
 
 export function HospitalAdmin() {
   const { profile } = useAuth();
@@ -29,7 +31,9 @@ export function HospitalAdmin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [acceptingTarget, setAcceptingTarget] = useState<{ id: string; accepting: boolean } | null>(null);
+  const [acceptingTarget, setAcceptingTarget] = useState<{ id: string; accepting: boolean } | null>(
+    null,
+  );
 
   const fetchHospitals = useCallback(async () => {
     if (!supabase) {
@@ -76,12 +80,12 @@ export function HospitalAdmin() {
     const { id, accepting } = acceptingTarget;
     setAcceptingTarget(null);
     // 낙관적 UI 업데이트
-    setHospitals(prev => prev.map(h => h.id === id ? { ...h, accepting } : h));
+    setHospitals((prev) => prev.map((h) => (h.id === id ? { ...h, accepting } : h)));
     const { error } = await supabase.from('hospitals').update({ accepting }).eq('id', id);
     if (error) {
       toast.error(getUserFriendlyError(error.message));
       // 롤백
-      setHospitals(prev => prev.map(h => h.id === id ? { ...h, accepting: !accepting } : h));
+      setHospitals((prev) => prev.map((h) => (h.id === id ? { ...h, accepting: !accepting } : h)));
     }
   };
 
@@ -133,9 +137,7 @@ export function HospitalAdmin() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            등록된 병원 ({hospitals.length}개)
-          </CardTitle>
+          <CardTitle className="text-base">등록된 병원 ({hospitals.length}개)</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -156,30 +158,40 @@ export function HospitalAdmin() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {hospitals.map(hospital => (
+                  {hospitals.map((hospital) => (
                     <TableRow key={hospital.id}>
                       <TableCell className="font-medium">{hospital.name}</TableCell>
                       <TableCell>
                         <Switch
                           checked={hospital.accepting}
-                          onCheckedChange={(v) => setAcceptingTarget({ id: hospital.id, accepting: v })}
+                          onCheckedChange={(v) =>
+                            setAcceptingTarget({ id: hospital.id, accepting: v })
+                          }
                         />
                       </TableCell>
                       <TableCell>{hospital.queue}명</TableCell>
                       <TableCell className="text-sm">
                         {hospital.contact ? (
-                          <a href={`tel:${hospital.contact}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                          <a
+                            href={`tel:${sanitizePhone(hospital.contact ?? '')}`}
+                            className="flex items-center gap-1 text-blue-600 hover:underline"
+                          >
                             <Phone size={12} />
                             {hospital.contact}
                           </a>
-                        ) : '-'}
+                        ) : (
+                          '-'
+                        )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                         {hospital.address || '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Dialog open={editingId === hospital.id} onOpenChange={(open) => setEditingId(open ? hospital.id : null)}>
+                          <Dialog
+                            open={editingId === hospital.id}
+                            onOpenChange={(open) => setEditingId(open ? hospital.id : null)}
+                          >
                             <DialogTrigger asChild>
                               <Button size="sm" variant="outline" className="h-8 px-2">
                                 <Pencil size={14} />
@@ -202,7 +214,9 @@ export function HospitalAdmin() {
                             size="sm"
                             variant="outline"
                             className="h-8 px-2 text-red-600 hover:bg-red-50"
-                            onClick={() => setDeleteTarget({ id: hospital.id, name: hospital.name })}
+                            onClick={() =>
+                              setDeleteTarget({ id: hospital.id, name: hospital.name })
+                            }
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -217,7 +231,12 @@ export function HospitalAdmin() {
         </CardContent>
       </Card>
       {/* 병원 삭제 확인 다이얼로그 */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>병원 삭제 확인</AlertDialogTitle>
@@ -227,15 +246,18 @@ export function HospitalAdmin() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              삭제
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>삭제</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* 수용 상태 변경 확인 다이얼로그 */}
-      <AlertDialog open={!!acceptingTarget} onOpenChange={(open) => { if (!open) setAcceptingTarget(null); }}>
+      <AlertDialog
+        open={!!acceptingTarget}
+        onOpenChange={(open) => {
+          if (!open) setAcceptingTarget(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>수용 상태 변경 확인</AlertDialogTitle>
@@ -247,9 +269,7 @@ export function HospitalAdmin() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleToggleAccepting}>
-              확인
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleToggleAccepting}>확인</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -284,7 +304,12 @@ function HospitalForm({ hospital, onSave }: { hospital?: Hospital; onSave: () =>
         address: form.address.trim() || null,
         latitude: form.latitude ? parseFloat(form.latitude) : null,
         longitude: form.longitude ? parseFloat(form.longitude) : null,
-        specialties: form.specialties ? form.specialties.split(',').map(s => s.trim()).filter(Boolean) : [],
+        specialties: form.specialties
+          ? form.specialties
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
         queue: parseInt(form.queue) || 0,
       };
 
@@ -316,39 +341,67 @@ function HospitalForm({ hospital, onSave }: { hospital?: Hospital; onSave: () =>
     <div className="space-y-4">
       <div className="space-y-1.5">
         <Label>병원명 *</Label>
-        <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="서울대학교병원" />
+        <Input
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder="서울대학교병원"
+        />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>연락처</Label>
-          <Input value={form.contact} onChange={e => setForm({ ...form, contact: e.target.value })} placeholder="02-1234-5678" />
+          <Input
+            value={form.contact}
+            onChange={(e) => setForm({ ...form, contact: e.target.value })}
+            placeholder="02-1234-5678"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>대기열</Label>
-          <Input type="number" value={form.queue} onChange={e => setForm({ ...form, queue: e.target.value })} />
+          <Input
+            type="number"
+            value={form.queue}
+            onChange={(e) => setForm({ ...form, queue: e.target.value })}
+          />
         </div>
       </div>
       <div className="space-y-1.5">
         <Label>주소</Label>
-        <Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="서울시 종로구..." />
+        <Input
+          value={form.address}
+          onChange={(e) => setForm({ ...form, address: e.target.value })}
+          placeholder="서울시 종로구..."
+        />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>위도</Label>
-          <Input value={form.latitude} onChange={e => setForm({ ...form, latitude: e.target.value })} placeholder="37.5795" />
+          <Input
+            value={form.latitude}
+            onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+            placeholder="37.5795"
+          />
         </div>
         <div className="space-y-1.5">
           <Label>경도</Label>
-          <Input value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} placeholder="126.9990" />
+          <Input
+            value={form.longitude}
+            onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+            placeholder="126.9990"
+          />
         </div>
       </div>
       <div className="space-y-1.5">
         <Label>전문과 (쉼표 구분)</Label>
-        <Input value={form.specialties} onChange={e => setForm({ ...form, specialties: e.target.value })} placeholder="응급의학, 외과, 내과" />
+        <Input
+          value={form.specialties}
+          onChange={(e) => setForm({ ...form, specialties: e.target.value })}
+          placeholder="응급의학, 외과, 내과"
+        />
       </div>
       <Button className="w-full min-h-[44px]" onClick={handleSubmit} disabled={saving}>
         <Save size={16} className="mr-2" />
-        {saving ? '저장 중...' : (hospital ? '수정' : '등록')}
+        {saving ? '저장 중...' : hospital ? '수정' : '등록'}
       </Button>
     </div>
   );

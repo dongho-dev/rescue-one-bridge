@@ -1,4 +1,4 @@
-import { Switch } from "../ui/switch";
+import { Switch } from '../ui/switch';
 import { Ambulance } from 'lucide-react';
 
 interface ParamedicHeaderProps {
@@ -17,16 +17,18 @@ export function ParamedicHeader({ isOnline, tracking, onStatusToggle }: Paramedi
             <span className="font-semibold text-lg">구급대원 대시보드</span>
           </div>
           <div className="flex items-center gap-3 ml-2">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              isOnline
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
-                : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
-            }`}>
-              <span className={`inline-block w-2.5 h-2.5 rounded-full ${
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 isOnline
-                  ? 'bg-green-500 animate-pulse'
-                  : 'bg-red-500'
-              }`} />
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+              }`}
+            >
+              <span
+                className={`inline-block w-2.5 h-2.5 rounded-full ${
+                  isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                }`}
+              />
               {isOnline ? '온라인' : '오프라인'}
             </div>
             <Switch

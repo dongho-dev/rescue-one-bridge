@@ -71,7 +71,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Verify HMAC signature to detect tampering
       const verified = verifyOAuthMeta(raw);
       if (!verified) {
-        if (import.meta.env.DEV) console.warn('OAuth signup meta signature verification failed — data discarded');
+        if (import.meta.env.DEV)
+          console.warn('OAuth signup meta signature verification failed — data discarded');
         return;
       }
       const { role, hospitalId } = verified as {
@@ -160,61 +161,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // getSession() and onAuthStateChange (Supabase recommended pattern).
     // The INITIAL_SESSION event fires once on setup with the current session,
     // eliminating the need for a separate getSession() call.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        try {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      try {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
 
-          if (newSession?.user) {
-            // On first sign-in via OAuth, apply any role/hospital the user
-            // selected on the signup page before the redirect.
-            if (event === 'SIGNED_IN') {
-              await applyOAuthSignupMeta(newSession.user.id);
-            }
-            await fetchProfile(newSession.user.id);
-          } else {
-            setProfile(null);
+        if (newSession?.user) {
+          // On first sign-in via OAuth, apply any role/hospital the user
+          // selected on the signup page before the redirect.
+          if (event === 'SIGNED_IN') {
+            await applyOAuthSignupMeta(newSession.user.id);
           }
-        } catch (err) {
-          if (import.meta.env.DEV) console.error('Error handling auth state change:', err);
+          await fetchProfile(newSession.user.id);
+        } else {
           setProfile(null);
-        } finally {
-          setLoading(false);
         }
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('Error handling auth state change:', err);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
-    );
+    });
 
     return () => {
       subscription.unsubscribe();
     };
   }, [fetchProfile, applyOAuthSignupMeta]);
 
-  const updateProfile = useCallback(async (data: { display_name?: string; phone?: string }): Promise<boolean> => {
-    if (!user) return false;
-    if (!supabase) {
-      // 데모 모드: 로컬 state만 업데이트
-      setProfile(prev => prev ? { ...prev, ...data } : prev);
-      return true;
-    }
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(data)
-        .eq('id', user.id);
-      if (error) {
-        if (import.meta.env.DEV) console.warn('Profile update failed:', error.message);
-        toast.error('프로필 업데이트에 실패했습니다.');
+  const updateProfile = useCallback(
+    async (data: { display_name?: string; phone?: string }): Promise<boolean> => {
+      if (!user) return false;
+      if (!supabase) {
+        // 데모 모드: 로컬 state만 업데이트
+        setProfile((prev) => (prev ? { ...prev, ...data } : prev));
+        return true;
+      }
+      try {
+        const { error } = await supabase.from('profiles').update(data).eq('id', user.id);
+        if (error) {
+          if (import.meta.env.DEV) console.warn('Profile update failed:', error.message);
+          toast.error('프로필 업데이트에 실패했습니다.');
+          return false;
+        }
+        setProfile((prev) => (prev ? { ...prev, ...data } : prev));
+        return true;
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('Unexpected error updating profile:', err);
+        toast.error('프로필 업데이트 중 오류가 발생했습니다.');
         return false;
       }
-      setProfile(prev => prev ? { ...prev, ...data } : prev);
-      return true;
-    } catch (err) {
-      if (import.meta.env.DEV) console.error('Unexpected error updating profile:', err);
-      toast.error('프로필 업데이트 중 오류가 발생했습니다.');
-      return false;
-    }
-  }, [user]);
+    },
+    [user],
+  );
 
   const signOut = useCallback(async () => {
     // Always force local cleanup regardless of server-side result
@@ -239,18 +240,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{
-      user, session, profile, loading, signOut, updateProfile,
-      isDemoMode: explicitDemoMode,
-      isEnvMissing,
-      switchDemoRole: explicitDemoMode ? () => {
-        setProfile(prev => prev ? {
-          ...prev,
-          role: prev.role === 'hospital_staff' ? 'paramedic' : 'hospital_staff',
-          hospital_id: prev.role === 'hospital_staff' ? null : 'demo-hospital',
-        } : prev);
-      } : undefined,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        profile,
+        loading,
+        signOut,
+        updateProfile,
+        isDemoMode: explicitDemoMode,
+        isEnvMissing,
+        switchDemoRole: explicitDemoMode
+          ? () => {
+              setProfile((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      role: prev.role === 'hospital_staff' ? 'paramedic' : 'hospital_staff',
+                      hospital_id: prev.role === 'hospital_staff' ? null : 'demo-hospital',
+                    }
+                  : prev,
+              );
+            }
+          : undefined,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -12,7 +12,14 @@ export type PatientStatus = 'waiting' | 'treating' | 'stable' | 'discharged';
 export type StaffRole = 'doctor' | 'nurse' | 'technician' | 'admin';
 export type StaffShift = 'day' | 'night' | 'evening';
 export type StaffStatus = 'on_duty' | 'off_duty' | 'break' | 'emergency';
-export type EquipmentType = 'monitor' | 'ventilator' | 'defibrillator' | 'xray' | 'ultrasound' | 'infusion' | 'other';
+export type EquipmentType =
+  | 'monitor'
+  | 'ventilator'
+  | 'defibrillator'
+  | 'xray'
+  | 'ultrasound'
+  | 'infusion'
+  | 'other';
 export type EquipmentStatus = 'operational' | 'maintenance' | 'error' | 'offline';
 export type RequestStatus = 'pending' | 'matched' | 'en_route' | 'completed' | 'cancelled';
 export type RequestPriority = 'emergency' | 'urgent' | 'normal';

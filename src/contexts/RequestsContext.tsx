@@ -19,11 +19,7 @@ const RequestsContext = createContext<RequestsContextType | null>(null);
 
 export function RequestsProvider({ children }: { children: React.ReactNode }) {
   const value = useRequests();
-  return (
-    <RequestsContext.Provider value={value}>
-      {children}
-    </RequestsContext.Provider>
-  );
+  return <RequestsContext.Provider value={value}>{children}</RequestsContext.Provider>;
 }
 
 export function useRequestsContext(): RequestsContextType {

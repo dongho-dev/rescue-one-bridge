@@ -1,8 +1,8 @@
 import { Loader2, Save } from 'lucide-react';
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../ui/sheet';
 
 interface ProfileEditSheetProps {
   open: boolean;
@@ -54,11 +54,7 @@ export function ProfileEditSheet({
               disabled={profileSaving}
             />
           </div>
-          <Button
-            className="w-full"
-            onClick={onSave}
-            disabled={profileSaving}
-          >
+          <Button className="w-full" onClick={onSave} disabled={profileSaving}>
             {profileSaving ? (
               <>
                 <Loader2 size={16} className="animate-spin mr-2" />

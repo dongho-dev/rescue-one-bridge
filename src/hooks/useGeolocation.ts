@@ -9,14 +9,12 @@ interface UseGeolocationReturn {
   position: GeoPosition | null;
   error: string | null;
   loading: boolean;
+  isFallback: boolean;
   refresh: () => void;
   tracking: boolean;
   startTracking: () => void;
   stopTracking: () => void;
 }
-
-// 서울 강남구 기본 좌표 (GPS 실패 시 폴백)
-const FALLBACK_POSITION: GeoPosition = { latitude: 37.4979, longitude: 127.0276 };
 
 const GEO_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
@@ -28,6 +26,7 @@ export function useGeolocation(): UseGeolocationReturn {
   const [position, setPosition] = useState<GeoPosition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFallback, setIsFallback] = useState(false);
   const [tracking, setTracking] = useState(false);
   const watchIdRef = useRef<number | null>(null);
 
@@ -38,13 +37,15 @@ export function useGeolocation(): UseGeolocationReturn {
       longitude: pos.coords.longitude,
     });
     setError(null);
+    setIsFallback(false);
     setLoading(false);
   }, []);
 
   const handleError = useCallback((err: GeolocationPositionError) => {
     console.warn('Geolocation error:', err.message);
     setError(err.message);
-    setPosition(FALLBACK_POSITION);
+    setPosition(null);
+    setIsFallback(true);
     setLoading(false);
   }, []);
 
@@ -52,7 +53,8 @@ export function useGeolocation(): UseGeolocationReturn {
   const refresh = useCallback(() => {
     if (!navigator.geolocation) {
       setError('Geolocation을 지원하지 않는 브라우저입니다.');
-      setPosition(FALLBACK_POSITION);
+      setPosition(null);
+      setIsFallback(true);
       setLoading(false);
       return;
     }
@@ -65,7 +67,8 @@ export function useGeolocation(): UseGeolocationReturn {
   const startTracking = useCallback(() => {
     if (!navigator.geolocation) {
       setError('Geolocation을 지원하지 않는 브라우저입니다.');
-      setPosition(FALLBACK_POSITION);
+      setPosition(null);
+      setIsFallback(true);
       setLoading(false);
       return;
     }
@@ -102,15 +105,17 @@ export function useGeolocation(): UseGeolocationReturn {
     };
   }, []);
 
-  return { position, error, loading, refresh, tracking, startTracking, stopTracking };
+  return { position, error, loading, isFallback, refresh, tracking, startTracking, stopTracking };
 }
 
 /**
  * Haversine formula: 두 GPS 좌표 간 거리(km) 계산
  */
 export function calculateDistanceKm(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
 ): number {
   const R = 6371;
   const dLat = toRad(lat2 - lat1);

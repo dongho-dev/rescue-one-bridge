@@ -30,7 +30,7 @@ export async function withRetry<T>(
         lastError = result;
         if (attempt < maxRetries) {
           const delay = resolvedBaseDelay * Math.pow(2, attempt) + Math.random() * 500;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
         continue;
       }
@@ -39,7 +39,7 @@ export async function withRetry<T>(
       lastError = err;
       if (attempt < maxRetries) {
         const delay = resolvedBaseDelay * Math.pow(2, attempt) + Math.random() * 500;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }

@@ -1,5 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts';
 import { TrendingUp } from 'lucide-react';
 
 interface HourlyLoadEntry {
@@ -50,7 +58,12 @@ export function HourlyLoadChart({ data }: HourlyLoadChartProps) {
               stroke="var(--chart-1)"
               strokeWidth={2.5}
               dot={{ r: 3, fill: 'var(--chart-1)', strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: 'var(--chart-1)', strokeWidth: 2, stroke: 'var(--background)' }}
+              activeDot={{
+                r: 5,
+                fill: 'var(--chart-1)',
+                strokeWidth: 2,
+                stroke: 'var(--background)',
+              }}
             />
           </LineChart>
         </ResponsiveContainer>

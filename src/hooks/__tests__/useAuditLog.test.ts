@@ -54,7 +54,7 @@ describe('useAuditLog', () => {
       expect.objectContaining({
         resource_id: null,
         metadata: {},
-      })
+      }),
     );
   });
 

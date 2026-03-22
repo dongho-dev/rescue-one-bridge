@@ -9,13 +9,7 @@ import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Separator } from '../ui/separator';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Building2, Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '../../utils/errorMessages';
@@ -119,10 +113,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const fetchHospitals = async () => {
     setLoadingHospitals(true);
     try {
-      const { data, error } = await supabase
-        .from('hospitals')
-        .select('id, name')
-        .order('name');
+      const { data, error } = await supabase.from('hospitals').select('id, name').order('name');
 
       if (error) {
         console.warn('Failed to fetch hospitals:', error.message);
@@ -259,9 +250,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   disabled={loading}
                   autoComplete="email"
                 />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
 
               {/* Password */}
@@ -366,9 +355,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                     </RadioGroup>
                   )}
                 />
-                {errors.role && (
-                  <p className="text-sm text-destructive">{errors.role.message}</p>
-                )}
+                {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
               </div>
 
               {/* Hospital Selection (only for hospital_staff) */}
@@ -386,7 +373,9 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                       >
                         <SelectTrigger id="hospital">
                           <SelectValue
-                            placeholder={loadingHospitals ? '병원 목록 로딩 중...' : '병원을 선택하세요'}
+                            placeholder={
+                              loadingHospitals ? '병원 목록 로딩 중...' : '병원을 선택하세요'
+                            }
                           />
                         </SelectTrigger>
                         <SelectContent>

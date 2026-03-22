@@ -1,12 +1,22 @@
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Label } from "../ui/label";
-import { Separator } from "../ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
-import { getRoleText } from "../../utils/statusHelpers";
-import type { Staff } from "@/types/database";
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
+import { Separator } from '../ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
+import { getRoleText } from '../../utils/statusHelpers';
+import type { Staff } from '@/types/database';
 
 interface StaffDetailDialogProps {
   staff: Staff | null;
@@ -35,7 +45,9 @@ export function StaffDetailDialog({
             <div className="space-y-6">
               {/* 기본 정보 */}
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">기본 정보</h4>
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  기본 정보
+                </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground text-sm">직원 ID</Label>
@@ -68,10 +80,14 @@ export function StaffDetailDialog({
 
               {/* 자격증 */}
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">자격증</h4>
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  자격증
+                </h4>
                 <div className="flex gap-2">
                   {staff.certifications.map((cert, index) => (
-                    <Badge key={index} variant="outline">{cert}</Badge>
+                    <Badge key={index} variant="outline">
+                      {cert}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -80,7 +96,9 @@ export function StaffDetailDialog({
 
               {/* 연락처 정보 */}
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">연락처</h4>
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  연락처
+                </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground text-sm">연락처</Label>
@@ -105,7 +123,10 @@ export function StaffDetailDialog({
 
               {/* 상태 변경 */}
               <div className="flex gap-2">
-                <Select defaultValue={staff.status} onValueChange={(value) => onStatusChange(staff.id, value)}>
+                <Select
+                  defaultValue={staff.status}
+                  onValueChange={(value) => onStatusChange(staff.id, value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -118,9 +139,7 @@ export function StaffDetailDialog({
                 </Select>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                      응급호출
-                    </Button>
+                    <Button variant="destructive">응급호출</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>

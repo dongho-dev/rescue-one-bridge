@@ -1,4 +1,4 @@
-import { InfoCard } from "../common/InfoCard";
+import { InfoCard } from '../common/InfoCard';
 import { Building2, Users, Clock, CheckCircle2 } from 'lucide-react';
 
 interface HospitalKPIsProps {
@@ -8,7 +8,12 @@ interface HospitalKPIsProps {
   todayProcessed: number;
 }
 
-export function HospitalKPIs({ availableBeds, erQueue, avgWaitTime, todayProcessed }: HospitalKPIsProps) {
+export function HospitalKPIs({
+  availableBeds,
+  erQueue,
+  avgWaitTime,
+  todayProcessed,
+}: HospitalKPIsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <InfoCard

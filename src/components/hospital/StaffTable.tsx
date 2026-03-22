@@ -1,10 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
-import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback } from '../ui/avatar';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
+import { toast } from 'sonner';
 import {
   getRoleText,
   getStaffStatusText,
@@ -13,8 +23,8 @@ import {
   getStaffStatusIcon,
   getRoleIcon,
   getAvatarBgClass,
-} from "../../utils/statusHelpers";
-import type { Staff } from "@/types/database";
+} from '../../utils/statusHelpers';
+import type { Staff } from '@/types/database';
 import { Eye, Edit, Shield, MapPin, Phone, Mail, Users } from 'lucide-react';
 
 interface StaffTableProps {
@@ -87,8 +97,17 @@ export function StaffTable({ filteredStaff, onViewDetails, onEmergencyCall }: St
                       <TableCell>{member.department}</TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <p>{member.shift_start} - {member.shift_end}</p>
-                          <p className="text-muted-foreground">{member.shift === 'day' ? '주간' : member.shift === 'night' ? '야간' : '저녁'}근무</p>
+                          <p>
+                            {member.shift_start} - {member.shift_end}
+                          </p>
+                          <p className="text-muted-foreground">
+                            {member.shift === 'day'
+                              ? '주간'
+                              : member.shift === 'night'
+                                ? '야간'
+                                : '저녁'}
+                            근무
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -100,7 +119,10 @@ export function StaffTable({ filteredStaff, onViewDetails, onEmergencyCall }: St
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <span aria-hidden="true">{getStaffStatusIcon(member.status)}</span>
-                          <Badge variant="outline" className={getStaffStatusBadgeClass(member.status)}>
+                          <Badge
+                            variant="outline"
+                            className={getStaffStatusBadgeClass(member.status)}
+                          >
                             {getStaffStatusText(member.status)}
                           </Badge>
                         </div>
@@ -119,10 +141,20 @@ export function StaffTable({ filteredStaff, onViewDetails, onEmergencyCall }: St
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => onViewDetails(member)} aria-label="상세보기">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onViewDetails(member)}
+                            aria-label="상세보기"
+                          >
                             <Eye size={14} />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => toast.info("추후 지원 예정입니다")} aria-label="직원 정보 수정">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toast.info('추후 지원 예정입니다')}
+                            aria-label="직원 정보 수정"
+                          >
                             <Edit size={14} />
                           </Button>
                           <AlertDialog>
@@ -135,7 +167,8 @@ export function StaffTable({ filteredStaff, onViewDetails, onEmergencyCall }: St
                               <AlertDialogHeader>
                                 <AlertDialogTitle>응급호출 확인</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  {member.name}에게 응급호출을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
+                                  {member.name}에게 응급호출을 발송하시겠습니까? 이 작업은 취소할 수
+                                  없습니다.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

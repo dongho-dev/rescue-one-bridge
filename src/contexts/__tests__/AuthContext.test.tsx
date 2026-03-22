@@ -66,14 +66,16 @@ describe('AuthContext', () => {
     mockFlags.isEnvMissing = false;
 
     // Default: onAuthStateChange captures the callback and returns a subscription
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => Promise<void>) => {
-      authCallback = cb;
-      return {
-        data: {
-          subscription: { unsubscribe: mockUnsubscribe },
-        },
-      };
-    });
+    mockOnAuthStateChange.mockImplementation(
+      (cb: (event: string, session: unknown) => Promise<void>) => {
+        authCallback = cb;
+        return {
+          data: {
+            subscription: { unsubscribe: mockUnsubscribe },
+          },
+        };
+      },
+    );
 
     // Default: profile fetch returns paramedic
     mockFrom.mockReturnValue({
