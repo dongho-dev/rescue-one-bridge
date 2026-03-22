@@ -58,6 +58,7 @@ export function useRequests(): UseRequestsResult {
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingQueueCount, setPendingQueueCount] = useState(() => getQueue().length);
+  const [retryCount, setRetryCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const flushingRef = useRef(false);
   const demoInitRef = useRef(false);
@@ -183,33 +184,45 @@ export function useRequests(): UseRequestsResult {
 
     const channel = supabase
       .channel(`requests:${filterColumn}:${filterValue}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'requests',
-        filter: `${filterColumn}=eq.${filterValue}`,
-      }, (payload) => {
-        const newReq = payload.new as Request;
-        setRequests(prev => [newReq, ...prev]);
-        if (profile.role === 'hospital_staff') {
-          toast.info('새로운 환자 이송 요청이 도착했습니다!');
-          notify('새 환자 이송 요청', {
-            body: `${newReq.patient_name || '환자'} · ${newReq.symptom} · 중증도 ${newReq.severity}/5`,
-            tag: `request-${newReq.id}`,
-          });
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'requests',
-        filter: `${filterColumn}=eq.${filterValue}`,
-      }, (payload) => {
-        const updated = payload.new as Request;
-        setRequests(prev => prev.map(r => r.id === updated.id ? updated : r));
-        if (profile.role === 'paramedic' && updated.status === 'matched') {
-          notify('병원 배정 완료', {
-            body: `${updated.distance_km ?? '?'}km · 예상 ${updated.eta_minutes ?? '?'}분`,
-            tag: `matched-${updated.id}`,
-          });
-        }
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'requests',
+          filter: `${filterColumn}=eq.${filterValue}`,
+        },
+        (payload) => {
+          const newReq = payload.new as Request;
+          setRequests((prev) => [newReq, ...prev]);
+          if (profile.role === 'hospital_staff') {
+            toast.info('새로운 환자 이송 요청이 도착했습니다!');
+            notify('새 환자 이송 요청', {
+              body: `${newReq.patient_name || '환자'} · ${newReq.symptom} · 중증도 ${newReq.severity}/5`,
+              tag: `request-${newReq.id}`,
+            });
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'requests',
+          filter: `${filterColumn}=eq.${filterValue}`,
+        },
+        (payload) => {
+          const updated = payload.new as Request;
+          setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+          if (profile.role === 'paramedic' && updated.status === 'matched') {
+            notify('병원 배정 완료', {
+              body: `${updated.distance_km ?? '?'}km · 예상 ${updated.eta_minutes ?? '?'}분`,
+              tag: `matched-${updated.id}`,
+            });
+          }
+        },
+      )
       .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
           setError(null);
@@ -224,7 +237,7 @@ export function useRequests(): UseRequestsResult {
               channelRef.current = null;
             }
             // re-subscribe by triggering effect re-run
-            fetchRequests();
+            setRetryCount((c) => c + 1);
           }, 30_000);
         }
       });
@@ -241,179 +254,216 @@ export function useRequests(): UseRequestsResult {
         channelRef.current = null;
       }
     };
-  }, [user, profile, notify, fetchRequests]);
+  }, [user, profile, notify, fetchRequests, retryCount]);
 
-  const updateRequestStatus = useCallback(async (requestId: string, status: RequestStatus) => {
-    setRequests(prev => prev.map(r =>
-      r.id === requestId ? { ...r, status, ...(status === 'matched' ? { matched_at: new Date().toISOString() } : {}) } : r
-    ));
+  const updateRequestStatus = useCallback(
+    async (requestId: string, status: RequestStatus) => {
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId
+            ? {
+                ...r,
+                status,
+                ...(status === 'matched' ? { matched_at: new Date().toISOString() } : {}),
+              }
+            : r,
+        ),
+      );
 
-    if (!supabase) return;
+      if (!supabase) return;
 
-    const updateData: Partial<Request> = { status };
-    if (status === 'matched') updateData.matched_at = new Date().toISOString();
-    if (status === 'completed') updateData.completed_at = new Date().toISOString();
+      const updateData: Partial<Request> = { status };
+      if (status === 'matched') updateData.matched_at = new Date().toISOString();
+      if (status === 'completed') updateData.completed_at = new Date().toISOString();
 
-    const { error } = await withRetry(
-      async () =>
-        await supabase
-          .from('requests')
-          .update(updateData)
-          .eq('id', requestId),
-      { maxRetries: 3, baseDelay: 1000, shouldRetry: supabaseShouldRetry },
-    );
+      const { error } = await withRetry(
+        async () => await supabase.from('requests').update(updateData).eq('id', requestId),
+        { maxRetries: 3, baseDelay: 1000, shouldRetry: supabaseShouldRetry },
+      );
 
-    if (error) {
-      toast.error(getUserFriendlyError(error.message));
-      await fetchRequests();
-    }
-  }, [fetchRequests]);
+      if (error) {
+        toast.error(getUserFriendlyError(error.message));
+        await fetchRequests();
+      }
+    },
+    [fetchRequests],
+  );
 
-  const createRequest = useCallback(async (data: CreateRequestData) => {
-    if (!user) {
-      toast.error('로그인이 필요합니다.');
-      return;
-    }
-
-    // Client-side validation
-    if (data.patient_age != null && (data.patient_age < 0 || data.patient_age > 150)) {
-      toast.error('나이는 0~150 사이의 숫자여야 합니다.');
-      return;
-    }
-    if (data.severity < 1 || data.severity > 5) {
-      toast.error('중증도는 1~5 사이의 값이어야 합니다.');
-      return;
-    }
-    if (data.patient_name && data.patient_name.trim().length > 100) {
-      toast.error('환자 이름은 100자 이내여야 합니다.');
-      return;
-    }
-
-    if (!supabase) {
-      // 데모 모드: 로컬 state에 요청 추가 + 가짜 매칭
-      const demoId = crypto.randomUUID();
-      const hospitals = ['서울대학교병원', '연세세브란스병원', '삼성서울병원', '아산병원'];
-      const hospitalName = hospitals[Math.floor(Math.random() * hospitals.length)];
-      const distanceKm = Math.round((Math.random() * 8 + 1) * 10) / 10;
-
-      const demoRequest: Request = {
-        id: demoId,
-        hospital_id: 'demo-hospital',
-        paramedic_id: user.id,
-        status: 'matched',
-        priority: data.priority,
-        severity: data.severity,
-        symptom: data.symptom,
-        patient_name: data.patient_name ?? null,
-        patient_age: data.patient_age ?? null,
-        patient_gender: data.patient_gender ?? null,
-        allergies: data.allergies ?? [],
-        vitals: (data.vitals ?? {}) as Request['vitals'],
-        distance_km: distanceKm,
-        eta_minutes: Math.max(5, Math.round(distanceKm * 3)),
-        location_text: data.location_text ?? null,
-        latitude: data.latitude ?? null,
-        longitude: data.longitude ?? null,
-        notes: data.notes ?? null,
-        requested_at: new Date().toISOString(),
-        matched_at: new Date().toISOString(),
-        completed_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      setRequests(prev => [demoRequest, ...prev]);
-      toast.success(`${hospitalName}에 매칭되었습니다! (${distanceKm}km)`);
-      return;
-    }
-
-    // 오프라인이면 로컬 큐에 저장
-    if (!navigator.onLine) {
-      enqueue(data, user.id);
-      setPendingQueueCount(getQueue().length);
-      toast.info('오프라인 상태입니다. 요청이 로컬에 저장되었습니다. 네트워크 복구 시 자동 전송됩니다.');
-      return;
-    }
-
-    const { data: inserted, error } = await withRetry(
-      async () =>
-        await supabase.from('requests').insert({
-          paramedic_id: user.id,
-          ...data,
-        }).select('id').single(),
-      { maxRetries: 3, baseDelay: 1000, shouldRetry: supabaseShouldRetry },
-    );
-
-    if (error) {
-      // 네트워크 오류면 큐에 저장
-      if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed')) {
-        enqueue(data, user.id);
-        setPendingQueueCount(getQueue().length);
-        toast.info('네트워크 오류로 요청이 로컬에 저장되었습니다. 복구 시 자동 전송됩니다.');
+  const createRequest = useCallback(
+    async (data: CreateRequestData) => {
+      if (!user) {
+        toast.error('로그인이 필요합니다.');
         return;
       }
-      toast.error(getUserFriendlyError(error.message));
-      throw error;
-    }
 
-    // 자동 매칭 시도
-    if (inserted?.id) {
-      try {
-        const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
-          p_request_id: inserted.id,
-        });
-        if (matchResult?.matched) {
-          toast.success(`${matchResult.hospital_name}에 매칭되었습니다! (${matchResult.distance_km}km)`);
-        } else {
-          toast.info('요청이 전송되었습니다. 수용 가능한 병원을 찾고 있습니다.');
+      // Client-side validation
+      if (data.patient_age != null && (data.patient_age < 0 || data.patient_age > 150)) {
+        toast.error('나이는 0~150 사이의 숫자여야 합니다.');
+        return;
+      }
+      if (data.severity < 1 || data.severity > 5) {
+        toast.error('중증도는 1~5 사이의 값이어야 합니다.');
+        return;
+      }
+      if (data.patient_name && data.patient_name.trim().length > 100) {
+        toast.error('환자 이름은 100자 이내여야 합니다.');
+        return;
+      }
+
+      if (!supabase) {
+        // 데모 모드: 로컬 state에 요청 추가 + 가짜 매칭
+        const demoId = crypto.randomUUID();
+        const hospitals = ['서울대학교병원', '연세세브란스병원', '삼성서울병원', '아산병원'];
+        const hospitalName = hospitals[Math.floor(Math.random() * hospitals.length)];
+        const distanceKm = Math.round((Math.random() * 8 + 1) * 10) / 10;
+
+        const demoRequest: Request = {
+          id: demoId,
+          hospital_id: 'demo-hospital',
+          paramedic_id: user.id,
+          status: 'matched',
+          priority: data.priority,
+          severity: data.severity,
+          symptom: data.symptom,
+          patient_name: data.patient_name ?? null,
+          patient_age: data.patient_age ?? null,
+          patient_gender: data.patient_gender ?? null,
+          allergies: data.allergies ?? [],
+          vitals: (data.vitals ?? {}) as Request['vitals'],
+          distance_km: distanceKm,
+          eta_minutes: Math.max(5, Math.round(distanceKm * 3)),
+          location_text: data.location_text ?? null,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
+          notes: data.notes ?? null,
+          requested_at: new Date().toISOString(),
+          matched_at: new Date().toISOString(),
+          completed_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        setRequests((prev) => [demoRequest, ...prev]);
+        toast.success(`${hospitalName}에 매칭되었습니다! (${distanceKm}km)`);
+        return;
+      }
+
+      // 오프라인이면 로컬 큐에 저장
+      if (!navigator.onLine) {
+        enqueue(data, user.id);
+        setPendingQueueCount(getQueue().length);
+        toast.info(
+          '오프라인 상태입니다. 요청이 로컬에 저장되었습니다. 네트워크 복구 시 자동 전송됩니다.',
+        );
+        return;
+      }
+
+      const { data: inserted, error } = await withRetry(
+        async () =>
+          await supabase
+            .from('requests')
+            .insert({
+              paramedic_id: user.id,
+              ...data,
+            })
+            .select('id')
+            .single(),
+        { maxRetries: 3, baseDelay: 1000, shouldRetry: supabaseShouldRetry },
+      );
+
+      if (error) {
+        // 네트워크 오류면 큐에 저장
+        if (
+          error.message.includes('fetch') ||
+          error.message.includes('network') ||
+          error.message.includes('Failed')
+        ) {
+          enqueue(data, user.id);
+          setPendingQueueCount(getQueue().length);
+          toast.info('네트워크 오류로 요청이 로컬에 저장되었습니다. 복구 시 자동 전송됩니다.');
+          return;
         }
-      } catch {
-        // RPC 미구성(데모 등) 시 조용히 넘어감
+        toast.error(getUserFriendlyError(error.message));
+        throw error;
+      }
+
+      // 자동 매칭 시도
+      if (inserted?.id) {
+        try {
+          const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
+            p_request_id: inserted.id,
+          });
+          if (matchResult?.matched) {
+            toast.success(
+              `${matchResult.hospital_name}에 매칭되었습니다! (${matchResult.distance_km}km)`,
+            );
+          } else {
+            toast.info('요청이 전송되었습니다. 수용 가능한 병원을 찾고 있습니다.');
+          }
+        } catch {
+          // RPC 미구성(데모 등) 시 조용히 넘어감
+          toast.success('요청이 병원으로 전송되었습니다!');
+        }
+      } else {
         toast.success('요청이 병원으로 전송되었습니다!');
       }
-    } else {
-      toast.success('요청이 병원으로 전송되었습니다!');
-    }
 
-    await fetchRequests();
-  }, [user, fetchRequests]);
-
-  const rejectRequest = useCallback(async (requestId: string) => {
-    // Optimistic update: remove from current hospital's list
-    setRequests(prev => prev.filter(r => r.id !== requestId));
-
-    if (!supabase) return;
-
-    // 1. Set status to pending so the RPC can process it
-    const { error } = await supabase
-      .from('requests')
-      .update({ status: 'pending' as RequestStatus })
-      .eq('id', requestId);
-
-    if (error) {
-      toast.error(getUserFriendlyError(error.message));
       await fetchRequests();
-      return;
-    }
+    },
+    [user, fetchRequests],
+  );
 
-    // 2. RPC handles hospital_id clearing + re-match atomically
-    // hospital_staff is now authorized to call this RPC
-    try {
-      const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
-        p_request_id: requestId,
-      });
-      if (matchResult?.matched) {
-        toast.success(`${matchResult.hospital_name}에 재배정되었습니다! (${matchResult.distance_km}km)`);
-      } else {
-        toast.warning('수용 가능한 병원이 없습니다');
+  const rejectRequest = useCallback(
+    async (requestId: string) => {
+      // Optimistic update: remove from current hospital's list
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+
+      if (!supabase) return;
+
+      // 1. Set status to pending so the RPC can process it
+      const { error } = await supabase
+        .from('requests')
+        .update({ status: 'pending' as RequestStatus })
+        .eq('id', requestId);
+
+      if (error) {
+        toast.error(getUserFriendlyError(error.message));
+        await fetchRequests();
+        return;
       }
-    } catch {
-      // RPC not configured (demo mode etc.) — silently skip
-      toast.info('요청이 거절되었습니다. 다른 병원을 찾고 있습니다.');
-    }
 
-    await fetchRequests();
-  }, [fetchRequests]);
+      // 2. RPC handles hospital_id clearing + re-match atomically
+      // hospital_staff is now authorized to call this RPC
+      try {
+        const { data: matchResult } = await supabase.rpc('match_hospital_for_request', {
+          p_request_id: requestId,
+        });
+        if (matchResult?.matched) {
+          toast.success(
+            `${matchResult.hospital_name}에 재배정되었습니다! (${matchResult.distance_km}km)`,
+          );
+        } else {
+          toast.warning('수용 가능한 병원이 없습니다');
+        }
+      } catch {
+        // RPC not configured (demo mode etc.) — silently skip
+        toast.info('요청이 거절되었습니다. 다른 병원을 찾고 있습니다.');
+      }
 
-  return { requests, loading, error, isOnline, pendingQueueCount, refetch: fetchRequests, updateRequestStatus, createRequest, rejectRequest };
+      await fetchRequests();
+    },
+    [fetchRequests],
+  );
+
+  return {
+    requests,
+    loading,
+    error,
+    isOnline,
+    pendingQueueCount,
+    refetch: fetchRequests,
+    updateRequestStatus,
+    createRequest,
+    rejectRequest,
+  };
 }
