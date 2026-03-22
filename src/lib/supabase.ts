@@ -3,13 +3,13 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const isDemoModeEnv = import.meta.env.VITE_DEMO_MODE === 'true';
-const isProduction = import.meta.env.PROD === true;
+const isProduction = import.meta.env.PROD === true && import.meta.env.MODE !== 'test';
 
 /** True when env vars are missing and demo mode is NOT explicitly enabled */
 export const isEnvMissing = (!supabaseUrl || !supabaseAnonKey) && !isDemoModeEnv;
 
 /** True only when VITE_DEMO_MODE=true is explicitly set and Supabase is not configured.
- *  Blocked in production builds for safety. */
+ *  Blocked in production builds for safety (test mode is exempt). */
 export const explicitDemoMode = isDemoModeEnv && (!supabaseUrl || !supabaseAnonKey) && !isProduction;
 
 let _supabase: SupabaseClient | null = null;
