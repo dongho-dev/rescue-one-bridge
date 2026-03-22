@@ -82,8 +82,11 @@ export function PatientRequest() {
   // GPS 좌표 → 주소 텍스트 (reverse geocoding via Nominatim)
   useEffect(() => {
     if (!position) return;
+    const controller = new AbortController();
     const { latitude, longitude } = position;
-    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ko`)
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=ko`, {
+      signal: controller.signal,
+    })
       .then(r => r.json())
       .then(data => {
         if (data.display_name) {
@@ -91,7 +94,11 @@ export function PatientRequest() {
           setCurrentLocation(parts.reverse().join(' '));
         }
       })
-      .catch(() => setCurrentLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`));
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        setCurrentLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+      });
+    return () => controller.abort();
   }, [position]);
 
   // 새 환자 폼 상태

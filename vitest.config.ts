@@ -20,6 +20,12 @@ export default defineConfig({
         'src/components/ui/**',
         'src/vite-env.d.ts',
       ],
+      thresholds: {
+        lines: 10,
+        functions: 40,
+        branches: 60,
+        statements: 10,
+      },
     },
   },
   resolve: {
