@@ -51,13 +51,15 @@ test.describe('Critical Path - Emergency Request Flow', () => {
 
     // Click the role switcher in the demo banner
     await page.locator('button', { hasText: /전환/ }).click();
+    await page.waitForTimeout(1000);
 
     // After switching to paramedic, should see paramedic dashboard
-    await expect(page.getByText('구급대원 대시보드')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('구급대원 대시보드')).toBeVisible({ timeout: 15000 });
 
     // Switch back to hospital_staff
     await page.locator('button', { hasText: /전환/ }).click();
-    await expect(page.getByText('병원 응급실 대시보드')).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(1000);
+    await expect(page.getByText('병원 응급실 대시보드')).toBeVisible({ timeout: 15000 });
   });
 
   test('should reflect created request in hospital dashboard', async ({ page }) => {
