@@ -120,8 +120,8 @@ export function IncomingRequestsTable({
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">
-                      {request.distance_km}km /{' '}
-                      <span className="font-medium">{request.eta_minutes}분</span>
+                      {request.distance_km ?? '-'}km /{' '}
+                      <span className="font-medium">{request.eta_minutes ?? '-'}분</span>
                     </span>
                   </TableCell>
                   <TableCell>

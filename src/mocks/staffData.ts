@@ -1,8 +1,6 @@
 import type { Staff } from '@/types/database';
 
-export type StaffMember = Staff;
-
-export const mockStaff: StaffMember[] = [
+export const mockStaff: Staff[] = [
   {
     id: 'DOC001',
     hospital_id: '',

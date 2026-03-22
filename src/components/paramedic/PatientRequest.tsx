@@ -28,7 +28,14 @@ const EMPTY_FORM: NewPatientFormState = {
   condition: '',
   severity: '',
   symptoms: '',
-  vitals: { consciousness: '', bloodPressure: '', pulse: '', respiration: '', temperature: '' },
+  vitals: {
+    consciousness: '',
+    bloodPressure: '',
+    pulse: '',
+    respiration: '',
+    temperature: '',
+    oxygenSaturation: '',
+  },
 };
 
 export function PatientRequest() {
@@ -182,6 +189,7 @@ export function PatientRequest() {
                 temperature: Number(newPatientForm.vitals.temperature) || undefined,
                 consciousness: newPatientForm.vitals.consciousness || undefined,
                 respiration: Number(newPatientForm.vitals.respiration) || undefined,
+                oxygen_saturation: Number(newPatientForm.vitals.oxygenSaturation) || undefined,
               }
             : undefined,
         notes: isQuickEmergency

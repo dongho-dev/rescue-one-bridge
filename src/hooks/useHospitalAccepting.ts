@@ -21,7 +21,9 @@ export function useHospitalAccepting(): UseHospitalAcceptingReturn {
 
   const [accepting, setAcceptingState] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch initial value
   useEffect(() => {
@@ -71,17 +73,33 @@ export function useHospitalAccepting(): UseHospitalAcceptingReturn {
           setAcceptingState(updated.accepting);
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          toast.error('실시간 연결이 끊어졌습니다. 재연결을 시도합니다.');
+          if (import.meta.env.DEV) console.warn('[accepting] channel error:', status, err);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+            setRetryCount((c) => c + 1);
+          }, 30_000);
+        }
+      });
 
     channelRef.current = channel;
 
     return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [hospitalId]);
+  }, [hospitalId, retryCount]);
 
   // Update accepting in DB
   const setAccepting = useCallback(
@@ -94,18 +112,24 @@ export function useHospitalAccepting(): UseHospitalAcceptingReturn {
       const prev = accepting;
       setAcceptingState(value);
 
-      const { error } = await supabase
-        .from('hospitals')
-        .update({ accepting: value })
-        .eq('id', hospitalId);
+      try {
+        const { error } = await supabase
+          .from('hospitals')
+          .update({ accepting: value })
+          .eq('id', hospitalId);
 
-      if (error) {
+        if (error) {
+          toast.error('수용 상태 업데이트에 실패했습니다');
+          setAcceptingState(prev);
+          return false;
+        }
+
+        return true;
+      } catch {
         toast.error('수용 상태 업데이트에 실패했습니다');
         setAcceptingState(prev);
         return false;
       }
-
-      return true;
     },
     [hospitalId, accepting],
   );
