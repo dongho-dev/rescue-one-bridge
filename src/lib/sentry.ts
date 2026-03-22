@@ -10,6 +10,14 @@ export const PHI_KEYS = new Set([
   'phone', 'email', 'emergency_contact', 'contact',
 ]);
 
+// Regex patterns for PHI that may appear in breadcrumb messages or free text
+const PHI_PATTERNS: RegExp[] = [
+  /\b\d{2,3}-\d{3,4}-\d{4}\b/g,           // Korean phone numbers
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email addresses
+  /\b\d{6}-[1-4]\d{6}\b/g,                  // Korean resident registration number
+  /patient[_\s]?name\s*[:=]\s*\S+/gi,       // patient_name in text
+];
+
 const MAX_SCRUB_DEPTH = 5;
 
 /**
@@ -32,6 +40,17 @@ export function scrubDeep(
       scrubDeep(obj[key] as Record<string, unknown>, depth + 1, seen);
     }
   }
+}
+
+/**
+ * Scrub PHI patterns from a string (e.g., breadcrumb messages).
+ */
+export function scrubString(str: string): string {
+  let result = str;
+  for (const pattern of PHI_PATTERNS) {
+    result = result.replace(pattern, '[REDACTED]');
+  }
+  return result;
 }
 
 /**
@@ -85,11 +104,14 @@ export function initSentry() {
         scrubDeep(event.extra as Record<string, unknown>);
       }
 
-      // Scrub PHI from breadcrumb data (recursive)
+      // Scrub PHI from breadcrumb data and messages (recursive)
       if (event.breadcrumbs) {
         for (const crumb of event.breadcrumbs) {
           if (crumb.data) {
             scrubDeep(crumb.data as Record<string, unknown>);
+          }
+          if (crumb.message) {
+            crumb.message = scrubString(crumb.message);
           }
         }
       }

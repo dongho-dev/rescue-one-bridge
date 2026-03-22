@@ -93,12 +93,14 @@ describe('offlineQueue', () => {
       expect(queue[0].data.location_text).toBeUndefined();
     });
 
-    it('preserves symptom and coordinates', () => {
-      enqueue(makeRequest({ symptom: '호흡곤란', latitude: 37.5, longitude: 127.0 }), 'user-1');
+    it('preserves symptom but strips coordinates and patient demographics', () => {
+      enqueue(makeRequest({ symptom: '호흡곤란', latitude: 37.5, longitude: 127.0, patient_age: 45, patient_gender: 'male' }), 'user-1');
       const queue = getQueue();
       expect(queue[0].data.symptom).toBe('호흡곤란');
-      expect(queue[0].data.latitude).toBe(37.5);
-      expect(queue[0].data.longitude).toBe(127.0);
+      expect(queue[0].data.latitude).toBeUndefined();
+      expect(queue[0].data.longitude).toBeUndefined();
+      expect(queue[0].data.patient_age).toBeUndefined();
+      expect(queue[0].data.patient_gender).toBeUndefined();
     });
 
     it('handles missing patient_name', () => {

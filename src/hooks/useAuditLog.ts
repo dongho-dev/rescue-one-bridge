@@ -17,16 +17,19 @@ export function useAuditLog() {
     if (!user || !supabase) return;
 
     try {
-      await supabase.from('audit_logs').insert({
+      const { error } = await supabase.from('audit_logs').insert({
         user_id: user.id,
         action,
         resource_type: resourceType,
         resource_id: resourceId ?? null,
         metadata: metadata ?? {},
       });
+      if (error) {
+        if (import.meta.env.DEV) console.warn('[audit] insert failed:', error.message);
+      }
     } catch {
       // 감사 로그 실패가 메인 플로우를 막아서는 안 됨
-      console.warn('[audit] log failed');
+      if (import.meta.env.DEV) console.warn('[audit] log failed');
     }
   }, [user]);
 
