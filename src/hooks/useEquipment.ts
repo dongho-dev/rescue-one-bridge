@@ -11,6 +11,7 @@ export function useEquipment() {
     table: 'equipment',
     fallback: mockEquipment,
     realtime: true,
+    columns: 'id, name, status, hospital_id, type, last_maintenance',
   });
 
   const updateEquipmentStatus = useCallback(async (equipmentId: string, status: EquipmentStatus) => {

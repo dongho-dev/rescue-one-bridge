@@ -12,6 +12,8 @@ interface UseSupabaseQueryOptions<T> {
   realtime?: boolean;
   /** Override hospital_id filter (default: from auth profile) */
   hospitalId?: string | null;
+  /** Supabase PostgREST select columns (default: '*') */
+  columns?: string;
 }
 
 interface UseSupabaseQueryResult<T> {
@@ -33,6 +35,7 @@ export function useSupabaseQuery<T extends { id: string }>({
   enabled = true,
   realtime = false,
   hospitalId: overrideHospitalId,
+  columns = '*',
 }: UseSupabaseQueryOptions<T>): UseSupabaseQueryResult<T> {
   const { profile } = useAuth();
   const hospitalId = overrideHospitalId ?? profile?.hospital_id;
@@ -62,7 +65,7 @@ export function useSupabaseQuery<T extends { id: string }>({
     try {
       const { data: rows, error: fetchError } = await supabase
         .from(table)
-        .select('*')
+        .select(columns)
         .eq('hospital_id', hospitalId);
 
       if (fetchError) {
@@ -70,7 +73,7 @@ export function useSupabaseQuery<T extends { id: string }>({
         setError(fetchError.message);
         setData(fallback);
       } else {
-        setData((rows ?? []) as T[]);
+        setData((rows ?? []) as unknown as T[]);
       }
     } catch (err) {
       console.error(`[${table}] unexpected error:`, err);
@@ -79,7 +82,7 @@ export function useSupabaseQuery<T extends { id: string }>({
     } finally {
       setLoading(false);
     }
-  }, [table, hospitalId, enabled, fallback]);
+  }, [table, hospitalId, enabled, fallback, columns]);
 
   useEffect(() => {
     fetchData();
