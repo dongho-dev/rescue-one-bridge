@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { InfoCard } from "../common/InfoCard";
 import { AmbulanceMap } from "../common/AmbulanceMap";
-import { useRequests } from "@/hooks/useRequests";
+import { useRequestsContext } from "@/contexts/RequestsContext";
 import { useBeds } from "@/hooks/useBeds";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useHospitalAccepting } from "@/hooks/useHospitalAccepting";
@@ -37,7 +37,7 @@ export function HospitalDashboard() {
   const { accepting, setAccepting: updateAccepting } = useHospitalAccepting();
   const [acceptingConfirmOpen, setAcceptingConfirmOpen] = useState(false);
   const [pendingAccepting, setPendingAccepting] = useState(true);
-  const { requests: dbRequests, loading, error, refetch, rejectRequest } = useRequests();
+  const { requests: dbRequests, loading, error, refetch, rejectRequest } = useRequestsContext();
   const { beds } = useBeds();
   const [selectedSeverity, setSelectedSeverity] = useState('all');
 

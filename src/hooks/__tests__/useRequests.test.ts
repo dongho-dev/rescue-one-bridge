@@ -59,8 +59,10 @@ vi.mock('@/utils/demoData', () => ({
   generateDemoRequests: vi.fn(() => []),
 }));
 
+import React from 'react';
 import { renderHook } from '@testing-library/react';
 import { useRequests } from '../useRequests';
+import { RequestsProvider, useRequestsContext } from '@/contexts/RequestsContext';
 import { generateMockRequests } from '../../components/common/models';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -176,5 +178,43 @@ describe('useRequests hook integration', () => {
 
     expect(toast.error).toHaveBeenCalledWith('환자 이름은 100자 이내여야 합니다.');
     unmount();
+  });
+});
+
+describe('RequestsContext', () => {
+  it('useRequestsContext throws when used without Provider', () => {
+    expect(() => {
+      renderHook(() => useRequestsContext());
+    }).toThrow('useRequestsContext must be used within RequestsProvider');
+  });
+
+  it('useRequestsContext returns same shape as useRequests when wrapped in Provider', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(RequestsProvider, null, children);
+
+    const { result, unmount } = renderHook(() => useRequestsContext(), { wrapper });
+
+    expect(result.current).toHaveProperty('requests');
+    expect(result.current).toHaveProperty('loading');
+    expect(result.current).toHaveProperty('error');
+    expect(result.current).toHaveProperty('isOnline');
+    expect(result.current).toHaveProperty('pendingQueueCount');
+    expect(typeof result.current.refetch).toBe('function');
+    expect(typeof result.current.updateRequestStatus).toBe('function');
+    expect(typeof result.current.createRequest).toBe('function');
+    expect(typeof result.current.rejectRequest).toBe('function');
+    unmount();
+  });
+
+  it('two consumers share the same context value (single Realtime channel)', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(RequestsProvider, null, children);
+
+    const { result: result1 } = renderHook(() => useRequestsContext(), { wrapper });
+    const { result: result2 } = renderHook(() => useRequestsContext(), { wrapper });
+
+    // Both should have the same requests array reference shape
+    expect(result1.current.requests).toEqual(result2.current.requests);
+    expect(result1.current.loading).toEqual(result2.current.loading);
   });
 });

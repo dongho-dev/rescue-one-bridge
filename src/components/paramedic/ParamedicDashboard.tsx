@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { InfoCard } from "../common/InfoCard";
 import { AmbulanceMap } from "../common/AmbulanceMap";
-import { useRequests } from "@/hooks/useRequests";
+import { useRequestsContext } from "@/contexts/RequestsContext";
 import { useHospitalAvailability } from "@/hooks/useHospitalAvailability";
 import { useGeolocation, calculateDistanceKm } from "@/hooks/useGeolocation";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -37,7 +37,7 @@ export function ParamedicDashboard() {
   const [isOnline, setIsOnline] = useState(true);
   const [showAllRequests, setShowAllRequests] = useState(false);
   const { hospitals: dbHospitals, loading: hospitalsLoading, error: hospitalsError, refetch: refetchHospitals } = useHospitalAvailability();
-  const { requests: dbRequests, loading: requestsLoading, error: requestsError, updateRequestStatus } = useRequests();
+  const { requests: dbRequests, loading: requestsLoading, error: requestsError, updateRequestStatus } = useRequestsContext();
   const { position, tracking, startTracking, stopTracking } = useGeolocation();
   const wakeLock = useWakeLock();
   const rawHospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();

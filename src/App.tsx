@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from "./components/theme/ThemeProvider";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { RequestsProvider } from "./contexts/RequestsContext";
 import type { UserRole } from "./types/database";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
@@ -118,7 +119,9 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="rescue-one-theme">
       <AuthProvider>
-        <AuthGate />
+        <RequestsProvider>
+          <AuthGate />
+        </RequestsProvider>
       </AuthProvider>
       <Toaster />
     </ThemeProvider>
