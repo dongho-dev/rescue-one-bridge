@@ -51,6 +51,16 @@ export function useLocationSharing(
           console.warn('[location] update failed:', error.message);
         } else {
           errorCountRef.current = 0;
+
+          // 위치 이력 INSERT (감사/경로 재현용, fire-and-forget)
+          supabase
+            .from('request_locations')
+            .insert({
+              request_id: requestId,
+              latitude: pos.latitude,
+              longitude: pos.longitude,
+            })
+            .then();
         }
 
         if (errorCountRef.current >= MAX_CONSECUTIVE_ERRORS) {
