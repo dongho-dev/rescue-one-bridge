@@ -35,26 +35,27 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
     }
 
     setLoading(true);
-    supabase
-      .from('messages')
-      .select('*')
-      .eq('request_id', requestId)
-      .order('created_at', { ascending: true })
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('request_id', requestId)
+          .order('created_at', { ascending: true });
+
         if (error) {
           console.warn('[messages] fetch failed:', error.message);
           setMessages([]);
         } else {
           setMessages((data ?? []) as Message[]);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('[messages] unexpected error:', err);
         setMessages([]);
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    })();
   }, [requestId]);
 
   // 실시간 구독
