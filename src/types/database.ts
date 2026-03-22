@@ -24,6 +24,8 @@ export interface PatientVitals {
   blood_pressure?: string;
   temperature?: number;
   oxygen_saturation?: number;
+  consciousness?: string;
+  respiration?: number;
 }
 
 // -- TABLE ROW TYPES --

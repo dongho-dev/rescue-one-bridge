@@ -183,6 +183,8 @@ export function PatientRequest() {
           blood_pressure: newPatientForm.vitals.bloodPressure || undefined,
           heart_rate: Number(newPatientForm.vitals.pulse) || undefined,
           temperature: Number(newPatientForm.vitals.temperature) || undefined,
+          consciousness: newPatientForm.vitals.consciousness || undefined,
+          respiration: Number(newPatientForm.vitals.respiration) || undefined,
         } : undefined,
         notes: isQuickEmergency ? undefined : (isNewPatient ? newPatientForm.symptoms || undefined : (additionalNotes || undefined)),
         location_text: currentLocation,

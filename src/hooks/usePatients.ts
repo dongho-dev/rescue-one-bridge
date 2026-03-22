@@ -14,11 +14,19 @@ export function usePatients() {
   });
 
   const updatePatientStatus = useCallback(async (patientId: string, status: PatientStatus) => {
-    setData(prev => prev.map(p => p.id === patientId ? { ...p, status } : p));
+    const discharge_time = status === 'discharged' ? new Date().toISOString() : undefined;
+    setData(prev => prev.map(p => p.id === patientId ? { ...p, status, ...(discharge_time ? { discharge_time } : {}) } : p));
+
+    if (!supabase) return;
+
+    const updatePayload: Record<string, unknown> = { status };
+    if (discharge_time) {
+      updatePayload.discharge_time = discharge_time;
+    }
 
     const { error } = await supabase
       .from('patients')
-      .update({ status })
+      .update(updatePayload)
       .eq('id', patientId);
 
     if (error) {

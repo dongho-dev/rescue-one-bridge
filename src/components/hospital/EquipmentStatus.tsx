@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -71,6 +71,22 @@ export function EquipmentStatus() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // 배터리 부족 알림 추적
+  const notifiedBatteryIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    equipment.forEach((item) => {
+      if (item.battery_level != null && item.battery_level < 20) {
+        if (!notifiedBatteryIdsRef.current.has(item.id)) {
+          notifiedBatteryIdsRef.current.add(item.id);
+          toast.warning(`${item.name} 배터리가 ${item.battery_level}%로 부족합니다. 충전이 필요합니다.`);
+        }
+      } else if (item.battery_level != null && item.battery_level >= 20) {
+        notifiedBatteryIdsRef.current.delete(item.id);
+      }
+    });
+  }, [equipment]);
 
   const filteredEquipment = useMemo(() => equipment.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
