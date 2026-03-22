@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -17,7 +20,45 @@ import { Building2, Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '../../utils/errorMessages';
 import { signOAuthMeta } from '../../utils/oauthMetaSigning';
-import type { UserRole } from '../../contexts/AuthContext';
+
+const signupSchema = z
+  .object({
+    displayName: z.string().min(2, '이름은 2자 이상').max(50, '이름은 50자 이하'),
+    email: z.string().email('올바른 이메일을 입력해주세요.'),
+    password: z
+      .string()
+      .min(8, '비밀번호는 8자 이상이어야 합니다.')
+      .superRefine((val, ctx) => {
+        let kinds = 0;
+        if (/[A-Z]/.test(val)) kinds++;
+        if (/[0-9]/.test(val)) kinds++;
+        if (/[^A-Za-z0-9]/.test(val)) kinds++;
+        if (kinds < 2) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: '대문자, 숫자, 특수문자 중 2종 이상을 포함해야 합니다.',
+          });
+        }
+      }),
+    confirmPassword: z.string(),
+    role: z.enum(['hospital_staff', 'paramedic']),
+    hospitalId: z.string().optional(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: '비밀번호가 일치하지 않습니다.',
+    path: ['confirmPassword'],
+  })
+  .superRefine((d, ctx) => {
+    if (d.role === 'hospital_staff' && !d.hospitalId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '소속 병원을 선택해주세요.',
+        path: ['hospitalId'],
+      });
+    }
+  });
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 interface SignupPageProps {
   onSwitchToLogin: () => void;
@@ -29,15 +70,27 @@ interface Hospital {
 }
 
 export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<UserRole>('hospital_staff');
-  const [hospitalId, setHospitalId] = useState<string>('');
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingHospitals, setLoadingHospitals] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      role: 'hospital_staff',
+      hospitalId: '',
+    },
+  });
+
+  const role = watch('role');
+  const password = watch('password');
+  const hospitalId = watch('hospitalId');
 
   // 비밀번호 강도 계산
   const passwordStrength = (() => {
@@ -53,14 +106,13 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   })();
 
   const passwordStrengthLabel = ['', '약함', '보통', '강함'][passwordStrength] ?? '';
-  const passwordStrengthColor = ['', 'bg-red-500', 'bg-amber-500', 'bg-green-500'][passwordStrength] ?? '';
+  const passwordStrengthColor =
+    ['', 'bg-red-500', 'bg-amber-500', 'bg-green-500'][passwordStrength] ?? '';
 
   // Fetch hospitals when role is hospital_staff
   useEffect(() => {
     if (role === 'hospital_staff') {
       fetchHospitals();
-    } else {
-      setHospitalId('');
     }
   }, [role]);
 
@@ -86,56 +138,18 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email || !password || !displayName) {
-      toast.error('모든 필수 항목을 입력해주세요.');
-      return;
-    }
-
-    if (displayName.trim().length < 2 || displayName.trim().length > 50) {
-      toast.error('이름은 2~50자 사이여야 합니다.');
-      return;
-    }
-
-    if (password.length < 8) {
-      toast.error('비밀번호는 8자 이상이어야 합니다.');
-      return;
-    }
-
-    {
-      let kinds = 0;
-      if (/[A-Z]/.test(password)) kinds++;
-      if (/[0-9]/.test(password)) kinds++;
-      if (/[^A-Za-z0-9]/.test(password)) kinds++;
-      if (kinds < 2) {
-        toast.error('비밀번호에 대문자, 숫자, 특수문자 중 2종 이상을 포함해주세요.');
-        return;
-      }
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
-    if (role === 'hospital_staff' && !hospitalId && hospitals.length > 0) {
-      toast.error('소속 병원을 선택해주세요.');
-      return;
-    }
-
+  const handleSignup = async (data: SignupFormValues) => {
     setLoading(true);
     try {
       // Role is sent via user_metadata but validated server-side in handle_new_user trigger.
       // hospital_id is NOT sent via metadata — linked via RPC after signup.
       const { data: signUpData, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         options: {
           data: {
-            display_name: displayName,
-            role,
+            display_name: data.displayName,
+            role: data.role,
           },
         },
       });
@@ -148,9 +162,9 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
         }
       } else {
         // Link hospital via server-side RPC if hospital_staff
-        if (role === 'hospital_staff' && hospitalId && signUpData?.user) {
+        if (data.role === 'hospital_staff' && data.hospitalId && signUpData?.user) {
           try {
-            await supabase.rpc('link_hospital', { p_hospital_id: hospitalId });
+            await supabase.rpc('link_hospital', { p_hospital_id: data.hospitalId });
           } catch (rpcErr) {
             console.warn('Hospital link failed (will retry on login):', rpcErr);
           }
@@ -217,7 +231,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4">
+            <form onSubmit={handleSubmit(handleSignup)} className="space-y-4">
               {/* Display Name */}
               <div className="space-y-2">
                 <Label htmlFor="displayName">이름</Label>
@@ -225,11 +239,13 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   id="displayName"
                   type="text"
                   placeholder="홍길동"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  {...register('displayName')}
                   disabled={loading}
                   autoComplete="name"
                 />
+                {errors.displayName && (
+                  <p className="text-sm text-destructive">{errors.displayName.message}</p>
+                )}
               </div>
 
               {/* Email */}
@@ -239,11 +255,13 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   id="signup-email"
                   type="email"
                   placeholder="name@hospital.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register('email')}
                   disabled={loading}
                   autoComplete="email"
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
               </div>
 
               {/* Password */}
@@ -253,11 +271,13 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   id="signup-password"
                   type="password"
                   placeholder="8자 이상, 대문자/숫자/특수문자 중 2종 포함"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register('password')}
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
                 {password && (
                   <div className="space-y-1">
                     <div className="flex gap-1">
@@ -270,11 +290,17 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                         />
                       ))}
                     </div>
-                    <p className={`text-xs ${
-                      passwordStrength === 1 ? 'text-red-500' :
-                      passwordStrength === 2 ? 'text-amber-500' :
-                      passwordStrength === 3 ? 'text-green-500' : ''
-                    }`}>
+                    <p
+                      className={`text-xs ${
+                        passwordStrength === 1
+                          ? 'text-red-500'
+                          : passwordStrength === 2
+                            ? 'text-amber-500'
+                            : passwordStrength === 3
+                              ? 'text-green-500'
+                              : ''
+                      }`}
+                    >
                       비밀번호 강도: {passwordStrengthLabel}
                     </p>
                   </div>
@@ -288,76 +314,100 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   id="confirm-password"
                   type="password"
                   placeholder="비밀번호를 다시 입력하세요"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  {...register('confirmPassword')}
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                )}
               </div>
 
               {/* Role Selection */}
               <div className="space-y-3">
                 <Label>역할 선택</Label>
-                <RadioGroup
-                  value={role}
-                  onValueChange={(value) => setRole(value as UserRole)}
-                  className="grid grid-cols-2 gap-3"
-                >
-                  <label
-                    htmlFor="role-hospital"
-                    className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${
-                      role === 'hospital_staff'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-400'
-                        : 'border-border hover:bg-accent'
-                    }`}
-                  >
-                    <RadioGroupItem value="hospital_staff" id="role-hospital" />
-                    <div>
-                      <p className="text-sm font-medium">병원 직원</p>
-                      <p className="text-xs text-muted-foreground">병원 관리</p>
-                    </div>
-                  </label>
-                  <label
-                    htmlFor="role-paramedic"
-                    className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${
-                      role === 'paramedic'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-400'
-                        : 'border-border hover:bg-accent'
-                    }`}
-                  >
-                    <RadioGroupItem value="paramedic" id="role-paramedic" />
-                    <div>
-                      <p className="text-sm font-medium">구급대원</p>
-                      <p className="text-xs text-muted-foreground">현장 대응</p>
-                    </div>
-                  </label>
-                </RadioGroup>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      className="grid grid-cols-2 gap-3"
+                    >
+                      <label
+                        htmlFor="role-hospital"
+                        className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${
+                          field.value === 'hospital_staff'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-400'
+                            : 'border-border hover:bg-accent'
+                        }`}
+                      >
+                        <RadioGroupItem value="hospital_staff" id="role-hospital" />
+                        <div>
+                          <p className="text-sm font-medium">병원 직원</p>
+                          <p className="text-xs text-muted-foreground">병원 관리</p>
+                        </div>
+                      </label>
+                      <label
+                        htmlFor="role-paramedic"
+                        className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${
+                          field.value === 'paramedic'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-400'
+                            : 'border-border hover:bg-accent'
+                        }`}
+                      >
+                        <RadioGroupItem value="paramedic" id="role-paramedic" />
+                        <div>
+                          <p className="text-sm font-medium">구급대원</p>
+                          <p className="text-xs text-muted-foreground">현장 대응</p>
+                        </div>
+                      </label>
+                    </RadioGroup>
+                  )}
+                />
+                {errors.role && (
+                  <p className="text-sm text-destructive">{errors.role.message}</p>
+                )}
               </div>
 
               {/* Hospital Selection (only for hospital_staff) */}
               {role === 'hospital_staff' && (
                 <div className="space-y-2">
                   <Label htmlFor="hospital">소속 병원</Label>
-                  <Select value={hospitalId} onValueChange={setHospitalId} disabled={loading || loadingHospitals}>
-                    <SelectTrigger id="hospital">
-                      <SelectValue
-                        placeholder={loadingHospitals ? '병원 목록 로딩 중...' : '병원을 선택하세요'}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hospitals.length > 0 ? (
-                        hospitals.map((hospital) => (
-                          <SelectItem key={hospital.id} value={hospital.id}>
-                            {hospital.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>
-                          {loadingHospitals ? '로딩 중...' : '등록된 병원이 없습니다'}
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="hospitalId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={loading || loadingHospitals}
+                      >
+                        <SelectTrigger id="hospital">
+                          <SelectValue
+                            placeholder={loadingHospitals ? '병원 목록 로딩 중...' : '병원을 선택하세요'}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hospitals.length > 0 ? (
+                            hospitals.map((hospital) => (
+                              <SelectItem key={hospital.id} value={hospital.id}>
+                                {hospital.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>
+                              {loadingHospitals ? '로딩 중...' : '등록된 병원이 없습니다'}
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.hospitalId && (
+                    <p className="text-sm text-destructive">{errors.hospitalId.message}</p>
+                  )}
                 </div>
               )}
 

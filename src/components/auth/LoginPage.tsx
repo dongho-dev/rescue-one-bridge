@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -9,26 +12,35 @@ import { Building2, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '../../utils/errorMessages';
 
+const loginSchema = z.object({
+  email: z.string().email('올바른 이메일을 입력해주세요.'),
+  password: z.string().min(1, '비밀번호를 입력해주세요.'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 interface LoginPageProps {
   onSwitchToSignup: () => void;
 }
 
 export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
-    if (!email || !password) {
-      toast.error('이메일과 비밀번호를 모두 입력해주세요.');
-      return;
-    }
-
+  const handleEmailLogin = async (data: LoginFormValues) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast.error('이메일 또는 비밀번호가 올바르지 않습니다.');
@@ -87,18 +99,20 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+            <form onSubmit={handleSubmit(handleEmailLogin)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">이메일</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="name@hospital.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register('email')}
                   disabled={loading}
                   autoComplete="email"
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -107,11 +121,13 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
                   id="password"
                   type="password"
                   placeholder="비밀번호를 입력하세요"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register('password')}
                   disabled={loading}
                   autoComplete="current-password"
                 />
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
