@@ -22,6 +22,7 @@ export interface NewPatientFormState {
     pulse: string;
     respiration: string;
     temperature: string;
+    oxygenSaturation: string;
   };
 }
 
@@ -238,6 +239,23 @@ export function NewPatientForm({ form, onChange }: NewPatientFormProps) {
                 placeholder="20 /min"
                 value={form.vitals.respiration}
                 onChange={(e) => updateVitals({ respiration: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="oxygenSaturation"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                산소포화도 (SpO2)
+              </Label>
+              <Input
+                id="oxygenSaturation"
+                type="number"
+                min={0}
+                max={100}
+                placeholder="98%"
+                value={form.vitals.oxygenSaturation}
+                onChange={(e) => updateVitals({ oxygenSaturation: e.target.value })}
               />
             </div>
           </div>
