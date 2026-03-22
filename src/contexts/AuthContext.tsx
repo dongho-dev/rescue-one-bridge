@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, explicitDemoMode, isEnvMissing } from '../lib/supabase';
 import type { UserRole } from '../types/database';
@@ -239,35 +247,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        loading,
-        signOut,
-        updateProfile,
-        isDemoMode: explicitDemoMode,
-        isEnvMissing,
-        switchDemoRole: explicitDemoMode
-          ? () => {
-              setProfile((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      role: prev.role === 'hospital_staff' ? 'paramedic' : 'hospital_staff',
-                      hospital_id: prev.role === 'hospital_staff' ? null : 'demo-hospital',
-                    }
-                  : prev,
-              );
-            }
-          : undefined,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const switchDemoRole = useCallback(() => {
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            role: prev.role === 'hospital_staff' ? 'paramedic' : 'hospital_staff',
+            hospital_id: prev.role === 'hospital_staff' ? null : 'demo-hospital',
+          }
+        : prev,
+    );
+  }, []);
+
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      session,
+      profile,
+      loading,
+      signOut,
+      updateProfile,
+      isDemoMode: explicitDemoMode,
+      isEnvMissing,
+      switchDemoRole: explicitDemoMode ? switchDemoRole : undefined,
+    }),
+    [user, session, profile, loading, signOut, updateProfile, switchDemoRole],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
