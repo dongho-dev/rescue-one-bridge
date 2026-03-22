@@ -1,4 +1,5 @@
 import type { RequestStatus, HospitalAvailability } from '@/types/database';
+import { SPECIALTY_LIST } from '@/lib/specialties';
 
 export interface MockRequest {
   id: string;
@@ -49,7 +50,7 @@ export const generateMockHospitals = (): MockHospital[] => {
     '한양대병원 응급센터'
   ];
 
-  const specialties = ['심장내과', '신경외과', '외상외과', '소아과', '정형외과'];
+  const specialties = [...SPECIALTY_LIST];
 
   const fixedDistances = [2.3, 4.1, 1.8, 6.5, 3.2, 5.7];
   const fixedQueues = [3, 7, 2, 10, 5, 8];

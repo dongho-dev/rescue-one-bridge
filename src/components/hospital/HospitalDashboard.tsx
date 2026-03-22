@@ -10,9 +10,8 @@ import { InfoCard } from "../common/InfoCard";
 import { AmbulanceMap } from "../common/AmbulanceMap";
 import { useRequests } from "@/hooks/useRequests";
 import { useBeds } from "@/hooks/useBeds";
-import { useAuth } from "@/contexts/AuthContext";
 import { useAuditLog } from "@/hooks/useAuditLog";
-import { supabase } from "@/lib/supabase";
+import { useHospitalAccepting } from "@/hooks/useHospitalAccepting";
 import { LoadingState } from "../common/LoadingState";
 import { RequestChat } from "../common/RequestChat";
 import type { Request } from "@/types/database";
@@ -35,8 +34,7 @@ import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export function HospitalDashboard() {
-  const { profile } = useAuth();
-  const [accepting, setAccepting] = useState(true);
+  const { accepting, setAccepting: updateAccepting } = useHospitalAccepting();
   const [acceptingConfirmOpen, setAcceptingConfirmOpen] = useState(false);
   const [pendingAccepting, setPendingAccepting] = useState(true);
   const { requests: dbRequests, loading, error, refetch, rejectRequest } = useRequests();
@@ -49,23 +47,13 @@ export function HospitalDashboard() {
   }, []);
 
   const handleAcceptingConfirm = useCallback(async () => {
-    setAccepting(pendingAccepting);
     setAcceptingConfirmOpen(false);
 
-    // DB에 accepting 상태 반영
-    if (supabase && profile?.hospital_id) {
-      const { error: updateError } = await supabase
-        .from('hospitals')
-        .update({ accepting: pendingAccepting })
-        .eq('id', profile.hospital_id);
-      if (updateError) {
-        toast.error('수용 상태 업데이트에 실패했습니다');
-        setAccepting(!pendingAccepting); // rollback
-        return;
-      }
+    const success = await updateAccepting(pendingAccepting);
+    if (success) {
+      toast(pendingAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
     }
-    toast(pendingAccepting ? "환자 수용을 시작합니다" : "환자 수용을 중단합니다");
-  }, [pendingAccepting, profile?.hospital_id]);
+  }, [pendingAccepting, updateAccepting]);
 
   const handleRequestAction = (requestId: string, action: 'accept' | 'reject') => {
     if (action === 'accept') {
