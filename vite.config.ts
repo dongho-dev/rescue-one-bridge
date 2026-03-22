@@ -19,9 +19,6 @@ export default defineConfig({
     port: 4173,
     host: true
   },
-  test: {
-    exclude: ['e2e/**', 'node_modules/**'],
-  },
   build: {
     outDir: 'dist',
     sourcemap: false,
