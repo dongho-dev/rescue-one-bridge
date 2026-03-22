@@ -115,6 +115,7 @@ export function useRequests(): UseRequestsResult {
         const { error: insertError } = await supabase.from('requests').insert({
           paramedic_id: user.id,
           ...item.data,
+          hospital_id: null,  // hospital_id 주입 방지
         });
         if (!insertError) {
           dequeue(item.id);
@@ -300,6 +301,7 @@ export function useRequests(): UseRequestsResult {
       await supabase.from('requests').insert({
         paramedic_id: user.id,
         ...data,
+        hospital_id: null,  // 스프레드 후에 명시적으로 null 강제 — hospital_id 주입 방지
       }).select('id').single()
     );
 
@@ -338,6 +340,11 @@ export function useRequests(): UseRequestsResult {
   }, [user, fetchRequests]);
 
   const rejectRequest = useCallback(async (requestId: string) => {
+    if (profile?.role !== 'hospital_staff') {
+      toast.error('병원 직원만 요청을 거절할 수 있습니다.');
+      return;
+    }
+
     // Optimistic update: remove from current hospital's list
     setRequests(prev => prev.filter(r => r.id !== requestId));
 
@@ -372,7 +379,7 @@ export function useRequests(): UseRequestsResult {
     }
 
     await fetchRequests();
-  }, [fetchRequests]);
+  }, [profile, fetchRequests]);
 
   return { requests, loading, error, isOnline, pendingQueueCount, refetch: fetchRequests, updateRequestStatus, createRequest, rejectRequest };
 }
