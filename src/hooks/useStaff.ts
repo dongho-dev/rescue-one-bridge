@@ -11,7 +11,7 @@ export function useStaff() {
     table: 'staff',
     fallback: mockStaff,
     realtime: true,
-    columns: 'id, name, role, status, hospital_id, department, phone, email, specialization, years_of_experience, current_location, shift',
+    columns: 'id, name, role, status, hospital_id, department, phone, email, specialization, years_of_experience, current_location, shift, shift_start, shift_end, certifications, emergency_contact',
   });
 
   const updateStaffStatus = useCallback(async (staffId: string, status: StaffStatus) => {
