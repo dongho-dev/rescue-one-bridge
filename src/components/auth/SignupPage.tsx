@@ -25,7 +25,21 @@ const signupSchema = z
   .object({
     displayName: z.string().min(2, '이름은 2자 이상').max(50, '이름은 50자 이하'),
     email: z.string().email('올바른 이메일을 입력해주세요.'),
-    password: z.string().min(6, '비밀번호는 6자 이상이어야 합니다.'),
+    password: z
+      .string()
+      .min(8, '비밀번호는 8자 이상이어야 합니다.')
+      .superRefine((val, ctx) => {
+        let kinds = 0;
+        if (/[A-Z]/.test(val)) kinds++;
+        if (/[0-9]/.test(val)) kinds++;
+        if (/[^A-Za-z0-9]/.test(val)) kinds++;
+        if (kinds < 2) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: '대문자, 숫자, 특수문자 중 2종 이상을 포함해야 합니다.',
+          });
+        }
+      }),
     confirmPassword: z.string(),
     role: z.enum(['hospital_staff', 'paramedic']),
     hospitalId: z.string().optional(),
@@ -256,7 +270,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="6자 이상"
+                  placeholder="8자 이상, 대문자/숫자/특수문자 중 2종 포함"
                   {...register('password')}
                   disabled={loading}
                   autoComplete="new-password"
@@ -437,7 +451,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                   fill="#34A853"
                 />
                 <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
                   fill="#FBBC05"
                 />
                 <path
