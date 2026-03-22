@@ -158,6 +158,8 @@ export function useRequests(): UseRequestsResult {
     if (isOnline) flushQueue();
   }, [isOnline, flushQueue]);
 
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!user || !profile || !supabase) return;
 
@@ -194,17 +196,38 @@ export function useRequests(): UseRequestsResult {
           });
         }
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          setError(null);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.warn(`[requests] realtime ${status}:`, err?.message);
+          setError(`실시간 연결 오류 (${status})`);
+          // 30초 후 재연결 시도
+          if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+            // re-subscribe by triggering effect re-run
+            fetchRequests();
+          }, 30_000);
+        }
+      });
 
     channelRef.current = channel;
 
     return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [user, profile, notify]);
+  }, [user, profile, notify, fetchRequests]);
 
   const updateRequestStatus = useCallback(async (requestId: string, status: RequestStatus) => {
     setRequests(prev => prev.map(r =>
