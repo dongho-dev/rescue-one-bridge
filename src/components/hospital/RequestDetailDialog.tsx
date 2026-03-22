@@ -1,9 +1,11 @@
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Separator } from "../ui/separator";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import type { Request } from "@/types/database";
 import { Eye, Check, Phone } from 'lucide-react';
 import { toast } from "sonner";
+import { RequestChat } from "../common/RequestChat";
 
 interface RequestDetailDialogProps {
   request: Request;
@@ -61,6 +63,8 @@ export function RequestDetailDialog({ request, onAccept }: RequestDetailDialogPr
               연락
             </Button>
           </div>
+          <Separator />
+          <RequestChat requestId={request.id} compact />
         </div>
       </DialogContent>
     </Dialog>
