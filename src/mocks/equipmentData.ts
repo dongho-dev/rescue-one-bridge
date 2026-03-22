@@ -1,7 +1,5 @@
 import type { Equipment } from '@/types/database';
 
-export type { Equipment };
-
 export const mockEquipment: Equipment[] = [
   {
     id: 'EQ001',

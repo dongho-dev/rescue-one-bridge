@@ -1,8 +1,6 @@
 import type { Bed } from '@/types/database';
 
-export type BedInfo = Bed;
-
-export const mockBeds: BedInfo[] = [
+export const mockBeds: Bed[] = [
   {
     id: 'A-01',
     hospital_id: '',

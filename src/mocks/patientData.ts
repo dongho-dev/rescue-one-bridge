@@ -1,7 +1,5 @@
 import type { Patient } from '@/types/database';
 
-export type { Patient };
-
 export const mockPatients: Patient[] = [
   {
     id: 'P001',
