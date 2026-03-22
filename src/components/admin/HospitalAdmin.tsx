@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/lib/supabase";
 import type { Hospital } from "@/types/database";
 import { toast } from "sonner";
+import { getUserFriendlyError } from "@/utils/errorMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Building2,
@@ -33,9 +34,20 @@ export function HospitalAdmin() {
       return;
     }
     setLoading(true);
-    const { data } = await supabase.from('hospitals').select('*').order('name');
-    setHospitals((data ?? []) as Hospital[]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase.from('hospitals').select('*').order('name');
+      if (error) {
+        toast.error(getUserFriendlyError(error.message));
+        setHospitals([]);
+      } else {
+        setHospitals((data ?? []) as Hospital[]);
+      }
+    } catch {
+      toast.error('병원 목록을 불러오는 중 오류가 발생했습니다.');
+      setHospitals([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -48,7 +60,7 @@ export function HospitalAdmin() {
 
     const { error } = await supabase.from('hospitals').delete().eq('id', id);
     if (error) {
-      toast.error('삭제 실패: ' + error.message);
+      toast.error(getUserFriendlyError(error.message));
     } else {
       toast.success(`${name} 삭제 완료`);
       await fetchHospitals();
@@ -57,8 +69,14 @@ export function HospitalAdmin() {
 
   const handleToggleAccepting = async (id: string, accepting: boolean) => {
     if (!supabase) return;
-    await supabase.from('hospitals').update({ accepting }).eq('id', id);
+    // 낙관적 UI 업데이트
     setHospitals(prev => prev.map(h => h.id === id ? { ...h, accepting } : h));
+    const { error } = await supabase.from('hospitals').update({ accepting }).eq('id', id);
+    if (error) {
+      toast.error(getUserFriendlyError(error.message));
+      // 롤백
+      setHospitals(prev => prev.map(h => h.id === id ? { ...h, accepting: !accepting } : h));
+    }
   };
 
   // Authorization guard — only hospital_staff can access admin
@@ -216,36 +234,39 @@ function HospitalForm({ hospital, onSave }: { hospital?: Hospital; onSave: () =>
     }
 
     setSaving(true);
-    const data = {
-      name: form.name.trim(),
-      contact: form.contact.trim() || null,
-      address: form.address.trim() || null,
-      latitude: form.latitude ? parseFloat(form.latitude) : null,
-      longitude: form.longitude ? parseFloat(form.longitude) : null,
-      specialties: form.specialties ? form.specialties.split(',').map(s => s.trim()).filter(Boolean) : [],
-      queue: parseInt(form.queue) || 0,
-    };
+    try {
+      const data = {
+        name: form.name.trim(),
+        contact: form.contact.trim() || null,
+        address: form.address.trim() || null,
+        latitude: form.latitude ? parseFloat(form.latitude) : null,
+        longitude: form.longitude ? parseFloat(form.longitude) : null,
+        specialties: form.specialties ? form.specialties.split(',').map(s => s.trim()).filter(Boolean) : [],
+        queue: parseInt(form.queue) || 0,
+      };
 
-    if (hospital) {
-      const { error } = await supabase.from('hospitals').update(data).eq('id', hospital.id);
-      if (error) {
-        toast.error('수정 실패: ' + error.message);
-        setSaving(false);
-        return;
+      if (hospital) {
+        const { error } = await supabase.from('hospitals').update(data).eq('id', hospital.id);
+        if (error) {
+          toast.error(getUserFriendlyError(error.message));
+          return;
+        }
+        toast.success('병원 정보가 수정되었습니다');
+      } else {
+        const { error } = await supabase.from('hospitals').insert({ ...data, accepting: true });
+        if (error) {
+          toast.error(getUserFriendlyError(error.message));
+          return;
+        }
+        toast.success('병원이 등록되었습니다');
       }
-      toast.success('병원 정보가 수정되었습니다');
-    } else {
-      const { error } = await supabase.from('hospitals').insert({ ...data, accepting: true });
-      if (error) {
-        toast.error('등록 실패: ' + error.message);
-        setSaving(false);
-        return;
-      }
-      toast.success('병원이 등록되었습니다');
+
+      await onSave();
+    } catch {
+      toast.error('네트워크 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
-    await onSave();
   };
 
   return (

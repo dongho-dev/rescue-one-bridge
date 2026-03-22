@@ -91,7 +91,7 @@ export function EquipmentStatus() {
   }), [equipment]);
 
   const handleAddEquipment = () => {
-    toast.success("새 장비 등록 폼이 열렸습니다.");
+    toast.info("추후 지원 예정입니다");
   };
 
   const handleMaintenanceRequest = (equipmentId: string) => {
