@@ -213,10 +213,17 @@ export function HospitalDashboard() {
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>수용 상태 변경 확인</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {pendingAccepting
-                      ? '환자 수용을 시작하시겠습니까?'
-                      : '환자 수용을 중단하시겠습니까? 새로운 환자 요청을 받을 수 없게 됩니다.'}
+                  <AlertDialogDescription asChild>
+                    <div>
+                      {pendingAccepting
+                        ? '환자 수용을 시작하시겠습니까?'
+                        : '환자 수용을 중단하시겠습니까? 새로운 환자 요청을 받을 수 없게 됩니다.'}
+                      {!pendingAccepting && kpiData.erQueue > 0 && (
+                        <p className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
+                          ⚠️ 현재 이송 중이거나 배정된 요청이 {kpiData.erQueue}건 있습니다. 해당 이송은 계속 진행됩니다.
+                        </p>
+                      )}
+                    </div>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

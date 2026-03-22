@@ -242,6 +242,7 @@ export function ParamedicDashboard() {
                         onStatusUpdate={handleStatusUpdate}
                         getSeverityLabel={getSeverityLabel}
                         getStatusBadge={getStatusBadge}
+                        hospitals={dbHospitals}
                       />
                     ))}
                   </TableBody>
@@ -320,11 +321,13 @@ function RequestRow({
   onStatusUpdate,
   getSeverityLabel,
   getStatusBadge,
+  hospitals,
 }: {
   request: Request;
   onStatusUpdate: (id: string, status: RequestStatus) => void;
   getSeverityLabel: (s: number) => string;
   getStatusBadge: (s: RequestStatus) => React.ReactNode;
+  hospitals: HospitalAvailability[];
 }) {
   const isTerminal = request.status === 'completed' || request.status === 'cancelled';
 
@@ -347,9 +350,12 @@ function RequestRow({
       <TableCell className="text-sm">
         {request.hospital_id ? (
           <span>
-            {request.distance_km != null && `${request.distance_km}km`}
+            <span className="font-medium">{hospitals.find(h => h.hospital_id === request.hospital_id)?.hospital_name ?? '병원 배정됨'}</span>
+            {request.distance_km != null && (
+              <span className="block text-xs text-muted-foreground">{request.distance_km}km</span>
+            )}
             {request.eta_minutes != null && (
-              <span className="text-muted-foreground"> / {request.eta_minutes}분</span>
+              <span className="text-muted-foreground text-xs"> / {request.eta_minutes}분</span>
             )}
           </span>
         ) : (

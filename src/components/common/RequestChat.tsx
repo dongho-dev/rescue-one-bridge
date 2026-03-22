@@ -5,6 +5,7 @@ import { Input } from "../ui/input";
 import { useMessages } from "@/hooks/useMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { MessageSquare, Send } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RequestChatProps {
   requestId: string | null;
@@ -30,6 +31,8 @@ export function RequestChat({ requestId, compact = false }: RequestChatProps) {
     const success = await sendMessage(input);
     if (success) {
       setInput('');
+    } else {
+      toast.error('메시지 전송에 실패했습니다. 다시 시도해주세요.');
     }
     setIsSubmitting(false);
   };
