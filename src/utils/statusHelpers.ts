@@ -1,3 +1,10 @@
+import {
+  UserCheck,
+  Activity,
+  Shield,
+  Stethoscope,
+  type LucideIcon,
+} from 'lucide-react';
 import type {
   PatientSeverity,
   PatientStatus,
@@ -96,6 +103,36 @@ export const getRoleText = (role: StaffRole): string => {
   }
 };
 
+export const getRoleBadgeClass = (role: StaffRole): string => {
+  switch (role) {
+    case 'doctor': return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50';
+    case 'nurse': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    case 'technician': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+    case 'admin': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+  }
+};
+
+export const getRoleIcon = (role: StaffRole): LucideIcon => {
+  switch (role) {
+    case 'doctor': return Stethoscope;
+    case 'nurse': return UserCheck;
+    case 'technician': return Activity;
+    case 'admin': return Shield;
+    default: return UserCheck;
+  }
+};
+
+export const getAvatarBgClass = (role: StaffRole): string => {
+  switch (role) {
+    case 'doctor': return 'bg-blue-100 text-blue-700';
+    case 'nurse': return 'bg-green-100 text-green-700';
+    case 'technician': return 'bg-amber-100 text-amber-700';
+    case 'admin': return 'bg-slate-100 text-slate-700';
+    default: return 'bg-slate-100 text-slate-700';
+  }
+};
+
 // -- Staff Status (직원 상태) --
 
 export const getStaffStatusColor = (status: StaffStatus): BadgeVariant => {
@@ -115,6 +152,26 @@ export const getStaffStatusText = (status: StaffStatus): string => {
     case 'break': return '휴식중';
     case 'emergency': return '응급호출';
     default: return status;
+  }
+};
+
+export const getStaffStatusBadgeClass = (status: StaffStatus): string => {
+  switch (status) {
+    case 'on_duty': return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50';
+    case 'off_duty': return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+    case 'break': return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+    case 'emergency': return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50';
+  }
+};
+
+export const getStaffStatusIcon = (status: StaffStatus): string => {
+  switch (status) {
+    case 'on_duty': return '\u25CF'; // ●
+    case 'break': return '\u25CB';   // ○
+    case 'off_duty': return '\u2014'; // —
+    case 'emergency': return '\u26A0'; // ⚠
+    default: return '';
   }
 };
 
