@@ -1,13 +1,19 @@
-import { Button } from "../ui/button";
-import { TableCell, TableRow } from "../ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import { Button } from '../ui/button';
+import { TableCell, TableRow } from '../ui/table';
 import {
-  Truck,
-  CheckCircle2,
-  XCircle,
-  Navigation,
-} from 'lucide-react';
-import type { HospitalAvailability, Request, RequestStatus } from "@/types/database";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
+import { Truck, CheckCircle2, XCircle, Navigation } from 'lucide-react';
+import type { HospitalAvailability, Request, RequestStatus } from '@/types/database';
+import { isValidCoordinate } from '@/utils/sanitize';
 
 interface RequestRowProps {
   request: Request;
@@ -29,15 +35,22 @@ export function RequestRow({
   return (
     <TableRow className={`hover:bg-muted/50 transition-colors ${isTerminal ? 'opacity-50' : ''}`}>
       <TableCell className="font-mono text-sm whitespace-nowrap">
-        {new Date(request.requested_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+        {new Date(request.requested_at).toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}
         <span className="block text-xs text-muted-foreground">
-          {new Date(request.requested_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+          {new Date(request.requested_at).toLocaleDateString('ko-KR', {
+            month: 'short',
+            day: 'numeric',
+          })}
         </span>
       </TableCell>
       <TableCell>
         <span className="text-sm font-medium">{request.patient_name || '미상'}</span>
         <span className="block text-xs text-muted-foreground">
-          {request.patient_age ? `${request.patient_age}세` : ''} {getSeverityLabel(request.severity)}
+          {request.patient_age ? `${request.patient_age}세` : ''}{' '}
+          {getSeverityLabel(request.severity)}
         </span>
       </TableCell>
       <TableCell className="text-sm">{request.symptom}</TableCell>
@@ -45,7 +58,10 @@ export function RequestRow({
       <TableCell className="text-sm">
         {request.hospital_id ? (
           <span>
-            <span className="font-medium">{hospitals.find(h => h.hospital_id === request.hospital_id)?.hospital_name ?? '병원 배정됨'}</span>
+            <span className="font-medium">
+              {hospitals.find((h) => h.hospital_id === request.hospital_id)?.hospital_name ??
+                '병원 배정됨'}
+            </span>
             {request.distance_km != null && (
               <span className="block text-xs text-muted-foreground">{request.distance_km}km</span>
             )}
@@ -106,20 +122,22 @@ export function RequestRow({
               </AlertDialogContent>
             </AlertDialog>
           )}
-          {(request.status === 'matched' || request.status === 'en_route') && request.hospital_id && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2.5 text-xs"
-              onClick={() => {
-                const url = `https://www.google.com/maps/dir/?api=1&origin=${request.latitude},${request.longitude}&travelmode=driving`;
-                window.open(url, '_blank');
-              }}
-            >
-              <Navigation size={13} className="mr-1" />
-              길 안내
-            </Button>
-          )}
+          {(request.status === 'matched' || request.status === 'en_route') &&
+            request.hospital_id &&
+            isValidCoordinate(request.latitude, request.longitude) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2.5 text-xs"
+                onClick={() => {
+                  const origin = encodeURIComponent(`${request.latitude},${request.longitude}`);
+                  const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&travelmode=driving`;
+                  window.open(url, '_blank');
+                }}
+              >
+                <Navigation size={13} className="mr-1" />길 안내
+              </Button>
+            )}
         </div>
       </TableCell>
     </TableRow>
