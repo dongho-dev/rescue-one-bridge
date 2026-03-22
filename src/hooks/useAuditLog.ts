@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
-type AuditAction = 'view' | 'create' | 'update' | 'delete';
-type ResourceType = 'request' | 'patient' | 'bed' | 'staff' | 'equipment';
+type AuditAction = 'view' | 'create' | 'update' | 'delete' | 'match';
+type ResourceType = 'request' | 'patient' | 'bed' | 'staff' | 'equipment' | 'hospital';
 
 export function useAuditLog() {
   const { user } = useAuth();

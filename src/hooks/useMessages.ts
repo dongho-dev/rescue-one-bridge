@@ -97,6 +97,10 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
   const sendMessage = useCallback(async (content: string): Promise<boolean> => {
     if (!requestId || !user || !profile || !supabase) return false;
     if (!content.trim()) return false;
+    if (content.trim().length > 2000) {
+      toast.error('메시지는 2000자 이하로 입력해주세요.');
+      return false;
+    }
 
     try {
       const { error } = await supabase.from('messages').insert({
