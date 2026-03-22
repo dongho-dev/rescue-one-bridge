@@ -9,7 +9,7 @@ import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { getSeverityColor, getSeverityText } from "../../utils/statusHelpers";
-import { useRequests } from "@/hooks/useRequests";
+import { useRequestsContext } from "@/contexts/RequestsContext";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import type { RequestPriority } from "@/types/database";
 import {
@@ -47,7 +47,7 @@ function mapSeverityToLabel(severity: number): 'critical' | 'urgent' | 'stable' 
 }
 
 export function PatientRequest() {
-  const { createRequest, requests } = useRequests();
+  const { createRequest, requests } = useRequestsContext();
   const { position, refresh: refreshGeo } = useGeolocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<QuickPatient | null>(null);
