@@ -167,11 +167,16 @@ export function HospitalDashboard() {
     dbRequests.filter(r => r.status === 'en_route' && r.latitude && r.longitude),
   [dbRequests]);
 
-  const ambulancePosition = useMemo(() => {
-    const first = enRouteRequests[0];
-    if (!first) return null;
-    return { latitude: first.latitude!, longitude: first.longitude! };
-  }, [enRouteRequests]);
+  const ambulancePositions = useMemo(() =>
+    enRouteRequests.map(r => ({
+      id: r.id,
+      latitude: r.latitude!,
+      longitude: r.longitude!,
+      eta_minutes: r.eta_minutes,
+      severity: r.severity,
+      patient_name: r.patient_name,
+    })),
+  [enRouteRequests]);
 
   const activeRequest = useMemo(() =>
     dbRequests.find(r => r.status === 'matched' || r.status === 'en_route'),
@@ -399,7 +404,7 @@ export function HospitalDashboard() {
           {enRouteRequests.length > 0 && (
             <AmbulanceMap
               title="접근 중인 구급차"
-              ambulancePosition={ambulancePosition}
+              ambulancePositions={ambulancePositions}
               className="shadow-sm"
             />
           )}
