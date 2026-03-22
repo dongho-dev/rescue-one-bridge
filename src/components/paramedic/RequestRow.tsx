@@ -1,5 +1,6 @@
 import { Button } from "../ui/button";
 import { TableCell, TableRow } from "../ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import {
   Truck,
   CheckCircle2,
@@ -79,14 +80,31 @@ export function RequestRow({
             </Button>
           )}
           {(request.status === 'pending' || request.status === 'matched') && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-              onClick={() => onStatusUpdate(request.id, 'cancelled')}
-            >
-              <XCircle size={13} />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                >
+                  <XCircle size={13} />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>이송 취소 확인</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    이 이송 요청을 취소하시겠습니까? 이 작업은 취소할 수 없습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>닫기</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onStatusUpdate(request.id, 'cancelled')}>
+                    취소 확인
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
           {(request.status === 'matched' || request.status === 'en_route') && request.hospital_id && (
             <Button

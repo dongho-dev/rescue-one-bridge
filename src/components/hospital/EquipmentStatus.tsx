@@ -5,6 +5,7 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Progress } from "../ui/progress";
@@ -331,9 +332,27 @@ export function EquipmentStatus() {
                   </Button>
 
                   {item.status === 'error' && (
-                    <Button size="sm" variant="destructive" onClick={() => handleEmergencyAlert(item.id)} aria-label="긴급 알림">
-                      <AlertTriangle size={14} />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive" aria-label="긴급 알림">
+                          <AlertTriangle size={14} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>긴급 알림 발송 확인</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            장비 {item.id}에 긴급 알림을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>취소</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleEmergencyAlert(item.id)}>
+                            알림 발송
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
 
                   <Button size="sm" variant="outline" onClick={() => handleMaintenanceRequest(item.id)} aria-label="유지보수 요청">
@@ -420,9 +439,25 @@ export function EquipmentStatus() {
                   <Button variant="outline" onClick={() => handleMaintenanceRequest(selectedEquipment.id)}>
                     유지보수 요청
                   </Button>
-                  <Button variant="destructive" onClick={() => handleEmergencyAlert(selectedEquipment.id)}>
-                    긴급 알림
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive">긴급 알림</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>긴급 알림 발송 확인</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          장비 {selectedEquipment.id}에 긴급 알림을 발송하시겠습니까? 이 작업은 취소할 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleEmergencyAlert(selectedEquipment.id)}>
+                          알림 발송
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <Button onClick={() => toast.success("장비 정보가 저장되었습니다.")}>
                     저장
                   </Button>

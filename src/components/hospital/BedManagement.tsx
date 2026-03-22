@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Separator } from "../ui/separator";
@@ -41,6 +42,7 @@ export function BedManagement() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedBed, setSelectedBed] = useState<BedType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ bedId: string; newStatus: string } | null>(null);
 
   const sections = ['A', 'B', 'C'];
 
@@ -60,9 +62,21 @@ export function BedManagement() {
 
   const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
 
-  const handleBedStatusChange = async (bedId: string, newStatus: string) => {
-    const status = newStatus as BedStatus;
-    await updateBedStatus(bedId, status);
+  const handleBedStatusChange = (bedId: string, newStatus: string) => {
+    // 사용중 병상의 상태 변경은 위험 동작 — 확인 다이얼로그 표시
+    const currentBed = beds.find(b => b.id === bedId);
+    if (currentBed?.status === 'occupied') {
+      setPendingStatusChange({ bedId, newStatus });
+      return;
+    }
+    void updateBedStatus(bedId, newStatus as BedStatus);
+  };
+
+  const confirmBedStatusChange = async () => {
+    if (!pendingStatusChange) return;
+    const { bedId, newStatus } = pendingStatusChange;
+    setPendingStatusChange(null);
+    await updateBedStatus(bedId, newStatus as BedStatus);
   };
 
   const handleAssignPatient = (bedId: string) => {
@@ -323,6 +337,23 @@ export function BedManagement() {
           )}
         </DialogContent>
       </Dialog>
+      {/* 사용중 병상 상태 변경 확인 다이얼로그 */}
+      <AlertDialog open={!!pendingStatusChange} onOpenChange={(open) => { if (!open) setPendingStatusChange(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>병상 상태 변경 확인</AlertDialogTitle>
+            <AlertDialogDescription>
+              현재 사용중인 병상의 상태를 변경하시겠습니까? 환자가 배정된 상태에서 변경하면 문제가 발생할 수 있습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBedStatusChange}>
+              변경 확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </LoadingState>
   );

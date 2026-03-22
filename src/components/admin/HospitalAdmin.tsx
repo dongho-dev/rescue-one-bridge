@@ -6,6 +6,7 @@ import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 import type { Hospital } from "@/types/database";
 import { toast } from "sonner";
@@ -27,6 +28,8 @@ export function HospitalAdmin() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [acceptingTarget, setAcceptingTarget] = useState<{ id: string; accepting: boolean } | null>(null);
 
   const fetchHospitals = useCallback(async () => {
     if (!supabase) {
@@ -54,9 +57,10 @@ export function HospitalAdmin() {
     fetchHospitals();
   }, [fetchHospitals]);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!supabase) return;
-    if (!confirm(`"${name}" 병원을 삭제하시겠습니까?`)) return;
+  const handleDelete = async () => {
+    if (!supabase || !deleteTarget) return;
+    const { id, name } = deleteTarget;
+    setDeleteTarget(null);
 
     const { error } = await supabase.from('hospitals').delete().eq('id', id);
     if (error) {
@@ -67,8 +71,10 @@ export function HospitalAdmin() {
     }
   };
 
-  const handleToggleAccepting = async (id: string, accepting: boolean) => {
-    if (!supabase) return;
+  const handleToggleAccepting = async () => {
+    if (!supabase || !acceptingTarget) return;
+    const { id, accepting } = acceptingTarget;
+    setAcceptingTarget(null);
     // 낙관적 UI 업데이트
     setHospitals(prev => prev.map(h => h.id === id ? { ...h, accepting } : h));
     const { error } = await supabase.from('hospitals').update({ accepting }).eq('id', id);
@@ -156,7 +162,7 @@ export function HospitalAdmin() {
                       <TableCell>
                         <Switch
                           checked={hospital.accepting}
-                          onCheckedChange={(v) => handleToggleAccepting(hospital.id, v)}
+                          onCheckedChange={(v) => setAcceptingTarget({ id: hospital.id, accepting: v })}
                         />
                       </TableCell>
                       <TableCell>{hospital.queue}명</TableCell>
@@ -196,7 +202,7 @@ export function HospitalAdmin() {
                             size="sm"
                             variant="outline"
                             className="h-8 px-2 text-red-600 hover:bg-red-50"
-                            onClick={() => handleDelete(hospital.id, hospital.name)}
+                            onClick={() => setDeleteTarget({ id: hospital.id, name: hospital.name })}
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -210,6 +216,43 @@ export function HospitalAdmin() {
           )}
         </CardContent>
       </Card>
+      {/* 병원 삭제 확인 다이얼로그 */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>병원 삭제 확인</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{deleteTarget?.name}" 병원을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 수용 상태 변경 확인 다이얼로그 */}
+      <AlertDialog open={!!acceptingTarget} onOpenChange={(open) => { if (!open) setAcceptingTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>수용 상태 변경 확인</AlertDialogTitle>
+            <AlertDialogDescription>
+              {acceptingTarget?.accepting
+                ? '이 병원의 수용 상태를 활성화하시겠습니까?'
+                : '이 병원의 수용 상태를 비활성화하시겠습니까? 새로운 이송 요청을 받지 않게 됩니다.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction onClick={handleToggleAccepting}>
+              확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
