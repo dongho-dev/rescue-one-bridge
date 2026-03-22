@@ -98,10 +98,9 @@ export function EquipmentStatus() {
     toast.success(`장비 ${equipmentId}의 유지보수가 요청되었습니다.`);
   };
 
-  const handleStatusChange = (equipmentId: string, newStatus: string) => {
+  const handleStatusChange = async (equipmentId: string, newStatus: string) => {
     const status = newStatus as EquipmentStatusType;
-    updateEquipmentStatus(equipmentId, status);
-    toast.success(`장비 ${equipmentId}의 상태가 ${getEquipmentStatusText(status)}로 변경되었습니다.`);
+    await updateEquipmentStatus(equipmentId, status);
   };
 
   const handleEmergencyAlert = (equipmentId: string) => {
