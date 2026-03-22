@@ -40,7 +40,10 @@ export function useSupabaseQuery<T extends { id: string }>({
   const { profile } = useAuth();
   const hospitalId = overrideHospitalId ?? profile?.hospital_id;
 
-  const [data, setData] = useState<T[]>(fallback);
+  const fallbackRef = useRef<T[]>(fallback);
+  useEffect(() => { fallbackRef.current = fallback; });
+
+  const [data, setData] = useState<T[]>(() => fallback);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -48,7 +51,7 @@ export function useSupabaseQuery<T extends { id: string }>({
 
   const fetchData = useCallback(async () => {
     if (!enabled || !hospitalId) {
-      setData(fallback);
+      setData(fallbackRef.current);
       setLoading(false);
       return;
     }
@@ -57,7 +60,7 @@ export function useSupabaseQuery<T extends { id: string }>({
     setError(null);
 
     if (!supabase) {
-      setData(fallback);
+      setData(fallbackRef.current);
       setLoading(false);
       return;
     }
@@ -71,18 +74,18 @@ export function useSupabaseQuery<T extends { id: string }>({
       if (fetchError) {
         console.warn(`[${table}] fetch failed:`, fetchError.message);
         setError(fetchError.message);
-        setData(fallback);
+        setData(fallbackRef.current);
       } else {
         setData((rows ?? []) as unknown as T[]);
       }
     } catch (err) {
       console.error(`[${table}] unexpected error:`, err);
       setError('데이터를 불러오는 중 오류가 발생했습니다.');
-      setData(fallback);
+      setData(fallbackRef.current);
     } finally {
       setLoading(false);
     }
-  }, [table, hospitalId, enabled, fallback, columns]);
+  }, [table, hospitalId, enabled, columns]);
 
   useEffect(() => {
     fetchData();
