@@ -25,6 +25,7 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { notify } = useNotification();
 
   // 메시지 조회
@@ -82,11 +83,29 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
           });
         }
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          // 연결 성공 — 에러 상태 클리어
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.warn(`[messages] realtime ${status}:`, err?.message);
+          toast.error('채팅 실시간 연결이 끊어졌습니다. 30초 후 재연결합니다.');
+          if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+          }, 30_000);
+        }
+      });
 
     channelRef.current = channel;
 
     return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

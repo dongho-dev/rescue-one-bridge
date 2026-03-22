@@ -42,7 +42,10 @@ export function ParamedicDashboard() {
   const wakeLock = useWakeLock();
   const rawHospitals = dbHospitals.length > 0 ? dbHospitals : generateMockHospitals();
 
-  // 이송 중인 요청의 위치를 병원에 실시간 공유
+  // matched 또는 en_route 상태의 활성 채팅용 요청
+  const activeChatRequest = useMemo(() => dbRequests.find(r => r.status === 'matched' || r.status === 'en_route'), [dbRequests]);
+
+  // 이송 중인 요청의 위치를 병원에 실시간 공유 (위치 공유는 en_route만)
   const enRouteRequest = useMemo(() => dbRequests.find(r => r.status === 'en_route'), [dbRequests]);
   useLocationSharing(enRouteRequest?.id ?? null, position, !!enRouteRequest);
 
@@ -267,8 +270,8 @@ export function ParamedicDashboard() {
         </CardContent>
       </Card>
 
-      {enRouteRequest && (
-        <RequestChat requestId={enRouteRequest.id} />
+      {activeChatRequest && (
+        <RequestChat requestId={activeChatRequest.id} />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

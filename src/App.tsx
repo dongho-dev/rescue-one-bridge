@@ -1,6 +1,8 @@
 import { useState, Suspense, lazy, useMemo } from 'react';
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
+import { Input } from "./components/ui/input";
+import { Label } from "./components/ui/label";
 import { ThemeProvider, useTheme } from "./components/theme/ThemeProvider";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { Toaster } from "./components/ui/sonner";
@@ -26,11 +28,13 @@ import {
   Loader2,
   User,
   Bell,
-  Settings
+  Settings,
+  Save,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "./components/ui/sheet";
 import { useNotification } from "./hooks/useNotification";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -179,9 +183,37 @@ function AuthGate() {
 }
 
 function AppContent() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, updateProfile } = useAuth();
   const { permission, requestPermission } = useNotification();
   useSessionTimeout();
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  const handleOpenProfile = () => {
+    setEditDisplayName(profile?.display_name ?? '');
+    setEditPhone(profile?.phone ?? '');
+    setProfileOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editDisplayName.trim()) {
+      toast.error('이름을 입력해주세요.');
+      return;
+    }
+    setProfileSaving(true);
+    const success = await updateProfile({
+      display_name: editDisplayName.trim(),
+      phone: editPhone.trim() || undefined,
+    });
+    setProfileSaving(false);
+    if (success) {
+      toast.success('프로필이 업데이트되었습니다.');
+      setProfileOpen(false);
+    }
+  };
 
   const NOTIFICATION_DISMISS_KEY = 'r1b_notification_dismissed_at';
   const NOTIFICATION_RE_ASK_DAYS = 7;
@@ -276,13 +308,19 @@ function AppContent() {
           <AlertDialog>
           {sidebarOpen ? (
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
-                <User size={16} className="text-sidebar-foreground/70" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{displayName}</p>
-                <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
-              </div>
+              <button
+                onClick={handleOpenProfile}
+                className="flex items-center gap-3 flex-1 min-w-0 rounded-lg p-1 -m-1 hover:bg-sidebar-accent transition-colors cursor-pointer"
+                aria-label="프로필 수정"
+              >
+                <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
+                  <User size={16} className="text-sidebar-foreground/70" />
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium truncate">{displayName}</p>
+                  <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
+                </div>
+              </button>
               <AlertDialogTrigger asChild>
                 <Button
                   variant="ghost"
@@ -368,13 +406,19 @@ function AppContent() {
             {/* User Info & Logout (Mobile) */}
             <div className="border-t border-sidebar-border p-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
-                  <User size={16} className="text-sidebar-foreground/70" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{displayName}</p>
-                  <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
-                </div>
+                <button
+                  onClick={handleOpenProfile}
+                  className="flex items-center gap-3 flex-1 min-w-0 rounded-lg p-1 -m-1 hover:bg-sidebar-accent transition-colors cursor-pointer"
+                  aria-label="프로필 수정"
+                >
+                  <div className="p-2 bg-sidebar-accent rounded-lg shrink-0">
+                    <User size={16} className="text-sidebar-foreground/70" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium truncate">{displayName}</p>
+                    <p className="text-xs text-sidebar-foreground/50 truncate">{roleLabel}</p>
+                  </div>
+                </button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -478,6 +522,56 @@ function AppContent() {
           </ErrorBoundary>
         </main>
       </div>
+
+      {/* 프로필 수정 Sheet */}
+      <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>프로필 수정</SheetTitle>
+            <SheetDescription>이름과 연락처를 수정할 수 있습니다.</SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="profile-display-name">이름</Label>
+              <Input
+                id="profile-display-name"
+                value={editDisplayName}
+                onChange={(e) => setEditDisplayName(e.target.value)}
+                placeholder="이름을 입력하세요"
+                disabled={profileSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-phone">연락처</Label>
+              <Input
+                id="profile-phone"
+                type="tel"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="010-0000-0000"
+                disabled={profileSaving}
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleSaveProfile}
+              disabled={profileSaving}
+            >
+              {profileSaving ? (
+                <>
+                  <Loader2 size={16} className="animate-spin mr-2" />
+                  저장 중...
+                </>
+              ) : (
+                <>
+                  <Save size={16} className="mr-2" />
+                  저장
+                </>
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 interface UseSupabaseQueryOptions<T> {
   table: string;
@@ -40,6 +41,7 @@ export function useSupabaseQuery<T extends { id: string }>({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!enabled || !hospitalId) {
@@ -128,17 +130,37 @@ export function useSupabaseQuery<T extends { id: string }>({
           setData(prev => prev.filter(item => item.id !== deleted.id));
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          setError(null);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.warn(`[${table}] realtime ${status}:`, err?.message);
+          setError(`실시간 연결 오류 (${status})`);
+          toast.error(`[${table}] 실시간 연결이 끊어졌습니다. 30초 후 재연결합니다.`);
+          if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+            fetchData();
+          }, 30_000);
+        }
+      });
 
     channelRef.current = channel;
 
     return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [table, hospitalId, realtime, enabled]);
+  }, [table, hospitalId, realtime, enabled, fetchData]);
 
   return { data, loading, error, refetch: fetchData, setData };
 }

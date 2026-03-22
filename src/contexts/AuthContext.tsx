@@ -14,6 +14,7 @@ export interface UserProfile {
   role: UserRole;
   hospital_id: string | null;
   display_name: string | null;
+  phone: string | null;
 }
 
 interface AuthContextType {
@@ -22,6 +23,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  updateProfile: (data: { display_name?: string; phone?: string }) => Promise<boolean>;
   isDemoMode: boolean;
   isEnvMissing: boolean;
   switchDemoRole?: () => void;
@@ -33,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  updateProfile: async () => false,
   isDemoMode: false,
   isEnvMissing: false,
   switchDemoRole: undefined,
@@ -105,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role, hospital_id, display_name')
+        .select('role, hospital_id, display_name, phone')
         .eq('id', userId)
         .single();
 
@@ -124,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role,
         hospital_id: data.hospital_id,
         display_name: data.display_name,
+        phone: data.phone ?? null,
       });
     } catch (err) {
       if (import.meta.env.DEV) console.error('Unexpected error fetching profile:', err);
@@ -146,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'hospital_staff',
         hospital_id: 'demo-hospital',
         display_name: 'Demo User',
+        phone: null,
       });
       setLoading(false);
       return () => {};
@@ -185,6 +190,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchProfile, applyOAuthSignupMeta]);
 
+  const updateProfile = useCallback(async (data: { display_name?: string; phone?: string }): Promise<boolean> => {
+    if (!user) return false;
+    if (!supabase) {
+      // 데모 모드: 로컬 state만 업데이트
+      setProfile(prev => prev ? { ...prev, ...data } : prev);
+      return true;
+    }
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', user.id);
+      if (error) {
+        if (import.meta.env.DEV) console.warn('Profile update failed:', error.message);
+        toast.error('프로필 업데이트에 실패했습니다.');
+        return false;
+      }
+      setProfile(prev => prev ? { ...prev, ...data } : prev);
+      return true;
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('Unexpected error updating profile:', err);
+      toast.error('프로필 업데이트 중 오류가 발생했습니다.');
+      return false;
+    }
+  }, [user]);
+
   const signOut = useCallback(async () => {
     // Always force local cleanup regardless of server-side result
     setUser(null);
@@ -209,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, session, profile, loading, signOut,
+      user, session, profile, loading, signOut, updateProfile,
       isDemoMode: explicitDemoMode,
       isEnvMissing,
       switchDemoRole: explicitDemoMode ? () => {

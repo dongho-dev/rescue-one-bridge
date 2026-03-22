@@ -39,6 +39,22 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const [loading, setLoading] = useState(false);
   const [loadingHospitals, setLoadingHospitals] = useState(false);
 
+  // 비밀번호 강도 계산
+  const passwordStrength = (() => {
+    if (!password) return 0;
+    let kinds = 0;
+    if (/[A-Z]/.test(password)) kinds++;
+    if (/[0-9]/.test(password)) kinds++;
+    if (/[^A-Za-z0-9]/.test(password)) kinds++;
+    if (password.length < 8) return 1; // 약함
+    if (kinds >= 2) return 3; // 강함
+    if (kinds >= 1) return 2; // 보통
+    return 1; // 약함
+  })();
+
+  const passwordStrengthLabel = ['', '약함', '보통', '강함'][passwordStrength] ?? '';
+  const passwordStrengthColor = ['', 'bg-red-500', 'bg-amber-500', 'bg-green-500'][passwordStrength] ?? '';
+
   // Fetch hospitals when role is hospital_staff
   useEffect(() => {
     if (role === 'hospital_staff') {
@@ -83,9 +99,20 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('비밀번호는 6자 이상이어야 합니다.');
+    if (password.length < 8) {
+      toast.error('비밀번호는 8자 이상이어야 합니다.');
       return;
+    }
+
+    {
+      let kinds = 0;
+      if (/[A-Z]/.test(password)) kinds++;
+      if (/[0-9]/.test(password)) kinds++;
+      if (/[^A-Za-z0-9]/.test(password)) kinds++;
+      if (kinds < 2) {
+        toast.error('비밀번호에 대문자, 숫자, 특수문자 중 2종 이상을 포함해주세요.');
+        return;
+      }
     }
 
     if (password !== confirmPassword) {
@@ -225,12 +252,33 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="6자 이상 입력하세요"
+                  placeholder="8자 이상, 대문자/숫자/특수문자 중 2종 포함"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
                   autoComplete="new-password"
                 />
+                {password && (
+                  <div className="space-y-1">
+                    <div className="flex gap-1">
+                      {[1, 2, 3].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-1.5 flex-1 rounded-full transition-colors ${
+                            passwordStrength >= level ? passwordStrengthColor : 'bg-muted'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className={`text-xs ${
+                      passwordStrength === 1 ? 'text-red-500' :
+                      passwordStrength === 2 ? 'text-amber-500' :
+                      passwordStrength === 3 ? 'text-green-500' : ''
+                    }`}>
+                      비밀번호 강도: {passwordStrengthLabel}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Confirm Password */}
