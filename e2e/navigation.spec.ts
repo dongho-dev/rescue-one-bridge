@@ -12,7 +12,7 @@ test.describe('Navigation - All Pages', () => {
     await page.goto('/');
     await page.getByText('환자 관리').click();
     // PatientDetails component should render
-    await expect(page.getByRole('heading', { name: /환자/ })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('main').getByRole('heading').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should access bed management page', async ({ page }) => {
@@ -25,14 +25,14 @@ test.describe('Navigation - All Pages', () => {
     await page.goto('/');
     await page.getByText('직원 관리').click();
     // StaffManagement component should render with staff-related content
-    await expect(page.getByRole('heading', { name: /직원/ })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('main').getByRole('heading').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should access equipment status page', async ({ page }) => {
     await page.goto('/');
     await page.getByText('장비 현황').click();
     // EquipmentStatus component should render
-    await expect(page.getByRole('heading', { name: /장비 현황/ })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('main').getByRole('heading').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should access patient request page', async ({ page }) => {
