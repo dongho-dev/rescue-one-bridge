@@ -228,7 +228,7 @@ export function PatientDetails() {
                         <TableCell className="font-mono text-sm">{patient.id}</TableCell>
                         <TableCell className="font-medium">{patient.name}</TableCell>
                         <TableCell>
-                          {patient.age}세 / {patient.gender}
+                          {patient.age ?? '-'}세 / {patient.gender ?? '-'}
                         </TableCell>
                         <TableCell>{patient.diagnosis ?? '-'}</TableCell>
                         <TableCell>
@@ -314,11 +314,11 @@ export function PatientDetails() {
                       </div>
                       <div>
                         <Label className="text-muted-foreground text-sm">나이</Label>
-                        <p className="font-medium">{selectedPatient.age}세</p>
+                        <p className="font-medium">{selectedPatient.age ?? '-'}세</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground text-sm">성별</Label>
-                        <p className="font-medium">{selectedPatient.gender}</p>
+                        <p className="font-medium">{selectedPatient.gender ?? '-'}</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground text-sm">진단</Label>
@@ -348,7 +348,7 @@ export function PatientDetails() {
                             <span className="text-sm text-muted-foreground">심박수</span>
                           </div>
                           <p className="text-lg font-semibold text-red-600">
-                            {selectedPatient.vitals.heart_rate}{' '}
+                            {selectedPatient.vitals.heart_rate ?? '-'}{' '}
                             <span className="text-sm font-normal text-muted-foreground">bpm</span>
                           </p>
                         </CardContent>
@@ -362,7 +362,7 @@ export function PatientDetails() {
                             <span className="text-sm text-muted-foreground">혈압</span>
                           </div>
                           <p className="text-lg font-semibold text-blue-600">
-                            {selectedPatient.vitals.blood_pressure}{' '}
+                            {selectedPatient.vitals.blood_pressure ?? '-'}{' '}
                             <span className="text-sm font-normal text-muted-foreground">mmHg</span>
                           </p>
                         </CardContent>
@@ -376,7 +376,7 @@ export function PatientDetails() {
                             <span className="text-sm text-muted-foreground">체온</span>
                           </div>
                           <p className="text-lg font-semibold text-orange-600">
-                            {selectedPatient.vitals.temperature}
+                            {selectedPatient.vitals.temperature ?? '-'}
                             <span className="text-sm font-normal text-muted-foreground">°C</span>
                           </p>
                         </CardContent>
@@ -390,7 +390,7 @@ export function PatientDetails() {
                             <span className="text-sm text-muted-foreground">산소포화도</span>
                           </div>
                           <p className="text-lg font-semibold text-green-600">
-                            {selectedPatient.vitals.oxygen_saturation}
+                            {selectedPatient.vitals.oxygen_saturation ?? '-'}
                             <span className="text-sm font-normal text-muted-foreground">%</span>
                           </p>
                         </CardContent>
