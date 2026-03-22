@@ -146,6 +146,7 @@ export interface Request {
   latitude: number | null;
   longitude: number | null;
   notes: string | null;
+  required_specialties?: string[];
   requested_at: string;
   matched_at: string | null;
   completed_at: string | null;

@@ -575,7 +575,7 @@ export function PatientRequest() {
 
               <Separator className="my-1" />
 
-              <Button variant="ghost" className="w-full text-muted-foreground min-h-[44px] touch-manipulation">
+              <Button variant="ghost" className="w-full text-muted-foreground min-h-[44px] touch-manipulation" disabled onClick={() => toast.info("추후 지원 예정입니다")}>
                 <Phone size={16} className="mr-2" />
                 병원과 직접 통화
               </Button>

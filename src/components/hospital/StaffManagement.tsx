@@ -110,7 +110,7 @@ export function StaffManagement() {
   }), [staff]);
 
   const handleAddStaff = () => {
-    toast.success("새 직원 등록 폼이 열렸습니다.");
+    toast.info("추후 지원 예정입니다");
   };
 
   const handleViewDetails = (member: Staff) => {
@@ -341,7 +341,7 @@ export function StaffManagement() {
                             <Button variant="ghost" size="sm" onClick={() => { handleViewDetails(member); setDialogOpen(true); }} aria-label="상세보기">
                               <Eye size={14} />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => toast.success("직원 정보 수정 폼이 열렸습니다.")}>
+                            <Button variant="ghost" size="sm" onClick={() => toast.info("추후 지원 예정입니다")} aria-label="직원 정보 수정">
                               <Edit size={14} />
                             </Button>
                             <AlertDialog>

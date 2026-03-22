@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useNotification } from './useNotification';
+import { toast } from 'sonner';
 
 export interface Message {
   id: string;
@@ -16,7 +17,7 @@ export interface Message {
 interface UseMessagesReturn {
   messages: Message[];
   loading: boolean;
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string) => Promise<boolean>;
 }
 
 export function useMessages(requestId: string | null): UseMessagesReturn {
@@ -34,15 +35,27 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
     }
 
     setLoading(true);
-    supabase
-      .from('messages')
-      .select('*')
-      .eq('request_id', requestId)
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        setMessages((data ?? []) as Message[]);
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('request_id', requestId)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.warn('[messages] fetch failed:', error.message);
+          setMessages([]);
+        } else {
+          setMessages((data ?? []) as Message[]);
+        }
+      } catch (err) {
+        console.error('[messages] unexpected error:', err);
+        setMessages([]);
+      } finally {
         setLoading(false);
-      });
+      }
+    })();
   }, [requestId]);
 
   // 실시간 구독
@@ -81,16 +94,26 @@ export function useMessages(requestId: string | null): UseMessagesReturn {
     };
   }, [requestId, user?.id, notify]);
 
-  const sendMessage = useCallback(async (content: string) => {
-    if (!requestId || !user || !profile || !supabase) return;
-    if (!content.trim()) return;
+  const sendMessage = useCallback(async (content: string): Promise<boolean> => {
+    if (!requestId || !user || !profile || !supabase) return false;
+    if (!content.trim()) return false;
 
-    await supabase.from('messages').insert({
-      request_id: requestId,
-      sender_id: user.id,
-      sender_role: profile.role,
-      content: content.trim(),
-    });
+    try {
+      const { error } = await supabase.from('messages').insert({
+        request_id: requestId,
+        sender_id: user.id,
+        sender_role: profile.role,
+        content: content.trim(),
+      });
+      if (error) {
+        toast.error('메시지 전송에 실패했습니다.');
+        return false;
+      }
+      return true;
+    } catch {
+      toast.error('네트워크 오류로 메시지를 전송할 수 없습니다.');
+      return false;
+    }
   }, [requestId, user, profile]);
 
   return { messages, loading, sendMessage };

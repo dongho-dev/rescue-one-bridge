@@ -28,12 +28,10 @@
   },
   "include": [
     "src",
-    "components",
-    "styles",
-    "App.tsx",
     "*.ts",
-    "*.tsx"
-, "../vite.config.ts"  ],
+    "*.tsx",
+    "vite.config.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist"

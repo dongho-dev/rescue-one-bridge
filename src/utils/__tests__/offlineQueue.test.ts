@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { enqueue, getQueue, dequeue, clearQueue } from '../offlineQueue';
+import { enqueue, getQueue, dequeue, clearQueue, sanitizePHI } from '../offlineQueue';
 import type { CreateRequestData } from '@/hooks/useRequests';
 
 const makeRequest = (
@@ -66,5 +66,54 @@ describe('offlineQueue', () => {
     const item1 = enqueue(makeRequest(), 'user-1');
     const item2 = enqueue(makeRequest(), 'user-1');
     expect(item1.id).not.toBe(item2.id);
+  });
+
+  describe('sanitizePHI', () => {
+    it('strips vitals from queued data', () => {
+      enqueue(makeRequest({ vitals: { bp: '120/80', pulse: 72 } }), 'user-1');
+      const queue = getQueue();
+      expect(queue[0].data.vitals).toBeUndefined();
+    });
+
+    it('strips allergies from queued data', () => {
+      enqueue(makeRequest({ allergies: ['페니실린', '아스피린'] }), 'user-1');
+      const queue = getQueue();
+      expect(queue[0].data.allergies).toBeUndefined();
+    });
+
+    it('strips notes from queued data', () => {
+      enqueue(makeRequest({ notes: '환자 특이사항 메모' }), 'user-1');
+      const queue = getQueue();
+      expect(queue[0].data.notes).toBeUndefined();
+    });
+
+    it('strips location_text from queued data', () => {
+      enqueue(makeRequest({ location_text: '서울시 강남구 역삼동 123' }), 'user-1');
+      const queue = getQueue();
+      expect(queue[0].data.location_text).toBeUndefined();
+    });
+
+    it('preserves symptom and coordinates', () => {
+      enqueue(makeRequest({ symptom: '호흡곤란', latitude: 37.5, longitude: 127.0 }), 'user-1');
+      const queue = getQueue();
+      expect(queue[0].data.symptom).toBe('호흡곤란');
+      expect(queue[0].data.latitude).toBe(37.5);
+      expect(queue[0].data.longitude).toBe(127.0);
+    });
+
+    it('handles missing patient_name', () => {
+      const result = sanitizePHI(makeRequest({ patient_name: undefined }));
+      expect(result.patient_name).toBeUndefined();
+    });
+
+    it('handles empty string patient_name', () => {
+      const result = sanitizePHI(makeRequest({ patient_name: '' }));
+      expect(result.patient_name).toBe('');
+    });
+
+    it('masks patient_name to first char + **', () => {
+      const result = sanitizePHI(makeRequest({ patient_name: '김철수' }));
+      expect(result.patient_name).toBe('김**');
+    });
   });
 });

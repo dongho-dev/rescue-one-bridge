@@ -7,7 +7,7 @@ export interface MockRequest {
   distance_km: number;
   symptom: string;
   status: RequestStatus;
-  patient_age?: string;
+  patient_age?: number | null;
   allergies?: string[];
   eta_minutes?: number;
 }
@@ -16,7 +16,7 @@ export interface MockHospital extends Omit<HospitalAvailability, 'hospital_id' |
   id: string;
   name: string;
   distance_km: number | null;
-  avg_wait_time?: number;
+  avg_wait_time: number | null;
   latitude?: number;
   longitude?: number;
 }
@@ -33,7 +33,7 @@ export const generateMockRequests = (): MockRequest[] => {
     distance_km: Math.round((Math.random() * 12 + 0.3) * 10) / 10,
     symptom: symptoms[Math.floor(Math.random() * symptoms.length)],
     status: statuses[Math.floor(Math.random() * statuses.length)],
-    patient_age: `${Math.floor(Math.random() * 60 + 20)}세`,
+    patient_age: Math.floor(Math.random() * 60 + 20),
     allergies: Math.random() > 0.7 ? ['페니실린'] : undefined,
     eta_minutes: Math.floor(Math.random() * 30 + 5)
   }));

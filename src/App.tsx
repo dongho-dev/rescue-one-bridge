@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import type { UserRole } from "./types/database";
 import { LoginPage } from "./components/auth/LoginPage";
 import { SignupPage } from "./components/auth/SignupPage";
+import { toast } from "sonner";
 import {
   Building2,
   Sun,
@@ -25,11 +26,11 @@ import {
   Loader2,
   User,
   Bell,
-  BellOff,
   Settings
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./components/ui/dialog";
 import { useNotification } from "./hooks/useNotification";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useSessionTimeout } from "./hooks/useSessionTimeout";
@@ -181,7 +182,29 @@ function AppContent() {
   const { user, profile, signOut } = useAuth();
   const { permission, requestPermission } = useNotification();
   useSessionTimeout();
-  const [notificationDismissed, setNotificationDismissed] = useState(false);
+
+  const NOTIFICATION_DISMISS_KEY = 'r1b_notification_dismissed_at';
+  const NOTIFICATION_RE_ASK_DAYS = 7;
+
+  const [notificationDismissed, setNotificationDismissed] = useState(() => {
+    try {
+      const dismissedAt = localStorage.getItem(NOTIFICATION_DISMISS_KEY);
+      if (!dismissedAt) return false;
+      const daysSince = (Date.now() - Number(dismissedAt)) / (1000 * 60 * 60 * 24);
+      return daysSince < NOTIFICATION_RE_ASK_DAYS;
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismissNotification = () => {
+    try {
+      localStorage.setItem(NOTIFICATION_DISMISS_KEY, String(Date.now()));
+    } catch {
+      // localStorage unavailable (private browsing)
+    }
+    setNotificationDismissed(true);
+  };
   const [currentPage, setCurrentPage] = useState<CurrentPage>(() => {
     // Default page based on role
     if (profile?.role === 'paramedic') return 'paramedic-dashboard';
@@ -190,7 +213,7 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const online = useOnlineStatus();
-  const showNotificationBanner = permission === 'default' && !notificationDismissed;
+  const showNotificationModal = permission === 'default' && !notificationDismissed;
 
   const navigationItems = useMemo(() => {
     if (!profile?.role) {
@@ -408,36 +431,36 @@ function AppContent() {
           </div>
         </header>
 
-        {/* 알림 권한 배너 */}
-        {showNotificationBanner && (
-          <div className="bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 text-sm">
-            <div className="flex items-center gap-2">
-              <BellOff size={16} />
-              <span>알림을 켜면 새 요청이 도착할 때 즉시 알려드립니다</span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-7 text-xs"
-                onClick={async () => {
-                  await requestPermission();
-                  setNotificationDismissed(true);
-                }}
-              >
-                <Bell size={13} className="mr-1" />
+        {/* 알림 권한 모달 */}
+        <Dialog open={showNotificationModal} onOpenChange={(open) => { if (!open) handleDismissNotification(); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>알림을 켜주세요</DialogTitle>
+              <DialogDescription>
+                새로운 응급 요청이 도착하면 즉시 알림을 받을 수 있습니다.
+                알림을 켜면 환자 이송 요청을 놓치지 않습니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 mt-2">
+              <Button onClick={async () => {
+                const granted = await requestPermission();
+                if (granted) {
+                  handleDismissNotification();
+                  toast.success('알림이 활성화되었습니다');
+                } else {
+                  toast.error('알림이 차단되었습니다. 브라우저 설정에서 알림을 허용해주세요.');
+                  handleDismissNotification();
+                }
+              }}>
+                <Bell size={16} className="mr-2" />
                 알림 켜기
               </Button>
-              <button
-                onClick={() => setNotificationDismissed(true)}
-                className="text-white/70 hover:text-white"
-                aria-label="닫기"
-              >
-                <X size={16} />
-              </button>
+              <Button variant="ghost" onClick={handleDismissNotification}>
+                나중에
+              </Button>
             </div>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         {/* Page Content */}
         <main className="flex-1 p-3 sm:p-6 overflow-auto">
