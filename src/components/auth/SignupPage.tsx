@@ -16,6 +16,7 @@ import {
 import { Building2, Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getUserFriendlyError } from '../../utils/errorMessages';
+import { signOAuthMeta } from '../../utils/oauthMetaSigning';
 import type { UserRole } from '../../contexts/AuthContext';
 
 interface SignupPageProps {
@@ -144,11 +145,10 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
       return;
     }
 
-    // Persist role/hospital to localStorage so the post-OAuth callback can apply them
-    localStorage.setItem(
-      'oauth_signup_meta',
-      JSON.stringify({ role, hospitalId: hospitalId || null }),
-    );
+    // Persist role/hospital to localStorage with HMAC signature for tamper detection
+    const meta = { role, hospitalId: hospitalId || null };
+    const signed = signOAuthMeta(meta);
+    localStorage.setItem('oauth_signup_meta', signed);
 
     setLoading(true);
     try {
