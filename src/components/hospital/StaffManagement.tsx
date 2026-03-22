@@ -117,15 +117,13 @@ export function StaffManagement() {
     setSelectedStaff(member);
   };
 
-  const handleStatusChange = (staffId: string, newStatus: string) => {
+  const handleStatusChange = async (staffId: string, newStatus: string) => {
     const status = newStatus as StaffStatus;
-    updateStaffStatus(staffId, status);
-    toast.success(`직원 ${staffId}의 상태가 ${getStaffStatusText(status)}로 변경되었습니다.`);
+    await updateStaffStatus(staffId, status);
   };
 
-  const handleEmergencyCall = (staffId: string) => {
-    updateStaffStatus(staffId, 'emergency');
-    toast.success(`${staffId} 직원에게 응급호출이 발송되었습니다.`);
+  const handleEmergencyCall = async (staffId: string) => {
+    await updateStaffStatus(staffId, 'emergency');
   };
 
   return (

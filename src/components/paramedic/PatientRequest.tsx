@@ -54,7 +54,12 @@ export function PatientRequest() {
   const [isNewPatient, setIsNewPatient] = useState(false);
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [currentLocation, setCurrentLocation] = useState('위치 확인 중...');
-  const [estimatedTime] = useState('15분');
+  // 매칭된 최신 요청의 eta_minutes로 동적 계산 (하드코딩 '15분' 제거)
+  const estimatedTime = useMemo(() => {
+    const latestMatched = requests.find(r => r.status === 'matched' || r.status === 'en_route');
+    if (latestMatched?.eta_minutes) return `${latestMatched.eta_minutes}분`;
+    return null;
+  }, [requests]);
 
   // 이전 요청에서 최근 환자 3명 추출 (하드코딩 제거)
   const quickPatients: QuickPatient[] = useMemo(() => {
@@ -235,10 +240,12 @@ export function PatientRequest() {
             <p className="text-sm text-muted-foreground">환자 정보를 입력하고 병원에 요청하세요</p>
           </div>
         </div>
-        <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm">
-          <Timer size={14} />
-          {estimatedTime} 도착 예정
-        </Badge>
+        {estimatedTime && (
+          <Badge variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm">
+            <Timer size={14} />
+            {estimatedTime} 도착 예정
+          </Badge>
+        )}
       </div>
 
       {/* 위치/ETA 정보 */}
@@ -269,7 +276,9 @@ export function PatientRequest() {
               </div>
               <span className="text-sm font-medium text-muted-foreground">예상 도착 시간</span>
             </div>
-            <p className="mt-2.5 text-2xl font-bold pl-9 text-amber-700 dark:text-amber-400">{estimatedTime}</p>
+            <p className="mt-2.5 text-2xl font-bold pl-9 text-amber-700 dark:text-amber-400">
+              {estimatedTime ?? '매칭 후 표시'}
+            </p>
           </CardContent>
         </Card>
       </div>

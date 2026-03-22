@@ -87,7 +87,18 @@ export function HospitalDashboard() {
   const kpiData = useMemo(() => {
     const availableBeds = beds.filter(b => b.status === 'available').length;
     const erQueue = dbRequests.filter(req => req.status === 'matched' || req.status === 'en_route').length;
-    const avgWaitTime = 25;
+
+    // avgWaitTime: matched_at - requested_at 실데이터 기반 평균 계산
+    const completedWithMatch = dbRequests.filter(r => r.matched_at && r.requested_at);
+    const avgWaitTime = completedWithMatch.length === 0
+      ? 0
+      : Math.round(
+          completedWithMatch.reduce((sum, r) => {
+            const wait = (new Date(r.matched_at!).getTime() - new Date(r.requested_at).getTime()) / 60000;
+            return sum + Math.max(0, wait);
+          }, 0) / completedWithMatch.length
+        );
+
     const todayProcessed = dbRequests.filter(req => req.status === 'completed').length;
     return { availableBeds, erQueue, avgWaitTime, todayProcessed };
   }, [dbRequests, beds]);
@@ -237,7 +248,6 @@ export function HospitalDashboard() {
           subtitle="현재 이용 가능"
           variant="success"
           icon={<Building2 size={18} />}
-          trend={{ value: '2', positive: true }}
         />
         <InfoCard
           title="ER 대기열"
@@ -245,15 +255,13 @@ export function HospitalDashboard() {
           subtitle="현재 대기 중"
           variant="warning"
           icon={<Users size={18} />}
-          trend={{ value: '3', positive: false }}
         />
         <InfoCard
           title="평균 대기시간"
           value={`${kpiData.avgWaitTime}분`}
-          subtitle="최근 1시간 평균"
+          subtitle={kpiData.avgWaitTime > 0 ? "매칭 소요시간 평균" : "데이터 없음"}
           variant="default"
           icon={<Clock size={18} />}
-          trend={{ value: '12%', positive: true }}
         />
         <InfoCard
           title="오늘 처리"
@@ -261,7 +269,6 @@ export function HospitalDashboard() {
           subtitle="완료된 케이스"
           variant="default"
           icon={<CheckCircle2 size={18} />}
-          trend={{ value: '8%', positive: true }}
         />
       </div>
 

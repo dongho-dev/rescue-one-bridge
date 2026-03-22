@@ -154,6 +154,14 @@ export interface Request {
   updated_at: string;
 }
 
+export interface RequestLocation {
+  id: string;
+  request_id: string;
+  latitude: number;
+  longitude: number;
+  recorded_at: string;
+}
+
 // -- RPC RETURN TYPES --
 
 export interface HospitalAvailability {

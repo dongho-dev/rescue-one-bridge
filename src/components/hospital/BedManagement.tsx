@@ -60,10 +60,9 @@ export function BedManagement() {
 
   const occupancyRate = bedStats.total > 0 ? Math.round((bedStats.occupied / bedStats.total) * 100) : 0;
 
-  const handleBedStatusChange = (bedId: string, newStatus: string) => {
+  const handleBedStatusChange = async (bedId: string, newStatus: string) => {
     const status = newStatus as BedStatus;
-    updateBedStatus(bedId, status);
-    toast.success(`병상 ${bedId}의 상태가 ${getBedStatusText(status)}로 변경되었습니다.`);
+    await updateBedStatus(bedId, status);
   };
 
   const handleAssignPatient = (bedId: string) => {
