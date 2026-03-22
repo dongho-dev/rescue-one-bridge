@@ -25,16 +25,32 @@ const ambulanceIcon = new L.DivIcon({
   iconAnchor: [7, 7],
 });
 
+// Module-level cached DivIcon instances per severity tier (avoids re-creation on every render)
+const AMBULANCE_ICON_HIGH = new L.DivIcon({
+  html: `<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px #ef444480;animation:pulse 2s infinite"></div>`,
+  className: '',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
+const AMBULANCE_ICON_MID = new L.DivIcon({
+  html: `<div style="background:#f59e0b;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px #f59e0b80;animation:pulse 2s infinite"></div>`,
+  className: '',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
+const AMBULANCE_ICON_LOW = new L.DivIcon({
+  html: `<div style="background:#3b82f6;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px #3b82f680;animation:pulse 2s infinite"></div>`,
+  className: '',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
 function getAmbulanceIcon(severity?: number): L.DivIcon {
-  const color = severity != null && severity >= 4 ? '#ef4444'
-    : severity != null && severity >= 3 ? '#f59e0b'
-    : '#3b82f6';
-  return new L.DivIcon({
-    html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 8px ${color}80;animation:pulse 2s infinite"></div>`,
-    className: '',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-  });
+  if (severity != null && severity >= 4) return AMBULANCE_ICON_HIGH;
+  if (severity != null && severity >= 3) return AMBULANCE_ICON_MID;
+  return AMBULANCE_ICON_LOW;
 }
 
 const hospitalIcon = new L.Icon({
